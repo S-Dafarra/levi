@@ -93,33 +93,41 @@ public:
     }
 
     template<class EvaluableRhs>
-    ExpressionElement<SumEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>> operator+(const ExpressionElement<EvaluableRhs>& rhs) {
+    ExpressionElement<sDiff::Evaluable<typename EvaluableT::matrix_type>> operator+(const ExpressionElement<EvaluableRhs>& rhs) {
         assert(rows() == rhs.rows());
         assert(cols() == rhs.cols());
         assert(m_evaluable);
         assert(rhs.m_evaluable);
 
-        return ExpressionElement<SumEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>>(this->m_evaluable, rhs.m_evaluable);
+        ExpressionElement<sDiff::Evaluable<typename EvaluableT::matrix_type>> newExpression;
+
+        newExpression = ExpressionElement<SumEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>>(this->m_evaluable, rhs.m_evaluable);
+
+        return newExpression;
     }
 
     template <typename Matrix>
-    ExpressionElement<SumEvaluable<EvaluableT, ConstantEvaluable<Matrix>, typename EvaluableT::matrix_type>> operator+(const Matrix& rhs) {
+    ExpressionElement<sDiff::Evaluable<typename EvaluableT::matrix_type>> operator+(const Matrix& rhs) {
         ExpressionElement<ConstantEvaluable<Matrix>> constant(rhs, "K");
 
         return operator+(constant);
     }
 
     template<class EvaluableRhs>
-    ExpressionElement<ProductEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>> operator*(const ExpressionElement<EvaluableRhs>& rhs) {
+    ExpressionElement<sDiff::Evaluable<typename EvaluableT::matrix_type>> operator*(const ExpressionElement<EvaluableRhs>& rhs) {
         assert(cols() == rhs.rows());
         assert(m_evaluable);
         assert(rhs.m_evaluable);
 
-        return ExpressionElement<ProductEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>>(this->m_evaluable, rhs.m_evaluable);
+        ExpressionElement<sDiff::Evaluable<typename EvaluableT::matrix_type>> newExpression;
+
+        newExpression = ExpressionElement<ProductEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>>(this->m_evaluable, rhs.m_evaluable);
+
+        return newExpression;
     }
 
     template <typename Matrix>
-    ExpressionElement<ProductEvaluable<EvaluableT, ConstantEvaluable<Matrix>, typename EvaluableT::matrix_type>> operator*(const Matrix& rhs) {
+    ExpressionElement<sDiff::Evaluable<typename EvaluableT::matrix_type>> operator*(const Matrix& rhs) {
         ExpressionElement<ConstantEvaluable<Matrix>> constant(rhs, "K");
 
         return operator*(constant);

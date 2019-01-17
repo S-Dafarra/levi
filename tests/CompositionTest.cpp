@@ -20,8 +20,8 @@ int main() {
 
     Expression c;
     c = a + b;
-    auto d = c * a;
-    std::cerr << d.name() << " " <<std::endl << d.evaluate() <<std::endl;
+    c = c * a;
+    std::cerr << c.name() << " " <<std::endl << c.evaluate() <<std::endl;
 
     VectorXd x_value(2);
     x_value.setRandom();
@@ -33,7 +33,7 @@ int main() {
     Matrix<double,3,1> V;
     V.setIdentity();
     V *= 3;
-    auto g = d * V;
+    auto g = c * V;
     std::cerr << g.name() << " " <<std::endl << g.evaluate() <<std::endl;
 
 
