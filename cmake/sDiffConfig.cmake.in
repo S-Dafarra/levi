@@ -1,0 +1,8 @@
+set(sDiff_VERSION @sDiff_VERSION@)
+
+find_package(Eigen3 REQUIRED)
+
+
+if(NOT TARGET sDiff)
+  include("${CMAKE_CURRENT_LIST_DIR}/sDiff.cmake")
+endif()
