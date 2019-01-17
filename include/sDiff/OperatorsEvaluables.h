@@ -46,8 +46,18 @@ public:
         this->m_evaluationBuffer = constant;
     }
 
+    ConstantEvaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
+        : Evaluable<Matrix>(rows, cols, name)
+    {
+        this->m_evaluationBuffer.setZero();
+    }
+
     virtual const Matrix& evaluate() final {
         return this->m_evaluationBuffer;
+    }
+
+    void operator=(const Matrix& rhs) {
+        this->m_evaluationBuffer = rhs;
     }
 };
 

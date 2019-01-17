@@ -7,12 +7,16 @@
 #ifndef SDIFF_H
 #define SDIFF_H
 
-#include "Expression.h"
+#include "ExpressionElement.h"
 #include "Evaluable.h"
-#include "Variable.h"
+#include "EvaluableVariable.h"
 
 namespace sDiff {
-    typedef ExpressionElement<Evaluable<Eigen::MatrixXd>> Expression;
+    typedef ExpressionElement<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic >>> Expression;
+
+    typedef ExpressionElement<EvaluableVariable<Eigen::Matrix< double , Eigen::Dynamic , 1>>> Variable;
+
+    typedef ExpressionElement<ConstantEvaluable<>> Constant;
 }
 
 #endif // SDIFF_H

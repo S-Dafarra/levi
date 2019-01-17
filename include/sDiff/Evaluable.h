@@ -65,6 +65,8 @@ public:
 
     typedef Matrix matrix_type;
 
+    static const bool is_variable = false;
+
 // manca la derivata
 };
 

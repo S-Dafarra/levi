@@ -4,11 +4,12 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  *
  */
-#ifndef SDIFF_EXPRESSION_H
-#define SDIFF_EXPRESSION_H
+#ifndef SDIFF_EXPRESSION_ELEMENT_H
+#define SDIFF_EXPRESSION_ELEMENT_H
 
 #include <sDiff/OperatorsEvaluables.h>
 #include <memory>
+#include <type_traits>
 #include <Eigen/Core>
 #include <string>
 #include <cassert>
@@ -41,6 +42,13 @@ class sDiff::ExpressionElement {
     void construct(bool_value<false>) {
         m_evaluable = nullptr;
     }
+
+    //See https://stackoverflow.com/questions/1005476/how-to-detect-whether-there-is-a-specific-member-variable-in-class
+    template<class Matrix, typename = int>
+    struct has_equal_to_constant_operator : std::false_type { };
+
+    template<class Matrix>
+    struct has_equal_to_constant_operator<Matrix, decltype(std::declval<Evaluable>().operator=(std::declval<Matrix>()), 0)> : std::true_type { };
 
 public:
 
@@ -96,11 +104,19 @@ public:
 
     template<class EvaluableRhs>
     void operator=(const ExpressionElement<EvaluableRhs>& rhs) {
+        static_assert (!Evaluable::is_variable, "Cannot assign an expression to a variable." );
         this->m_evaluable = rhs.m_evaluable;
     }
 
+    //assign from a constant
+    template<typename Matrix>
+    void operator=(const Matrix& rhs) {
+        static_assert (has_equal_to_constant_operator<Matrix>(), "This expression cannot be set equal to a constant.");
+        assert(m_evaluable && "This expression cannot be set because the constructor was not called properly.");
+        m_evaluable->operator=(rhs);
+    }
 
 };
 
 
-#endif // SDIFF_EXPRESSION_H
+#endif // SDIFF_EXPRESSION_ELEMENT_H
