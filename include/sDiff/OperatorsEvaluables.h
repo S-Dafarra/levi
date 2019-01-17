@@ -21,6 +21,9 @@ namespace sDiff {
 
     template <class LeftEvaluable, class RightEvaluable, typename Matrix = Eigen::MatrixXd>
     class SumEvaluable;
+
+    template <class LeftEvaluable, class RightEvaluable, typename Matrix = Eigen::MatrixXd>
+    class ProductEvaluable;
 }
 
 template <typename Matrix>
@@ -77,6 +80,28 @@ public:
 
     virtual const Matrix& evaluate() final {
         this->m_evaluationBuffer = m_lhs->evaluate() + m_rhs->evaluate();
+
+        return this->m_evaluationBuffer;
+    }
+
+};
+
+template <class LeftEvaluable, class RightEvaluable, typename Matrix>
+class sDiff::ProductEvaluable : public sDiff::Evaluable<Matrix>{
+
+    std::shared_ptr<LeftEvaluable> m_lhs;
+    std::shared_ptr<RightEvaluable> m_rhs;
+
+public:
+
+    ProductEvaluable(std::shared_ptr<LeftEvaluable> lhs, std::shared_ptr<RightEvaluable> rhs)
+        : Evaluable<Matrix>(lhs->rows(), rhs->cols(), "(" + lhs->name() + ")" + " * " + "(" + rhs->name() + ")")
+        , m_lhs(lhs)
+        , m_rhs(rhs)
+    { }
+
+    virtual const Matrix& evaluate() final {
+        this->m_evaluationBuffer = m_lhs->evaluate() * m_rhs->evaluate();
 
         return this->m_evaluationBuffer;
     }

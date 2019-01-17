@@ -24,22 +24,22 @@ namespace sDiff {
 template<bool T>
 struct bool_value { static const bool value = T; };
 
-template <class Evaluable>
+template <class EvaluableT>
 class sDiff::ExpressionElement {
 
     template <class OtherEvaluable>
     friend class ExpressionElement;
 
-    std::shared_ptr<Evaluable> m_evaluable;
+    std::shared_ptr<EvaluableT> m_evaluable;
 
     template<bool value>
-    void construct(bool_value<value>) {}
+    void default_constructor(bool_value<value>) {}
 
-    void construct(bool_value<true>) {
-        m_evaluable = std::make_shared<Evaluable>();
+    void default_constructor(bool_value<true>) {
+        m_evaluable = std::make_shared<EvaluableT>();
     }
 
-    void construct(bool_value<false>) {
+    void default_constructor(bool_value<false>) {
         m_evaluable = nullptr;
     }
 
@@ -48,13 +48,13 @@ class sDiff::ExpressionElement {
     struct has_equal_to_constant_operator : std::false_type { };
 
     template<class Matrix>
-    struct has_equal_to_constant_operator<Matrix, decltype(std::declval<Evaluable>().operator=(std::declval<Matrix>()), 0)> : std::true_type { };
+    struct has_equal_to_constant_operator<Matrix, decltype(std::declval<EvaluableT>().operator=(std::declval<Matrix>()), 0)> : std::true_type { };
 
 public:
 
     ExpressionElement()
     {
-        construct(bool_value<std::is_constructible<Evaluable>::value>());
+        default_constructor(bool_value<std::is_constructible<EvaluableT>::value>());
     }
 
     template<class EvaluableOther>
@@ -65,10 +65,10 @@ public:
 
     template<class... Args >
     ExpressionElement(Args&&... args)
-        : m_evaluable(std::make_shared<Evaluable>(args...))
+        : m_evaluable(std::make_shared<EvaluableT>(args...))
     { }
 
-    std::weak_ptr<Evaluable> evaluable() {
+    std::weak_ptr<EvaluableT> evaluable() {
         return m_evaluable;
     }
 
@@ -87,24 +87,47 @@ public:
         return m_evaluable->cols();
     }
 
-    const Eigen::MatrixBase<typename Evaluable::matrix_type>& evaluate() {
+    const Eigen::MatrixBase<typename EvaluableT::matrix_type>& evaluate() {
         assert(m_evaluable);
         return m_evaluable->evaluate();
     }
 
     template<class EvaluableRhs>
-    ExpressionElement<SumEvaluable<Evaluable, EvaluableRhs, typename Evaluable::matrix_type>> operator+(const ExpressionElement<EvaluableRhs>& rhs) {
+    ExpressionElement<SumEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>> operator+(const ExpressionElement<EvaluableRhs>& rhs) {
         assert(rows() == rhs.rows());
         assert(cols() == rhs.cols());
         assert(m_evaluable);
         assert(rhs.m_evaluable);
 
-        return ExpressionElement<SumEvaluable<Evaluable, EvaluableRhs, typename Evaluable::matrix_type>>(this->m_evaluable, rhs.m_evaluable);
+        return ExpressionElement<SumEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>>(this->m_evaluable, rhs.m_evaluable);
+    }
+
+    template <typename Matrix>
+    ExpressionElement<SumEvaluable<EvaluableT, ConstantEvaluable<Matrix>, typename EvaluableT::matrix_type>> operator+(const Matrix& rhs) {
+        ExpressionElement<ConstantEvaluable<Matrix>> constant(rhs, "K");
+
+        return operator+(constant);
+    }
+
+    template<class EvaluableRhs>
+    ExpressionElement<ProductEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>> operator*(const ExpressionElement<EvaluableRhs>& rhs) {
+        assert(cols() == rhs.rows());
+        assert(m_evaluable);
+        assert(rhs.m_evaluable);
+
+        return ExpressionElement<ProductEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>>(this->m_evaluable, rhs.m_evaluable);
+    }
+
+    template <typename Matrix>
+    ExpressionElement<ProductEvaluable<EvaluableT, ConstantEvaluable<Matrix>, typename EvaluableT::matrix_type>> operator*(const Matrix& rhs) {
+        ExpressionElement<ConstantEvaluable<Matrix>> constant(rhs, "K");
+
+        return operator*(constant);
     }
 
     template<class EvaluableRhs>
     void operator=(const ExpressionElement<EvaluableRhs>& rhs) {
-        static_assert (!Evaluable::is_variable, "Cannot assign an expression to a variable." );
+        static_assert (!EvaluableT::is_variable, "Cannot assign an expression to a variable." );
         this->m_evaluable = rhs.m_evaluable;
     }
 
