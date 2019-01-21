@@ -11,10 +11,13 @@
 int main() {
     using namespace Eigen;
     using namespace sDiff;
+    MatrixXd A(MatrixXd::Identity(3,3));
     Constant a(MatrixXd::Identity(3,3), "a");
     Matrix<double,3,3> B;
     B.setIdentity();
     Constant b(3,3,"b");
+
+    auto sum  = A + a;
 
     b = B;
 
