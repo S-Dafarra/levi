@@ -18,10 +18,9 @@ int main() {
 
     b = B;
 
-    Expression c;
-    c = a + b;
+    Expression c = a + b;
     c = c * a;
-    std::cerr << c.name() << " " <<std::endl << c.evaluate() <<std::endl;
+    std::cerr << c.name() << ": " <<std::endl << c.evaluate() <<std::endl;
 
     VectorXd x_value(2);
     x_value.setRandom();
@@ -30,16 +29,25 @@ int main() {
 
     auto f = x + y;
 
-    Matrix<double,3,1> V;
+    Matrix<double,3,3> V;
     V.setIdentity();
     V *= 3;
-    auto g = c * V;
+    auto g = V * c;
     std::cerr << g.name() << " " <<std::endl << g.evaluate() <<std::endl;
+
+    Scalar test(0.5);
+    c = test* c;
+    std::cerr << c.name() << ": " <<std::endl << c.evaluate() <<std::endl;
+
+    c = 0.5* c;
+    std::cerr << c.name() << ": " <<std::endl << c.evaluate() <<std::endl;
 
 
     x = x_value;
 
     assert(x.evaluate() == x_value);
+
+
 
     return 0;
 }

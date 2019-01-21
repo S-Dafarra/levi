@@ -14,15 +14,30 @@
 #include <string>
 #include <cassert>
 
+template<bool T>
+struct bool_value { static const bool value = T; };
+
 namespace sDiff {
 
     template <class Evaluable>
     class ExpressionElement;
 
-}
+    template<bool value, typename T>
+    static ExpressionElement<ConstantEvaluable<T>> build_constant(bool_value<value>, const T& rhs) { }
 
-template<bool T>
-struct bool_value { static const bool value = T; };
+    template<typename T>
+    static ExpressionElement<ConstantEvaluable<T>> build_constant(bool_value<true>, const T& rhs) {
+        ExpressionElement<ConstantEvaluable<T>> constant(rhs);
+        return constant;
+    }
+
+    template<typename T>
+    static ExpressionElement<ConstantEvaluable<T>> build_constant(bool_value<false>, const T& rhs) {
+        ExpressionElement<ConstantEvaluable<T>> constant(rhs, "UnnamedMatrix");
+        return constant;
+    }
+
+}
 
 template <class EvaluableT>
 class sDiff::ExpressionElement {
@@ -108,27 +123,28 @@ public:
 
     template <typename Matrix>
     ExpressionElement<sDiff::Evaluable<typename EvaluableT::matrix_type>> operator+(const Matrix& rhs) {
-        ExpressionElement<ConstantEvaluable<Matrix>> constant(rhs, "K");
+        ExpressionElement<ConstantEvaluable<Matrix>> constant(rhs, "UnnamedMatrix");
 
         return operator+(constant);
     }
 
     template<class EvaluableRhs>
-    ExpressionElement<sDiff::Evaluable<typename EvaluableT::matrix_type>> operator*(const ExpressionElement<EvaluableRhs>& rhs) {
-        assert(cols() == rhs.rows());
+    ExpressionElement<sDiff::Evaluable<
+    typename matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator*(const ExpressionElement<EvaluableRhs>& rhs) {
+        assert((cols() == 1 && rows() == 1) || (rhs.cols() == 1 && rhs.rows() == 1) || (cols() == rhs.rows()) && "Dimension mismatch for product.");
         assert(m_evaluable);
         assert(rhs.m_evaluable);
 
-        ExpressionElement<sDiff::Evaluable<typename EvaluableT::matrix_type>> newExpression;
+        ExpressionElement<sDiff::Evaluable<typename matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> newExpression;
 
-        newExpression = ExpressionElement<ProductEvaluable<EvaluableT, EvaluableRhs, typename EvaluableT::matrix_type>>(this->m_evaluable, rhs.m_evaluable);
+        newExpression = ExpressionElement<ProductEvaluable<EvaluableT, EvaluableRhs>>(this->m_evaluable, rhs.m_evaluable);
 
         return newExpression;
     }
 
     template <typename Matrix>
-    ExpressionElement<sDiff::Evaluable<typename EvaluableT::matrix_type>> operator*(const Matrix& rhs) {
-        ExpressionElement<ConstantEvaluable<Matrix>> constant(rhs, "K");
+    ExpressionElement<sDiff::Evaluable<typename matrix_product_return<typename EvaluableT::matrix_type, Matrix>::type>> operator*(const Matrix& rhs) {
+        ExpressionElement<ConstantEvaluable<Matrix>> constant = build_constant(bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
 
         return operator*(constant);
     }
@@ -144,10 +160,19 @@ public:
     void operator=(const Matrix& rhs) {
         static_assert (has_equal_to_constant_operator<Matrix>(), "This expression cannot be set equal to a constant.");
         assert(m_evaluable && "This expression cannot be set because the constructor was not called properly.");
-        m_evaluable->operator=(rhs);
+        (*m_evaluable) = rhs;
     }
 
 };
+
+template <class Matrix, class EvaluableT>
+sDiff::ExpressionElement<sDiff::Evaluable<typename matrix_product_return<Matrix, typename EvaluableT::matrix_type>::type>> operator*(const Matrix& lhs, const sDiff::ExpressionElement<EvaluableT> &rhs) {
+
+    sDiff::ExpressionElement<sDiff::ConstantEvaluable<Matrix>> newConstant =
+            sDiff::build_constant<Matrix>(bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
+
+    return newConstant * rhs;
+}
 
 
 #endif // SDIFF_EXPRESSION_ELEMENT_H

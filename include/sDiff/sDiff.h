@@ -16,7 +16,9 @@ namespace sDiff {
 
     typedef ExpressionElement<EvaluableVariable<Eigen::Matrix< double , Eigen::Dynamic , 1>>> Variable;
 
-    typedef ExpressionElement<ConstantEvaluable<>> Constant;
+    typedef ExpressionElement<ConstantEvaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic>>> Constant;
+
+    typedef ExpressionElement<ConstantEvaluable<double>> Scalar;
 }
 
 #endif // SDIFF_H
