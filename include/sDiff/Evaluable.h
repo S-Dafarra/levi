@@ -133,10 +133,6 @@ public:
         return 1;
     }
 
-    void resize(Eigen::Index newRows, Eigen::Index newCols) {
-        m_evaluationBuffer.resize(newRows, newCols);
-    }
-
     std::string name() const {
         return m_name;
     }

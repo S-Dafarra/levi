@@ -19,23 +19,25 @@ int main() {
 
     auto sum  = A + a;
 
+    auto subtraction  = A - a;
+
+
     b = B;
 
     Expression c = a + b;
     c = c * a;
     std::cerr << c.name() << ": " <<std::endl << c.evaluate() <<std::endl;
 
-    VectorXd x_value(2);
-    x_value.setRandom();
-
-    Variable x(2,"x"), y(2, "y");
+    Variable x(3,"x"), y(3, "y");
 
     auto f = x + y;
 
     Matrix<double,3,3> V;
     V.setIdentity();
     V *= 3;
-    auto g = V * c;
+    Constant v(V, "V");
+    Expression g = v * c;
+    auto k = V * g;
     std::cerr << g.name() << " " <<std::endl << g.evaluate() <<std::endl;
 
     Scalar test(0.5);
@@ -45,8 +47,14 @@ int main() {
     c = 0.5* c;
     std::cerr << c.name() << ": " <<std::endl << c.evaluate() <<std::endl;
 
-
+    VectorXd x_value(3);
+    x_value.setRandom();
     x = x_value;
+    ColumnExpression testX = g*x;
+    std::cerr << testX.name() << " " <<std::endl << testX.evaluate() << std::endl <<"with x= " << x.evaluate()<<std::endl;
+    x_value.setRandom();
+    x = x_value;
+    std::cerr << testX.name() << " " <<std::endl << testX.evaluate() << std::endl <<"with x= " << x.evaluate()<<std::endl;
 
     assert(x.evaluate() == x_value);
 

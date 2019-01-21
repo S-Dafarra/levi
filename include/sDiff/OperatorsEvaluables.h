@@ -101,6 +101,9 @@ class ConstantEvaluable { };
     class SumEvaluable;
 
     template <class LeftEvaluable, class RightEvaluable>
+    class SubtractionEvaluable;
+
+    template <class LeftEvaluable, class RightEvaluable>
     class ProductEvaluable;
 }
 
@@ -160,6 +163,30 @@ public:
 
     virtual const sum_type& evaluate() final {
         this->m_evaluationBuffer = m_lhs->evaluate() + m_rhs->evaluate();
+
+        return this->m_evaluationBuffer;
+    }
+
+};
+
+template <class LeftEvaluable, class RightEvaluable>
+class sDiff::SubtractionEvaluable : public sDiff::Evaluable<typename matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
+
+    std::shared_ptr<LeftEvaluable> m_lhs;
+    std::shared_ptr<RightEvaluable> m_rhs;
+
+public:
+
+    typedef typename matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type sum_type;
+
+    SubtractionEvaluable(std::shared_ptr<LeftEvaluable> lhs, std::shared_ptr<RightEvaluable> rhs)
+        : Evaluable<sum_type>(lhs->rows(), lhs->cols(), lhs->name() + " - " + rhs->name())
+        , m_lhs(lhs)
+        , m_rhs(rhs)
+    { }
+
+    virtual const sum_type& evaluate() final {
+        this->m_evaluationBuffer = m_lhs->evaluate() - m_rhs->evaluate();
 
         return this->m_evaluationBuffer;
     }

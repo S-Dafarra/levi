@@ -132,6 +132,29 @@ public:
 
     template<class EvaluableRhs>
     ExpressionElement<sDiff::Evaluable<
+    typename matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator-(const ExpressionElement<EvaluableRhs>& rhs) {
+        assert(rows() == rhs.rows());
+        assert(cols() == rhs.cols());
+        assert(m_evaluable);
+        assert(rhs.m_evaluable);
+
+        ExpressionElement<sDiff::Evaluable<
+                typename matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> newExpression;
+
+        newExpression = ExpressionElement<SubtractionEvaluable<EvaluableT, EvaluableRhs>>(this->m_evaluable, rhs.m_evaluable);
+
+        return newExpression;
+    }
+
+    template <typename Matrix>
+    ExpressionElement<sDiff::Evaluable<typename matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& rhs) {
+        ExpressionElement<ConstantEvaluable<Matrix>> constant = build_constant(bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
+
+        return operator-(constant);
+    }
+
+    template<class EvaluableRhs>
+    ExpressionElement<sDiff::Evaluable<
     typename matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator*(const ExpressionElement<EvaluableRhs>& rhs) {
         assert((cols() == 1 && rows() == 1) || (rhs.cols() == 1 && rhs.rows() == 1) || (cols() == rhs.rows()) && "Dimension mismatch for product.");
         assert(m_evaluable);
@@ -172,7 +195,15 @@ sDiff::ExpressionElement<sDiff::Evaluable<typename matrix_sum_return<typename Ev
     sDiff::ExpressionElement<sDiff::ConstantEvaluable<Matrix>> constant =
             sDiff::build_constant(bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
 
-    return constant +rhs;
+    return constant + rhs;
+}
+
+template <typename Matrix, class EvaluableT>
+sDiff::ExpressionElement<sDiff::Evaluable<typename matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& lhs, const sDiff::ExpressionElement<EvaluableT> &rhs) {
+    sDiff::ExpressionElement<sDiff::ConstantEvaluable<Matrix>> constant =
+            sDiff::build_constant(bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
+
+    return constant - rhs;
 }
 
 template <typename Matrix, class EvaluableT>
