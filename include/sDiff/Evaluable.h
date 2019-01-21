@@ -87,8 +87,6 @@ public:
 
     typedef Matrix matrix_type;
 
-    static const bool is_variable = false;
-
 // manca la derivata
 };
 
@@ -150,8 +148,6 @@ public:
     Evaluable<Scalar>& operator*(const Evaluable& other) const = delete;
 
     typedef Scalar matrix_type;
-
-    static const bool is_variable = false;
 
 // manca la derivata
 };

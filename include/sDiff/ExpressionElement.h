@@ -19,6 +19,9 @@ struct bool_value { static const bool value = T; };
 
 namespace sDiff {
 
+    template <typename Vector>
+    class EvaluableVariable;
+
     template <class Evaluable>
     class ExpressionElement;
 
@@ -176,7 +179,7 @@ public:
 
     template<class EvaluableRhs>
     void operator=(const ExpressionElement<EvaluableRhs>& rhs) {
-        static_assert (!EvaluableT::is_variable, "Cannot assign an expression to a variable." );
+        static_assert (!std::is_base_of<sDiff::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
         this->m_evaluable = rhs.m_evaluable;
     }
 

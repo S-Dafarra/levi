@@ -13,7 +13,7 @@
 
 namespace sDiff {
 
-    template <typename Vector = Eigen::VectorXd>
+    template <typename Vector>
     class EvaluableVariable;
 }
 
@@ -78,8 +78,6 @@ public:
     }
 
     typedef Vector matrix_type;
-
-    static const bool is_variable = true;
 
 };
 
