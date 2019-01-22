@@ -37,7 +37,7 @@ int main() {
     V *= 3;
     Constant v(V, "V");
     Expression g = v * c;
-    auto k = V * g;
+    Expression k = V * g;
     std::cerr << g.name() << " " <<std::endl << g.evaluate() <<std::endl;
 
     Scalar test(0.5);

@@ -76,10 +76,14 @@ public:
     }
 
     template<class EvaluableOther>
-    ExpressionElement(const ExpressionElement<EvaluableOther>& other) = delete;
+    ExpressionElement(const ExpressionElement<EvaluableOther>& other) {
+        this = other;
+    }
 
     template<class EvaluableOther>
-    ExpressionElement(ExpressionElement<EvaluableOther>&& other) = delete;
+    ExpressionElement(ExpressionElement<EvaluableOther>&& other) {
+        *this = other;
+    }
 
     template<class... Args >
     ExpressionElement(Args&&... args)
@@ -180,7 +184,13 @@ public:
     template<class EvaluableRhs>
     void operator=(const ExpressionElement<EvaluableRhs>& rhs) {
         static_assert (!std::is_base_of<sDiff::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
-        this->m_evaluable = rhs.m_evaluable;
+        this->m_evaluable = std::dynamic_pointer_cast<EvaluableT>(rhs.m_evaluable);
+    }
+
+    template<class EvaluableRhs>
+    ExpressionElement<EvaluableT>& operator=(const ExpressionElement<EvaluableRhs>&& rhs) {
+        static_assert (!std::is_base_of<sDiff::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
+        this->m_evaluable = std::dynamic_pointer_cast<EvaluableT>(rhs.m_evaluable);
     }
 
     //assign from a constant

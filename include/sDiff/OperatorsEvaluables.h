@@ -89,7 +89,7 @@ struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar
 namespace sDiff {
 
     template <typename Matrix, class Enabler = void>
-class ConstantEvaluable { };
+    class ConstantEvaluable { };
 
     template <typename Matrix>
     class ConstantEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
