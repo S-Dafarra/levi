@@ -7,29 +7,25 @@
 #ifndef SDIFF_EVALUABLE_H
 #define SDIFF_EVALUABLE_H
 
-#include<Eigen/Core>
-#include<string>
-#include <type_traits>
-
-namespace sDiff {
-    template<typename Matrix, class Enabler = void>
-    class Evaluable { };
-
-    template <typename Matrix>
-    class Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
-
-    template <typename Scalar>
-    class Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
-}
+#include <sDiff/ForwardDeclarations.h>
 
 template<typename Matrix>
 class sDiff::Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> {
 
     std::string m_name;
 
+public:
+
+    typedef Matrix matrix_type;
+
+    typedef typename Matrix::value_type value_type;
+
+    typedef Evaluable<Eigen::Matrix<value_type, Matrix::RowsAtCompileTime, Eigen::Dynamic>> derivative_evaluable;
+
 protected:
 
     Matrix m_evaluationBuffer;
+    std::shared_ptr<derivative_evaluable> m_derivative;
 
 public:
 
@@ -37,11 +33,13 @@ public:
 
     Evaluable(const std::string& name)
         : m_name(name)
+        , m_derivative(nullptr)
     { }
 
     Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(rows, cols)
+        , m_derivative(nullptr)
     {
         m_evaluationBuffer.setZero();
     }
@@ -49,11 +47,14 @@ public:
     Evaluable(const Matrix& initialValue, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(initialValue)
+        , m_derivative(nullptr)
     { }
 
-    Evaluable(const Evaluable& other) = delete;
+    template <typename OtherMatrix>
+    Evaluable(const Evaluable<OtherMatrix>& other) = delete;
 
-    Evaluable(Evaluable&& other) = delete;
+    template <typename OtherMatrix>
+    Evaluable(Evaluable<OtherMatrix>&& other) = delete;
 
     virtual ~Evaluable() { }
 
@@ -75,6 +76,8 @@ public:
 
     virtual const Matrix& evaluate() = 0;
 
+    virtual std::shared_ptr<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) = 0;
+
     Evaluable<Matrix>& operator=(const Evaluable& other) = delete;
 
     void operator=(Evaluable&& other) = delete;
@@ -85,9 +88,6 @@ public:
 
     Evaluable<Matrix>& operator*(const Evaluable& other) const = delete;
 
-    typedef Matrix matrix_type;
-
-// manca la derivata
 };
 
 template <typename Scalar>
@@ -95,9 +95,20 @@ class sDiff::Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar
 
     std::string m_name;
 
+public:
+
+    typedef Scalar matrix_type;
+
+    typedef Scalar value_type;
+
+    typedef Evaluable<Eigen::Matrix<value_type, 1, Eigen::Dynamic>> derivative_evaluable;
+
+
 protected:
 
     Scalar m_evaluationBuffer;
+
+    std::shared_ptr<derivative_evaluable> m_derivative;
 
 public:
 
@@ -105,21 +116,26 @@ public:
 
     Evaluable(const std::string& name)
         : m_name(name)
+        , m_derivative(nullptr)
     { }
 
     Evaluable(const Scalar& initialValue, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(initialValue)
+        , m_derivative(nullptr)
     { }
 
     Evaluable(const Scalar& initialValue)
         : m_name(std::to_string(initialValue))
         , m_evaluationBuffer(initialValue)
+        , m_derivative(nullptr)
     { }
 
-    Evaluable(const Evaluable& other) = delete;
+    template <typename OtherMatrix, typename OtherDerivativeEvaluable>
+    Evaluable(const Evaluable<OtherMatrix, OtherDerivativeEvaluable>& other) = delete;
 
-    Evaluable(Evaluable&& other) = delete;
+    template <typename OtherMatrix, typename OtherDerivativeEvaluable>
+    Evaluable(Evaluable<OtherMatrix, OtherDerivativeEvaluable>&& other) = delete;
 
     virtual ~Evaluable() { }
 
@@ -137,6 +153,8 @@ public:
 
     virtual const Scalar& evaluate() = 0;
 
+    virtual std::shared_ptr<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) = 0;
+
     Evaluable<Scalar>& operator=(const Evaluable& other) = delete;
 
     void operator=(Evaluable&& other) = delete;
@@ -147,9 +165,6 @@ public:
 
     Evaluable<Scalar>& operator*(const Evaluable& other) const = delete;
 
-    typedef Scalar matrix_type;
-
-// manca la derivata
 };
 
 #endif // SDIFF_EVALUABLE_H

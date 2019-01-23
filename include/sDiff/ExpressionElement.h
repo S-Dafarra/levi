@@ -7,23 +7,14 @@
 #ifndef SDIFF_EXPRESSION_ELEMENT_H
 #define SDIFF_EXPRESSION_ELEMENT_H
 
+#include <sDiff/ForwardDeclarations.h>
 #include <sDiff/OperatorsEvaluables.h>
-#include <memory>
-#include <type_traits>
-#include <Eigen/Core>
-#include <string>
-#include <cassert>
+#include <sDiff/Variable.h>
 
 template<bool T>
 struct bool_value { static const bool value = T; };
 
 namespace sDiff {
-
-    template <typename Vector>
-    class EvaluableVariable;
-
-    template <class Evaluable>
-    class ExpressionElement;
 
     template<bool value, typename T>
     static ExpressionElement<ConstantEvaluable<T>> build_constant(bool_value<value>, const T& rhs) { }

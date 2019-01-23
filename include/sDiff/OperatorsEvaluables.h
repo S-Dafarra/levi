@@ -8,9 +8,7 @@
 #define SDIFF_OPERATORS_EVALUABLES_H
 
 #include <sDiff/Evaluable.h>
-#include <type_traits>
-#include <Eigen/Core>
-#include <memory>
+#include <sDiff/ForwardDeclarations.h>
 
 template <typename Scalar_lhs, typename Scalar_rhs>
 struct scalar_sum_return {
@@ -86,27 +84,6 @@ struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar
 };
 
 
-namespace sDiff {
-
-    template <typename Matrix, class Enabler = void>
-    class ConstantEvaluable { };
-
-    template <typename Matrix>
-    class ConstantEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
-
-    template <typename Scalar>
-    class ConstantEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
-
-    template <class LeftEvaluable, class RightEvaluable>
-    class SumEvaluable;
-
-    template <class LeftEvaluable, class RightEvaluable>
-    class SubtractionEvaluable;
-
-    template <class LeftEvaluable, class RightEvaluable>
-    class ProductEvaluable;
-}
-
 template <typename Matrix>
 class sDiff::ConstantEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> : public sDiff::Evaluable<Matrix>{
 public:
@@ -123,6 +100,12 @@ public:
         return this->m_evaluationBuffer;
     }
 
+    virtual std::shared_ptr<typename sDiff::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                  std::shared_ptr<sDiff::VariableBase> variable) final {
+        return this->m_derivative;
+    }
+
+
     void operator=(const Matrix& rhs) {
         this->m_evaluationBuffer = rhs;
     }
@@ -138,6 +121,11 @@ public:
 
     virtual const Scalar& evaluate() final {
         return this->m_evaluationBuffer;
+    }
+
+    virtual std::shared_ptr<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
+        return this->m_derivative;
     }
 
     void operator=(const Scalar& rhs) {
@@ -167,6 +155,11 @@ public:
         return this->m_evaluationBuffer;
     }
 
+    virtual std::shared_ptr<typename sDiff::Evaluable<sum_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
+        return this->m_derivative;
+    }
+
 };
 
 template <class LeftEvaluable, class RightEvaluable>
@@ -189,6 +182,11 @@ public:
         this->m_evaluationBuffer = m_lhs->evaluate() - m_rhs->evaluate();
 
         return this->m_evaluationBuffer;
+    }
+
+    virtual std::shared_ptr<typename sDiff::Evaluable<sum_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
+        return this->m_derivative;
     }
 
 };
@@ -214,6 +212,11 @@ public:
         this->m_evaluationBuffer = m_lhs->evaluate() * m_rhs->evaluate();
 
         return this->m_evaluationBuffer;
+    }
+
+    virtual std::shared_ptr<typename sDiff::Evaluable<product_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                               std::shared_ptr<sDiff::VariableBase> variable) final {
+        return this->m_derivative;
     }
 
 };
