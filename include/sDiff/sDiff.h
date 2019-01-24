@@ -10,5 +10,6 @@
 #include "Evaluable.h"
 #include "Variable.h"
 #include "Expression.h"
+#include "ExpressionImplementation.h"
 
 #endif // SDIFF_H
