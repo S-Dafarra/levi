@@ -136,20 +136,20 @@ namespace sDiff {
     template<class Evaluable, class Enabler = void>
     class RowEvaluable;
 
-    template <typename Evaluable>
-    class RowEvaluable<Evaluable, typename std::enable_if<!std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>;
+    template <typename EvaluableT>
+    class RowEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
 
-    template <typename Evaluable>
-    class RowEvaluable<Evaluable, typename std::enable_if<std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>;
+    template <typename EvaluableT>
+    class RowEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
 
-    template<class Evaluable, class Enabler = void>
+    template<class EvaluableT, class Enabler = void>
     class ElementEvaluable;
 
-    template <typename Evaluable>
-    class ElementEvaluable<Evaluable, typename std::enable_if<!std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>;
+    template <typename EvaluableT>
+    class ElementEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
 
-    template <typename Evaluable>
-    class ElementEvaluable<Evaluable, typename std::enable_if<std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>;
+    template <typename EvaluableT>
+    class ElementEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
 
     template <class LeftEvaluable, class RightEvaluable>
     class CastEvaluable;

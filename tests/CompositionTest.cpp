@@ -66,6 +66,15 @@ int main() {
 
     assert(row1.evaluate() == c.evaluate().row(0));
 
+    auto testRow = test.row(0);
+
+    auto cElement = c(0, 1);
+    std::cerr << cElement.name() << " " <<std::endl << cElement.evaluate() <<std::endl;
+    assert(cElement.evaluate() == c.evaluate()(0, 1));
+
+    auto testElement = test(0,0);
+
+
 
 
     return 0;

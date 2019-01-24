@@ -45,7 +45,6 @@ struct sDiff::scalar_product_return {
     typedef decltype (std::declval<Scalar_lhs>() * std::declval<Scalar_rhs>()) type;
 };
 
-
 template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
 struct sDiff::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
         typename std::enable_if<sDiff::is_valid_product<lhsRows, lhsCols, rhsRows, rhsCols>::value>::type> {
@@ -153,112 +152,122 @@ public:
 
 };
 
-template <typename Evaluable>
-class sDiff::RowEvaluable<Evaluable, typename std::enable_if<!std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>
-        : public sDiff::Evaluable<Eigen::Matrix<typename Evaluable::value_type, 1, Evaluable::cols_at_compile_time>>
+template <typename EvaluableT>
+class sDiff::RowEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
+        : public sDiff::Evaluable<typename EvaluableT::row_type>
 {
-    std::shared_ptr<Evaluable> m_evaluable;
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
     Eigen::Index m_row;
 
 public:
 
-    typedef Eigen::Matrix<typename Evaluable::value_type, 1, Evaluable::cols_at_compile_time> row_type;
-
-    RowEvaluable(std::shared_ptr<Evaluable> evaluable, Eigen::Index row)
-        : sDiff::Evaluable<row_type>(1, evaluable->cols(), "(" + evaluable->name() + ")(" + std::to_string(row) + ",:)")
-        , m_evaluable(evaluable)
+    RowEvaluable(const sDiff::ExpressionComponent<EvaluableT>& evaluable, Eigen::Index row)
+        : sDiff::Evaluable<typename EvaluableT::row_type>(1, evaluable.cols(), "(" + evaluable.name() + ")(" + std::to_string(row) + ",:)")
+        , m_expression(evaluable)
         , m_row(row)
     { }
 
-    virtual const row_type& evaluate() final {
-        this->m_evaluationBuffer = m_evaluable->evaluate().row(m_row);
+    virtual const typename EvaluableT::row_type& evaluate() final {
+        this->m_evaluationBuffer = m_expression.evaluate().row(m_row);
 
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<row_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
-        std::shared_ptr<typename sDiff::Evaluable<row_type>::derivative_evaluable> newDerivative;
+//    virtual std::shared_ptr<typename sDiff::Evaluable<typename EvaluableT::row_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                                                std::shared_ptr<sDiff::VariableBase> variable) final {
+//        std::shared_ptr<typename sDiff::Evaluable<typename EvaluableT::row_type>::derivative_evaluable> newDerivative;
 
-        newDerivative = std::make_shared<sDiff::RowEvaluable<typename Evaluable::derivative_evaluable>>(m_evaluable->getColumnDerivative(column, variable), m_row);
+//        newDerivative = std::make_shared<sDiff::RowEvaluable<typename EvaluableT::derivative_evaluable>>(m_evaluable->getColumnDerivative(column, variable), m_row);
 
-        return std::move(newDerivative);
-    }
+//        return std::move(newDerivative);
+//    }
 
 };
 
-template <typename Evaluable>
-class sDiff::RowEvaluable<Evaluable, typename std::enable_if<std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>
-        : public sDiff::ElementEvaluable<Evaluable>
+template <typename EvaluableT>
+class sDiff::RowEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
+        : public sDiff::Evaluable<typename EvaluableT::row_type>
 {
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
+
 public:
 
-    typedef Eigen::Matrix<typename Evaluable::value_type, 1, 1> row_type;
+    RowEvaluable(const sDiff::ExpressionComponent<EvaluableT>& expression, Eigen::Index row)
+        : sDiff::Evaluable<typename EvaluableT::row_type>(expression.name())
+        , m_expression(expression)
+    {
+        assert(row == 0);
+    }
 
-    RowEvaluable(std::shared_ptr<Evaluable> evaluable, Eigen::Index row)
-        : sDiff::ElementEvaluable<Evaluable>(evaluable, row, 0)
-    { }
+    virtual const typename EvaluableT::row_type& evaluate() final {
+        this->m_evaluationBuffer = m_expression.evaluate();
+
+        return this->m_evaluationBuffer;
+    }
+
+
+    //derivative missing. Similar to ElementEvaluable derivative
 };
 
 template <typename EvaluableT>
 class sDiff::ElementEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
         : public sDiff::Evaluable<typename EvaluableT::value_type>
 {
-    std::shared_ptr<EvaluableT> m_evaluable;
+    ExpressionComponent<EvaluableT> m_expression;
     Eigen::Index m_row, m_col;
 
 public:
 
-    ElementEvaluable(std::shared_ptr<EvaluableT> evaluable, Eigen::Index row, Eigen::Index col)
-        : sDiff::Evaluable<typename EvaluableT::value_type>("(" + evaluable->name() + ")(" + std::to_string(row) + ", " + std::to_string(col) + ")")
-        , m_evaluable(evaluable)
+    ElementEvaluable(const sDiff::ExpressionComponent<EvaluableT>& expression, Eigen::Index row, Eigen::Index col)
+        : sDiff::Evaluable<typename EvaluableT::value_type>("[" + expression.name() + "](" + std::to_string(row) + ", " + std::to_string(col) + ")")
+        , m_expression(expression)
         , m_row(row)
         , m_col(col)
     { }
 
     virtual const typename EvaluableT::value_type& evaluate() final {
-        this->m_evaluationBuffer = m_evaluable->evaluate()(m_row, m_col);
+        this->m_evaluationBuffer = m_expression.evaluate()(m_row, m_col);
 
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                std::shared_ptr<sDiff::VariableBase> variable) final {
-        assert(column == m_col);
-        std::shared_ptr<typename sDiff::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> newDerivative;
+//    virtual std::shared_ptr<typename sDiff::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                                std::shared_ptr<sDiff::VariableBase> variable) final {
+//        assert(column == m_col);
+//        std::shared_ptr<typename sDiff::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> newDerivative;
 
-        newDerivative = std::make_shared<sDiff::RowEvaluable<typename EvaluableT::derivative_evaluable>>(m_evaluable->getColumnDerivative(m_col, variable), m_row);
+//        newDerivative = std::make_shared<sDiff::RowEvaluable<typename EvaluableT::derivative_evaluable>>(m_evaluable->getColumnDerivative(m_col, variable), m_row);
 
-        return std::move(newDerivative);
-    }
+//        return std::move(newDerivative);
+//    }
 };
 
 template <typename EvaluableT>
 class sDiff::ElementEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
         : public sDiff::Evaluable<typename EvaluableT::value_type> {
 
-    std::shared_ptr<EvaluableT> m_evaluable;
+    ExpressionComponent<EvaluableT> m_expression;
 
 public:
 
-    ElementEvaluable(std::shared_ptr<EvaluableT> evaluable, Eigen::Index row, Eigen::Index col)
-        : sDiff::Evaluable<typename EvaluableT::value_type>(evaluable->name())
-        , m_evaluable(evaluable)
+    ElementEvaluable(const sDiff::ExpressionComponent<EvaluableT>& expression, Eigen::Index row, Eigen::Index col)
+        : sDiff::Evaluable<typename EvaluableT::value_type>(expression.name())
+        , m_expression(expression)
     {
-        assert(row == 1 && col == 1);
+        assert(row == 0 && col == 0);
     }
 
     virtual const typename EvaluableT::value_type& evaluate() final {
-        this->m_evaluationBuffer = m_evaluable->evaluate();
+        this->m_evaluationBuffer = m_expression.evaluate();
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
-        assert(column == 0);
+//    virtual std::shared_ptr<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
+//        assert(column == 0);
 
-        return std::move(m_evaluable->getColumnDerivative(0, variable));
-    }
+//        return std::move(m_evaluable->getColumnDerivative(0, variable));
+//    }
 };
 
 template <class LeftEvaluable, class RightEvaluable>

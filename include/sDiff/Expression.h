@@ -104,9 +104,12 @@ public:
     template<typename Matrix>
     void operator=(const Matrix& rhs);
 
-    ExpressionComponent<sDiff::Evaluable<typename RowEvaluable<EvaluableT>::row_type>> row(Eigen::Index row);
+    ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>> row(Eigen::Index row);
+
+    ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> operator()(Eigen::Index row, Eigen::Index col);
 
 };
+
 
 template <typename Matrix, class EvaluableT>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator+(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs);

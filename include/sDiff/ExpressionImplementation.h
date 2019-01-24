@@ -205,14 +205,27 @@ void sDiff::ExpressionComponent<EvaluableT>::operator=(const Matrix& rhs) {
 }
 
 template <class EvaluableT>
-sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::RowEvaluable<EvaluableT>::row_type>> sDiff::ExpressionComponent<EvaluableT>::row(Eigen::Index row) {
+sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>> sDiff::ExpressionComponent<EvaluableT>::row(Eigen::Index row) {
     assert(row < this->rows());
     assert(m_evaluable && "Cannot extract a row from this expression");
 
-    ExpressionComponent<RowEvaluable<EvaluableT>> selectedRow(m_evaluable, row);
+    ExpressionComponent<RowEvaluable<EvaluableT>> selectedRow(*this, row);
     assert(selectedRow.m_evaluable);
 
     return selectedRow;
+}
+
+template<class EvaluableT>
+sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> sDiff::ExpressionComponent<EvaluableT>::operator()(Eigen::Index row, Eigen::Index col)
+{
+    assert(row < this->rows());
+    assert(col < this->cols());
+    assert(m_evaluable && "Cannot extract an element from this expression");
+
+    ExpressionComponent<ElementEvaluable<EvaluableT>> selectedElement(*this, row, col);
+    assert(selectedElement.m_evaluable);
+
+    return selectedElement;
 }
 
 //end of ExpressionComponent implementation

@@ -24,6 +24,8 @@ public:
 
     static const Eigen::Index cols_at_compile_time = Matrix::ColsAtCompileTime;
 
+    typedef Eigen::Matrix<value_type, 1, cols_at_compile_time> row_type;
+
     typedef Evaluable<Eigen::Matrix<value_type, rows_at_compile_time, Eigen::Dynamic>> derivative_evaluable;
 
 protected:
@@ -106,6 +108,8 @@ public:
     typedef Scalar matrix_type;
 
     typedef Scalar value_type;
+
+    typedef Scalar row_type;
 
     typedef Evaluable<Eigen::Matrix<value_type, 1, Eigen::Dynamic>> derivative_evaluable;
 
