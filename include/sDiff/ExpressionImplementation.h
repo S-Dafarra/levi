@@ -9,41 +9,56 @@
 
 #include <sDiff/Expression.h>
 
+template<bool value, typename T>
+static sDiff::ExpressionComponent<sDiff::ConstantEvaluable<T>> sDiff::build_constant(sDiff::bool_value<value>, const T& rhs) { }
+
+template<typename T>
+static sDiff::ExpressionComponent<sDiff::ConstantEvaluable<T>> sDiff::build_constant(sDiff::bool_value<true>, const T& rhs) {
+    sDiff::ExpressionComponent<ConstantEvaluable<T>> constant(rhs);
+    return constant;
+}
+
+template<typename T>
+static sDiff::ExpressionComponent<sDiff::ConstantEvaluable<T>> sDiff::build_constant(sDiff::bool_value<false>, const T& rhs) {
+    sDiff::ExpressionComponent<sDiff::ConstantEvaluable<T>> constant(rhs, "UnnamedMatrix");
+    return constant;
+}
+
 template <class EvaluableT>
 template<bool value>
-void sDiff::ExpressionComponent<EvaluableT>::default_constructor(bool_value<value>)
+void sDiff::ExpressionComponent<EvaluableT>::default_constructor(sDiff::bool_value<value>)
 { }
 
 template <class EvaluableT>
-void sDiff::ExpressionComponent<EvaluableT>::default_constructor(bool_value<true>) {
+void sDiff::ExpressionComponent<EvaluableT>::default_constructor(sDiff::bool_value<true>) {
     m_evaluable = std::make_shared<EvaluableT>();
 }
 
 template <class EvaluableT>
-void sDiff::ExpressionComponent<EvaluableT>::default_constructor(bool_value<false>) {
+void sDiff::ExpressionComponent<EvaluableT>::default_constructor(sDiff::bool_value<false>) {
     m_evaluable = nullptr;
 }
 
 template <class EvaluableT>
 template<bool value, typename OtherEvaluable>
-void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(bool_value<value>, std::shared_ptr<OtherEvaluable> other) {}
+void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(sDiff::bool_value<value>, std::shared_ptr<OtherEvaluable> other) {}
 
 template <class EvaluableT>
 template<typename OtherEvaluable>
-void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(bool_value<true>, std::shared_ptr<OtherEvaluable> other) {
+void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(sDiff::bool_value<true>, std::shared_ptr<OtherEvaluable> other) {
     m_evaluable = other;
 }
 
 template <class EvaluableT>
 template<typename OtherEvaluable>
-void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(bool_value<false>, std::shared_ptr<OtherEvaluable> other) {
+void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(sDiff::bool_value<false>, std::shared_ptr<OtherEvaluable> other) {
     m_evaluable = std::make_shared<sDiff::CastEvaluable<EvaluableT, OtherEvaluable>>(other);
 }
 
 template <class EvaluableT>
 sDiff::ExpressionComponent<EvaluableT>::ExpressionComponent()
 {
-    default_constructor(bool_value<std::is_constructible<EvaluableT>::value>());
+    default_constructor(sDiff::bool_value<std::is_constructible<EvaluableT>::value>());
 }
 
 template <class EvaluableT>
@@ -112,7 +127,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename matrix_sum_return<typename 
 template <class EvaluableT>
 template <typename Matrix>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> sDiff::ExpressionComponent<EvaluableT>::operator+(const Matrix& rhs) {
-    ExpressionComponent<ConstantEvaluable<Matrix>> constant = build_constant(bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
+    ExpressionComponent<ConstantEvaluable<Matrix>> constant = build_constant(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
 
     return operator+(constant);
 }
@@ -136,7 +151,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename matrix_sum_return<typename 
 template <class EvaluableT>
 template <typename Matrix>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> sDiff::ExpressionComponent<EvaluableT>::operator-(const Matrix& rhs) {
-    ExpressionComponent<ConstantEvaluable<Matrix>> constant = build_constant(bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
+    ExpressionComponent<ConstantEvaluable<Matrix>> constant = build_constant(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
 
     return operator-(constant);
 }
@@ -158,7 +173,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename matrix_product_return<typen
 template <class EvaluableT>
 template <typename Matrix>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename matrix_product_return<typename EvaluableT::matrix_type, Matrix>::type>> sDiff::ExpressionComponent<EvaluableT>::operator*(const Matrix& rhs) {
-    ExpressionComponent<ConstantEvaluable<Matrix>> constant = build_constant(bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
+    ExpressionComponent<ConstantEvaluable<Matrix>> constant = build_constant(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
 
     return operator*(constant);
 }
@@ -167,7 +182,7 @@ template <class EvaluableT>
 template<class EvaluableRhs>
 sDiff::ExpressionComponent<EvaluableT>& sDiff::ExpressionComponent<EvaluableT>::operator=(const ExpressionComponent<EvaluableRhs>& rhs) {
     static_assert (!std::is_base_of<sDiff::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
-    casted_assignement(bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs.m_evaluable);
+    casted_assignement(sDiff::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs.m_evaluable);
     return *this;
 }
 
@@ -175,7 +190,7 @@ template <class EvaluableT>
 template<class EvaluableRhs>
 sDiff::ExpressionComponent<EvaluableT>& sDiff::ExpressionComponent<EvaluableT>::operator=(const ExpressionComponent<EvaluableRhs>&& rhs) {
     static_assert (!std::is_base_of<sDiff::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
-    casted_assignement(bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs.m_evaluable);
+    casted_assignement(sDiff::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs.m_evaluable);
     return *this;
 }
 
@@ -204,7 +219,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::RowEvaluable<Evaluab
 template <typename Matrix, class EvaluableT>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator+(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs) {
     sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Matrix>> constant =
-            sDiff::build_constant(bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
+            sDiff::build_constant(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
 
     return constant + rhs;
 }
@@ -212,7 +227,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename matrix_sum_return<typename 
 template <typename Matrix, class EvaluableT>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs) {
     sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Matrix>> constant =
-            sDiff::build_constant(bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
+            sDiff::build_constant(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
 
     return constant - rhs;
 }
@@ -221,7 +236,7 @@ template <typename Matrix, class EvaluableT>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename matrix_product_return<Matrix, typename EvaluableT::matrix_type>::type>> operator*(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs) {
 
     sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Matrix>> newConstant =
-            sDiff::build_constant<Matrix>(bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
+            sDiff::build_constant<Matrix>(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
 
     return newConstant * rhs;
 }

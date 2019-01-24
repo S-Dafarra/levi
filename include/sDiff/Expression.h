@@ -11,25 +11,16 @@
 #include <sDiff/OperatorsEvaluables.h>
 #include <sDiff/Variable.h>
 
-template<bool T>
-struct bool_value { static const bool value = T; };
-
 namespace sDiff {
 
     template<bool value, typename T>
-    static ExpressionComponent<ConstantEvaluable<T>> build_constant(bool_value<value>, const T& rhs) { }
+    static ExpressionComponent<ConstantEvaluable<T>> build_constant(bool_value<value>, const T& rhs);
 
     template<typename T>
-    static ExpressionComponent<ConstantEvaluable<T>> build_constant(bool_value<true>, const T& rhs) {
-        ExpressionComponent<ConstantEvaluable<T>> constant(rhs);
-        return constant;
-    }
+    static ExpressionComponent<ConstantEvaluable<T>> build_constant(bool_value<true>, const T& rhs);
 
     template<typename T>
-    static ExpressionComponent<ConstantEvaluable<T>> build_constant(bool_value<false>, const T& rhs) {
-        ExpressionComponent<ConstantEvaluable<T>> constant(rhs, "UnnamedMatrix");
-        return constant;
-    }
+    static ExpressionComponent<ConstantEvaluable<T>> build_constant(bool_value<false>, const T& rhs);
 
 }
 
@@ -42,11 +33,11 @@ class sDiff::ExpressionComponent {
     std::shared_ptr<EvaluableT> m_evaluable;
 
     template<bool value>
-    void default_constructor(bool_value<value>);
+    void default_constructor(sDiff::bool_value<value>);
 
-    void default_constructor(bool_value<true>);
+    void default_constructor(sDiff::bool_value<true>);
 
-    void default_constructor(bool_value<false>);
+    void default_constructor(sDiff::bool_value<false>);
 
     //See https://stackoverflow.com/questions/1005476/how-to-detect-whether-there-is-a-specific-member-variable-in-class
     template<class Matrix, typename = int>
@@ -56,13 +47,13 @@ class sDiff::ExpressionComponent {
     struct has_equal_to_constant_operator<Matrix, decltype(std::declval<EvaluableT>().operator=(std::declval<Matrix>()), 0)> : std::true_type { };
 
     template<bool value, typename OtherEvaluable>
-    void casted_assignement(bool_value<value>, std::shared_ptr<OtherEvaluable> other);
+    void casted_assignement(sDiff::bool_value<value>, std::shared_ptr<OtherEvaluable> other);
 
     template<typename OtherEvaluable>
-    void casted_assignement(bool_value<true>, std::shared_ptr<OtherEvaluable> other);
+    void casted_assignement(sDiff::bool_value<true>, std::shared_ptr<OtherEvaluable> other);
 
     template<typename OtherEvaluable>
-    void casted_assignement(bool_value<false>, std::shared_ptr<OtherEvaluable> other);
+    void casted_assignement(sDiff::bool_value<false>, std::shared_ptr<OtherEvaluable> other);
 
 public:
 

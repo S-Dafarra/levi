@@ -15,6 +15,10 @@
 #include <cassert>
 
 namespace sDiff {
+
+    template<bool T>
+    struct bool_value { };
+
     template<typename Matrix, class Enabler = void>
     class Evaluable;
 
