@@ -36,10 +36,10 @@ namespace sDiff {
     class EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
 
     template <class Evaluable>
-    class ExpressionElement;
+    class ExpressionComponent;
 
     template <typename Matrix, class Enabler = void>
-    class ConstantEvaluable { };
+    class ConstantEvaluable;
 
     template <typename Matrix>
     class ConstantEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
@@ -56,15 +56,36 @@ namespace sDiff {
     template <class LeftEvaluable, class RightEvaluable>
     class ProductEvaluable;
 
-    typedef ExpressionElement<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic >>> Expression;
+    template<class Evaluable, class Enabler = void>
+    class RowEvaluable;
 
-    typedef ExpressionElement<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , 1 >>> ColumnExpression;
+    template <typename Evaluable>
+    class RowEvaluable<Evaluable, typename std::enable_if<!std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>;
 
-    typedef ExpressionElement<EvaluableVariable<Eigen::Matrix< double , Eigen::Dynamic , 1>>> Variable;
+    template <typename Evaluable>
+    class RowEvaluable<Evaluable, typename std::enable_if<std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>;
 
-    typedef ExpressionElement<ConstantEvaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic>>> Constant;
+    template<class Evaluable, class Enabler = void>
+    class ElementEvaluable;
 
-    typedef ExpressionElement<ConstantEvaluable<double>> Scalar;
+    template <typename Evaluable>
+    class ElementEvaluable<Evaluable, typename std::enable_if<!std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>;
+
+    template <typename Evaluable>
+    class ElementEvaluable<Evaluable, typename std::enable_if<std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>;
+
+    template <class LeftEvaluable, class RightEvaluable>
+    class CastEvaluable;
+
+    typedef ExpressionComponent<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic >>> Expression;
+
+    typedef ExpressionComponent<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , 1 >>> ColumnExpression;
+
+    typedef ExpressionComponent<EvaluableVariable<Eigen::Matrix< double , Eigen::Dynamic , 1>>> Variable;
+
+    typedef ExpressionComponent<ConstantEvaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic>>> Constant;
+
+    typedef ExpressionComponent<ConstantEvaluable<double>> Scalar;
 }
 
 #endif // SDIFF_FORWARDDECLARATIONS_H

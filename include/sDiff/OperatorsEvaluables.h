@@ -221,4 +221,136 @@ public:
 
 };
 
+template <typename Evaluable>
+class sDiff::RowEvaluable<Evaluable, typename std::enable_if<!std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>
+        : public sDiff::Evaluable<Eigen::Matrix<typename Evaluable::value_type, 1, Evaluable::cols_at_compile_time>>
+{
+    std::shared_ptr<Evaluable> m_evaluable;
+    Eigen::Index m_row;
+
+public:
+
+    typedef Eigen::Matrix<typename Evaluable::value_type, 1, Evaluable::cols_at_compile_time> row_type;
+
+    RowEvaluable(std::shared_ptr<Evaluable> evaluable, Eigen::Index row)
+        : sDiff::Evaluable<row_type>(1, evaluable->cols(), "(" + evaluable->name() + ")(" + std::to_string(row) + ",:)")
+        , m_evaluable(evaluable)
+        , m_row(row)
+    { }
+
+    virtual const row_type& evaluate() final {
+        this->m_evaluationBuffer = m_evaluable->evaluate().row(m_row);
+
+        return this->m_evaluationBuffer;
+    }
+
+    virtual std::shared_ptr<typename sDiff::Evaluable<row_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
+        std::shared_ptr<typename sDiff::Evaluable<row_type>::derivative_evaluable> newDerivative;
+
+        newDerivative = std::make_shared<sDiff::RowEvaluable<typename Evaluable::derivative_evaluable>>(m_evaluable->getColumnDerivative(column, variable), m_row);
+
+        return std::move(newDerivative);
+    }
+
+};
+
+template <typename Evaluable>
+class sDiff::RowEvaluable<Evaluable, typename std::enable_if<std::is_arithmetic<typename Evaluable::matrix_type>::value>::type>
+        : public sDiff::ElementEvaluable<Evaluable>
+{
+public:
+
+    typedef Eigen::Matrix<typename Evaluable::value_type, 1, 1> row_type;
+
+    RowEvaluable(std::shared_ptr<Evaluable> evaluable, Eigen::Index row)
+        : sDiff::ElementEvaluable<Evaluable>(evaluable, row, 0)
+    { }
+};
+
+template <typename EvaluableT>
+class sDiff::ElementEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
+        : public sDiff::Evaluable<typename EvaluableT::value_type>
+{
+    std::shared_ptr<EvaluableT> m_evaluable;
+    Eigen::Index m_row, m_col;
+
+public:
+
+    ElementEvaluable(std::shared_ptr<EvaluableT> evaluable, Eigen::Index row, Eigen::Index col)
+        : sDiff::Evaluable<typename EvaluableT::value_type>("(" + evaluable->name() + ")(" + std::to_string(row) + ", " + std::to_string(col) + ")")
+        , m_evaluable(evaluable)
+        , m_row(row)
+        , m_col(col)
+    { }
+
+    virtual const typename EvaluableT::value_type& evaluate() final {
+        this->m_evaluationBuffer = m_evaluable->evaluate()(m_row, m_col);
+
+        return this->m_evaluationBuffer;
+    }
+
+    virtual std::shared_ptr<typename sDiff::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                                std::shared_ptr<sDiff::VariableBase> variable) final {
+        assert(column == m_col);
+        std::shared_ptr<typename sDiff::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> newDerivative;
+
+        newDerivative = std::make_shared<sDiff::RowEvaluable<typename EvaluableT::derivative_evaluable>>(m_evaluable->getColumnDerivative(m_col, variable), m_row);
+
+        return std::move(newDerivative);
+    }
+};
+
+template <typename EvaluableT>
+class sDiff::ElementEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
+        : public sDiff::Evaluable<typename EvaluableT::value_type> {
+
+    std::shared_ptr<EvaluableT> m_evaluable;
+
+public:
+
+    ElementEvaluable(std::shared_ptr<EvaluableT> evaluable, Eigen::Index row, Eigen::Index col)
+        : sDiff::Evaluable<typename EvaluableT::value_type>(evaluable->name())
+        , m_evaluable(evaluable)
+    {
+        assert(row == 1 && col == 1);
+    }
+
+    virtual const typename EvaluableT::value_type& evaluate() final {
+        this->m_evaluationBuffer = m_evaluable->evaluate();
+        return this->m_evaluationBuffer;
+    }
+
+    virtual std::shared_ptr<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
+        assert(column == 0);
+
+        return std::move(m_evaluable->getColumnDerivative(0, variable));
+    }
+};
+
+template <class LeftEvaluable, class RightEvaluable>
+class sDiff::CastEvaluable : public sDiff::Evaluable<typename LeftEvaluable::matrix_type> {
+
+    std::shared_ptr<RightEvaluable> m_rhs;
+
+public:
+
+    CastEvaluable(std::shared_ptr<RightEvaluable> rhs)
+        : Evaluable<typename LeftEvaluable::matrix_type>(rhs->rows(), rhs->cols(), "")
+        , m_rhs(rhs)
+    { }
+
+    virtual const typename LeftEvaluable::matrix_type& evaluate() final {
+        this->m_evaluationBuffer = m_rhs->evaluate();
+
+        return this->m_evaluationBuffer;
+    }
+
+    virtual std::shared_ptr<typename sDiff::Evaluable<typename LeftEvaluable::matrix_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                                                      std::shared_ptr<sDiff::VariableBase> variable) final {
+        return std::make_shared<CastEvaluable<typename sDiff::Evaluable<typename LeftEvaluable::matrix_type>::derivative_evaluable, typename RightEvaluable::derivative_evaluable>>(m_rhs->getColumnDerivative(column, variable));
+    }
+};
+
 #endif // SDIFF_OPERATORS_H

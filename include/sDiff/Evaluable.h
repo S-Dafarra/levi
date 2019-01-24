@@ -20,7 +20,11 @@ public:
 
     typedef typename Matrix::value_type value_type;
 
-    typedef Evaluable<Eigen::Matrix<value_type, Matrix::RowsAtCompileTime, Eigen::Dynamic>> derivative_evaluable;
+    static const Eigen::Index rows_at_compile_time = Matrix::RowsAtCompileTime;
+
+    static const Eigen::Index cols_at_compile_time = Matrix::ColsAtCompileTime;
+
+    typedef Evaluable<Eigen::Matrix<value_type, rows_at_compile_time, Eigen::Dynamic>> derivative_evaluable;
 
 protected:
 
@@ -76,7 +80,9 @@ public:
 
     virtual const Matrix& evaluate() = 0;
 
-    virtual std::shared_ptr<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) = 0;
+    virtual std::shared_ptr<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+        return nullptr;
+    }
 
     Evaluable<Matrix>& operator=(const Evaluable& other) = delete;
 
@@ -153,7 +159,9 @@ public:
 
     virtual const Scalar& evaluate() = 0;
 
-    virtual std::shared_ptr<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) = 0;
+    virtual std::shared_ptr<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+        return nullptr;
+    }
 
     Evaluable<Scalar>& operator=(const Evaluable& other) = delete;
 

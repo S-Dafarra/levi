@@ -58,6 +58,12 @@ int main() {
 
     assert(x.evaluate() == x_value);
 
+    auto row1 = c.row(0);
+
+    row1.evaluate();
+
+    assert(row1.evaluate() == c.evaluate().row(0));
+
 
 
     return 0;

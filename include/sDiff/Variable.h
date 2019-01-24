@@ -44,6 +44,10 @@ public:
 
     typedef typename Vector::value_type value_type;
 
+    static const Eigen::Index rows_at_compile_time = Vector::RowsAtCompileTime;
+
+    static const Eigen::Index cols_at_compile_time = 1;
+
     typedef Evaluable<Eigen::Matrix<value_type, Vector::RowsAtCompileTime, Eigen::Dynamic>> derivative_evaluable;
 
 
