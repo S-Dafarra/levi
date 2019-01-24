@@ -64,17 +64,17 @@ struct sDiff::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>,
 };
 
 template <class LeftEvaluable, class RightEvaluable>
-class sDiff::SumEvaluable : public sDiff::Evaluable<typename matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
+class sDiff::SumEvaluable : public sDiff::Evaluable<typename sDiff::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
 
     sDiff::ExpressionComponent<LeftEvaluable> m_lhs;
     sDiff::ExpressionComponent<RightEvaluable> m_rhs;
 
 public:
 
-    typedef typename matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type sum_type;
+    typedef typename sDiff::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type sum_type;
 
     SumEvaluable(const sDiff::ExpressionComponent<LeftEvaluable>& lhs, const sDiff::ExpressionComponent<RightEvaluable>& rhs)
-        : Evaluable<sum_type>(lhs.rows(), lhs.cols(), lhs.name() + " + " + rhs.name())
+        : sDiff::Evaluable<sum_type>(lhs.rows(), lhs.cols(), lhs.name() + " + " + rhs.name())
         , m_lhs(lhs)
         , m_rhs(rhs)
     { }
@@ -85,25 +85,25 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<sum_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
-        return this->m_derivative;
-    }
+//    virtual std::shared_ptr<typename sDiff::Evaluable<sum_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
+//        return this->m_derivative;
+//    }
 
 };
 
 template <class LeftEvaluable, class RightEvaluable>
-class sDiff::SubtractionEvaluable : public sDiff::Evaluable<typename matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
+class sDiff::SubtractionEvaluable : public sDiff::Evaluable<typename sDiff::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
 
     sDiff::ExpressionComponent<LeftEvaluable> m_lhs;
     sDiff::ExpressionComponent<RightEvaluable> m_rhs;
 
 public:
 
-    typedef typename matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type sum_type;
+    typedef typename sDiff::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type sum_type;
 
     SubtractionEvaluable(const sDiff::ExpressionComponent<LeftEvaluable>& lhs, const sDiff::ExpressionComponent<RightEvaluable>& rhs)
-        : Evaluable<sum_type>(lhs.rows(), lhs.cols(), lhs.name() + " - " + rhs.name())
+        : sDiff::Evaluable<sum_type>(lhs.rows(), lhs.cols(), lhs.name() + " - " + rhs.name())
         , m_lhs(lhs)
         , m_rhs(rhs)
     { }
@@ -114,10 +114,10 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<sum_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
-        return this->m_derivative;
-    }
+//    virtual std::shared_ptr<typename sDiff::Evaluable<sum_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
+//        return this->m_derivative;
+//    }
 
 };
 
@@ -133,7 +133,7 @@ public:
     typedef typename sDiff::matrix_product_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type product_type;
 
     ProductEvaluable(const sDiff::ExpressionComponent<LeftEvaluable>& lhs, const sDiff::ExpressionComponent<RightEvaluable>& rhs)
-        : Evaluable<product_type>(lhs.rows(), rhs.cols(), "(" + lhs.name() + ")" + " * " + "(" + rhs.name() + ")")
+        : sDiff::Evaluable<product_type>(lhs.rows(), rhs.cols(), "(" + lhs.name() + ")" + " * " + "(" + rhs.name() + ")")
         , m_lhs(lhs)
         , m_rhs(rhs)
     { }
@@ -145,10 +145,10 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<product_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                               std::shared_ptr<sDiff::VariableBase> variable) final {
-        return this->m_derivative;
-    }
+//    virtual std::shared_ptr<typename sDiff::Evaluable<product_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                               std::shared_ptr<sDiff::VariableBase> variable) final {
+//        return this->m_derivative;
+//    }
 
 };
 
@@ -213,7 +213,7 @@ template <typename EvaluableT>
 class sDiff::ElementEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
         : public sDiff::Evaluable<typename EvaluableT::value_type>
 {
-    ExpressionComponent<EvaluableT> m_expression;
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
     Eigen::Index m_row, m_col;
 
 public:
@@ -246,7 +246,7 @@ template <typename EvaluableT>
 class sDiff::ElementEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
         : public sDiff::Evaluable<typename EvaluableT::value_type> {
 
-    ExpressionComponent<EvaluableT> m_expression;
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
 
 public:
 
@@ -278,7 +278,7 @@ class sDiff::CastEvaluable : public sDiff::Evaluable<typename LeftEvaluable::mat
 public:
 
     CastEvaluable(const sDiff::ExpressionComponent<RightEvaluable>& rhs)
-        : Evaluable<typename LeftEvaluable::matrix_type>(rhs.rows(), rhs.cols(), rhs.name())
+        : sDiff::Evaluable<typename LeftEvaluable::matrix_type>(rhs.rows(), rhs.cols(), rhs.name())
         , m_rhs(rhs)
     { }
 

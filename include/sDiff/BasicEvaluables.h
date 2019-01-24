@@ -16,22 +16,21 @@ class sDiff::ConstantEvaluable<Matrix, typename std::enable_if<!std::is_arithmet
 public:
 
     ConstantEvaluable(const Matrix& constant, std::string name)
-        : Evaluable<Matrix>(constant, name)
+        : sDiff::Evaluable<Matrix>(constant, name)
     { }
 
     ConstantEvaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
-        : Evaluable<Matrix>(rows, cols, name)
+        : sDiff::Evaluable<Matrix>(rows, cols, name)
     { }
 
     virtual const Matrix& evaluate() final {
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                  std::shared_ptr<sDiff::VariableBase> variable) final {
-        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
-    }
-
+//    virtual std::shared_ptr<typename sDiff::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                  std::shared_ptr<sDiff::VariableBase> variable) final {
+//        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
+//    }
 
     void operator=(const Matrix& rhs) {
         this->m_evaluationBuffer = rhs;
@@ -43,17 +42,17 @@ class sDiff::ConstantEvaluable<Scalar, typename std::enable_if<std::is_arithmeti
 public:
 
     ConstantEvaluable(const Scalar& constant)
-        : Evaluable<Scalar>(constant)
+        : sDiff::Evaluable<Scalar>(constant)
     { }
 
     virtual const Scalar& evaluate() final {
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
-        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
-    }
+//    virtual std::shared_ptr<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
+//        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
+//    }
 
     void operator=(const Scalar& rhs) {
         this->m_evaluationBuffer = rhs;
@@ -66,7 +65,7 @@ public:
 
 
     NullEvaluable(Eigen::Index rows, Eigen::Index cols)
-        : Evaluable<Matrix>(rows, cols, "0")
+        : sDiff::Evaluable<Matrix>(rows, cols, "0")
     {
         this->m_evaluationBuffer.setZero();
     }
@@ -75,10 +74,10 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
-        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
-    }
+//    virtual std::shared_ptr<typename sDiff::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
+//        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
+//    }
 };
 
 template <typename Scalar>
@@ -86,7 +85,7 @@ class sDiff::NullEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Sc
 public:
 
     NullEvaluable(const Scalar& constant)
-        : Evaluable<Scalar>(constant)
+        : sDiff::Evaluable<Scalar>(constant)
     {
         this->m_evaluationBuffer = 0;
     }
@@ -95,10 +94,10 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
-        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
-    }
+//    virtual std::shared_ptr<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
+//        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
+//    }
 };
 
 template <typename Matrix>
@@ -107,7 +106,7 @@ public:
 
 
     IdentityEvaluable(Eigen::Index rows, Eigen::Index cols)
-        : Evaluable<Matrix>(rows, cols, "1")
+        : sDiff::Evaluable<Matrix>(rows, cols, "1")
     {
         this->m_evaluationBuffer.setIdentity();
     }
@@ -116,10 +115,10 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
-        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
-    }
+//    virtual std::shared_ptr<typename sDiff::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
+//        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
+//    }
 };
 
 template <typename Scalar>
@@ -127,17 +126,17 @@ class sDiff::IdentityEvaluable<Scalar, typename std::enable_if<std::is_arithmeti
 public:
 
     IdentityEvaluable()
-        : Evaluable<Scalar>(1)
+        : sDiff::Evaluable<Scalar>(1)
     { }
 
     virtual const Scalar& evaluate() final {
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
-        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
-    }
+//    virtual std::shared_ptr<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
+//        return std::make_shared<NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
+//    }
 };
 
 #endif // SDIFF_BASICEVALUABLES_H

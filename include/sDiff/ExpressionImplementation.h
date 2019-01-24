@@ -112,13 +112,13 @@ const typename EvaluableT::matrix_type &sDiff::ExpressionComponent<EvaluableT>::
 
 template <class EvaluableT>
 template<class EvaluableRhs>
-sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> sDiff::ExpressionComponent<EvaluableT>::operator+(const ExpressionComponent<EvaluableRhs>& rhs) {
+sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> sDiff::ExpressionComponent<EvaluableT>::operator+(const sDiff::ExpressionComponent<EvaluableRhs>& rhs) {
     assert(rows() == rhs.rows());
     assert(cols() == rhs.cols());
     assert(m_evaluable);
     assert(rhs.m_evaluable);
 
-    ExpressionComponent<sDiff::Evaluable<
+    sDiff::ExpressionComponent<sDiff::Evaluable<
             typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> newExpression;
 
     newExpression = sDiff::ExpressionComponent<sDiff::SumEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
@@ -136,7 +136,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<ty
 
 template <class EvaluableT>
 template<class EvaluableRhs>
-sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> sDiff::ExpressionComponent<EvaluableT>::operator-(const ExpressionComponent<EvaluableRhs>& rhs) {
+sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> sDiff::ExpressionComponent<EvaluableT>::operator-(const sDiff::ExpressionComponent<EvaluableRhs>& rhs) {
     assert(rows() == rhs.rows());
     assert(cols() == rhs.cols());
     assert(m_evaluable);
@@ -159,14 +159,14 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<ty
 
 template <class EvaluableT>
 template<class EvaluableRhs>
-sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> sDiff::ExpressionComponent<EvaluableT>::operator*(const ExpressionComponent<EvaluableRhs>& rhs) {
+sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> sDiff::ExpressionComponent<EvaluableT>::operator*(const sDiff::ExpressionComponent<EvaluableRhs>& rhs) {
     assert((cols() == 1 && rows() == 1) || (rhs.cols() == 1 && rhs.rows() == 1) || (cols() == rhs.rows()) && "Dimension mismatch for product.");
     assert(m_evaluable);
     assert(rhs.m_evaluable);
 
     sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> newExpression;
 
-    newExpression = sDiff::ExpressionComponent<ProductEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
+    newExpression = sDiff::ExpressionComponent<sDiff::ProductEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
 
     return newExpression;
 }
@@ -174,14 +174,14 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_retur
 template <class EvaluableT>
 template <typename Matrix>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, Matrix>::type>> sDiff::ExpressionComponent<EvaluableT>::operator*(const Matrix& rhs) {
-    sDiff::ExpressionComponent<ConstantEvaluable<Matrix>> constant = sDiff::build_constant(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
+    sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Matrix>> constant = sDiff::build_constant(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
 
     return operator*(constant);
 }
 
 template <class EvaluableT>
 template<class EvaluableRhs>
-sDiff::ExpressionComponent<EvaluableT>& sDiff::ExpressionComponent<EvaluableT>::operator=(const ExpressionComponent<EvaluableRhs>& rhs) {
+sDiff::ExpressionComponent<EvaluableT>& sDiff::ExpressionComponent<EvaluableT>::operator=(const sDiff::ExpressionComponent<EvaluableRhs>& rhs) {
     static_assert (!std::is_base_of<sDiff::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
     casted_assignement(sDiff::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs);
     return *this;
@@ -189,7 +189,7 @@ sDiff::ExpressionComponent<EvaluableT>& sDiff::ExpressionComponent<EvaluableT>::
 
 template <class EvaluableT>
 template<class EvaluableRhs>
-sDiff::ExpressionComponent<EvaluableT>& sDiff::ExpressionComponent<EvaluableT>::operator=(const ExpressionComponent<EvaluableRhs>&& rhs) {
+sDiff::ExpressionComponent<EvaluableT>& sDiff::ExpressionComponent<EvaluableT>::operator=(const sDiff::ExpressionComponent<EvaluableRhs>&& rhs) {
     static_assert (!std::is_base_of<sDiff::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
     casted_assignement(sDiff::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs);
     return *this;
@@ -209,7 +209,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>> sDif
     assert(row < this->rows());
     assert(m_evaluable && "Cannot extract a row from this expression");
 
-    ExpressionComponent<RowEvaluable<EvaluableT>> selectedRow(*this, row);
+    sDiff::ExpressionComponent<sDiff::RowEvaluable<EvaluableT>> selectedRow(*this, row);
     assert(selectedRow.m_evaluable);
 
     return selectedRow;
@@ -222,7 +222,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> sD
     assert(col < this->cols());
     assert(m_evaluable && "Cannot extract an element from this expression");
 
-    ExpressionComponent<ElementEvaluable<EvaluableT>> selectedElement(*this, row, col);
+    sDiff::ExpressionComponent<sDiff::ElementEvaluable<EvaluableT>> selectedElement(*this, row, col);
     assert(selectedElement.m_evaluable);
 
     return selectedElement;
@@ -232,6 +232,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> sD
 
 template <typename Matrix, class EvaluableT>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator+(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs) {
+
     sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Matrix>> constant =
             sDiff::build_constant(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
 
@@ -240,6 +241,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<ty
 
 template <typename Matrix, class EvaluableT>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs) {
+
     sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Matrix>> constant =
             sDiff::build_constant(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
 

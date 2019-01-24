@@ -50,15 +50,15 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<Vector>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                  std::shared_ptr<sDiff::VariableBase> variable) final {
-        assert(column == 0);
-        if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
-            return std::make_shared<sDiff::IdentityEvaluable<typename sDiff::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension());
-        } else {
-            return std::make_shared<sDiff::NullEvaluable<typename sDiff::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension());
-        }
-    }
+//    virtual std::shared_ptr<typename sDiff::Evaluable<Vector>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                  std::shared_ptr<sDiff::VariableBase> variable) final {
+//        assert(column == 0);
+//        if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
+//            return std::make_shared<sDiff::IdentityEvaluable<typename sDiff::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension());
+//        } else {
+//            return std::make_shared<sDiff::NullEvaluable<typename sDiff::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension());
+//        }
+//    }
 
 };
 
@@ -92,15 +92,15 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual std::shared_ptr<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                  std::shared_ptr<sDiff::VariableBase> variable) final {
-        assert(column == 0);
-        if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
-            return std::make_shared<sDiff::IdentityEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension());
-        } else {
-            return std::make_shared<sDiff::NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension());
-        }
-    }
+//    virtual std::shared_ptr<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+//                                                                                                  std::shared_ptr<sDiff::VariableBase> variable) final {
+//        assert(column == 0);
+//        if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
+//            return std::make_shared<sDiff::IdentityEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension());
+//        } else {
+//            return std::make_shared<sDiff::NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension());
+//        }
+//    }
 
 };
 
