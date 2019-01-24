@@ -43,17 +43,17 @@ void sDiff::ExpressionComponent<EvaluableT>::default_constructor(sDiff::bool_val
 
 template <class EvaluableT>
 template<bool value, typename OtherEvaluable>
-void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(sDiff::bool_value<value>, std::shared_ptr<OtherEvaluable> other) {}
+void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(sDiff::bool_value<value>, const sDiff::ExpressionComponent<OtherEvaluable>& other) {}
 
 template <class EvaluableT>
 template<typename OtherEvaluable>
-void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(sDiff::bool_value<true>, std::shared_ptr<OtherEvaluable> other) {
-    m_evaluable = other;
+void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(sDiff::bool_value<true>, const sDiff::ExpressionComponent<OtherEvaluable>& other) {
+    m_evaluable = other.m_evaluable;
 }
 
 template <class EvaluableT>
 template<typename OtherEvaluable>
-void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(sDiff::bool_value<false>, std::shared_ptr<OtherEvaluable> other) {
+void sDiff::ExpressionComponent<EvaluableT>::casted_assignement(sDiff::bool_value<false>, const sDiff::ExpressionComponent<OtherEvaluable>& other) {
     m_evaluable = std::make_shared<sDiff::CastEvaluable<EvaluableT, OtherEvaluable>>(other);
 }
 
@@ -105,7 +105,7 @@ Eigen::Index sDiff::ExpressionComponent<EvaluableT>::cols() const {
 }
 
 template <class EvaluableT>
-const Eigen::MatrixBase<typename EvaluableT::matrix_type>& sDiff::ExpressionComponent<EvaluableT>::evaluate() {
+const typename EvaluableT::matrix_type &sDiff::ExpressionComponent<EvaluableT>::evaluate() {
     assert(m_evaluable);
     return m_evaluable->evaluate();
 }
@@ -121,7 +121,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<ty
     ExpressionComponent<sDiff::Evaluable<
             typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> newExpression;
 
-    newExpression = sDiff::ExpressionComponent<sDiff::SumEvaluable<EvaluableT, EvaluableRhs>>(this->m_evaluable, rhs.m_evaluable);
+    newExpression = sDiff::ExpressionComponent<sDiff::SumEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
 
     return newExpression;
 }
@@ -144,7 +144,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<ty
 
     sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> newExpression;
 
-    newExpression = sDiff::ExpressionComponent<sDiff::SubtractionEvaluable<EvaluableT, EvaluableRhs>>(this->m_evaluable, rhs.m_evaluable);
+    newExpression = sDiff::ExpressionComponent<sDiff::SubtractionEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
 
     return newExpression;
 }
@@ -166,7 +166,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_retur
 
     sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> newExpression;
 
-    newExpression = sDiff::ExpressionComponent<ProductEvaluable<EvaluableT, EvaluableRhs>>(this->m_evaluable, rhs.m_evaluable);
+    newExpression = sDiff::ExpressionComponent<ProductEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
 
     return newExpression;
 }
@@ -183,7 +183,7 @@ template <class EvaluableT>
 template<class EvaluableRhs>
 sDiff::ExpressionComponent<EvaluableT>& sDiff::ExpressionComponent<EvaluableT>::operator=(const ExpressionComponent<EvaluableRhs>& rhs) {
     static_assert (!std::is_base_of<sDiff::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
-    casted_assignement(sDiff::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs.m_evaluable);
+    casted_assignement(sDiff::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs);
     return *this;
 }
 
@@ -191,7 +191,7 @@ template <class EvaluableT>
 template<class EvaluableRhs>
 sDiff::ExpressionComponent<EvaluableT>& sDiff::ExpressionComponent<EvaluableT>::operator=(const ExpressionComponent<EvaluableRhs>&& rhs) {
     static_assert (!std::is_base_of<sDiff::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
-    casted_assignement(sDiff::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs.m_evaluable);
+    casted_assignement(sDiff::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs);
     return *this;
 }
 

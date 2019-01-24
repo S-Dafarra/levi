@@ -45,13 +45,13 @@ class sDiff::ExpressionComponent {
     struct has_equal_to_constant_operator<Matrix, decltype(std::declval<EvaluableT>().operator=(std::declval<Matrix>()), 0)> : std::true_type { };
 
     template<bool value, typename OtherEvaluable>
-    void casted_assignement(sDiff::bool_value<value>, std::shared_ptr<OtherEvaluable> other);
+    void casted_assignement(sDiff::bool_value<value>, const ExpressionComponent<OtherEvaluable>& other);
 
     template<typename OtherEvaluable>
-    void casted_assignement(sDiff::bool_value<true>, std::shared_ptr<OtherEvaluable> other);
+    void casted_assignement(sDiff::bool_value<true>, const sDiff::ExpressionComponent<OtherEvaluable>& other);
 
     template<typename OtherEvaluable>
-    void casted_assignement(sDiff::bool_value<false>, std::shared_ptr<OtherEvaluable> other);
+    void casted_assignement(sDiff::bool_value<false>, const sDiff::ExpressionComponent<OtherEvaluable>& other);
 
 public:
 
@@ -74,7 +74,7 @@ public:
 
     Eigen::Index cols() const;
 
-    const Eigen::MatrixBase<typename EvaluableT::matrix_type>& evaluate();
+    const typename EvaluableT::matrix_type& evaluate();
 
     template<class EvaluableRhs>
     ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator+(const ExpressionComponent<EvaluableRhs>& rhs);
