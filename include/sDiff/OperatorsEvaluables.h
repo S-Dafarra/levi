@@ -11,76 +11,56 @@
 #include <sDiff/ForwardDeclarations.h>
 
 template <typename Scalar_lhs, typename Scalar_rhs>
-struct scalar_sum_return {
+struct sDiff::scalar_sum_return {
     typedef decltype (std::declval<Scalar_lhs>() + std::declval<Scalar_rhs>()) type;
 };
 
-template<int lhsRows, int lhsCols, int rhsRows, int rhsCols, class Enabler = void>
-struct is_valid_sum : std::false_type {};
-
-template<int lhsRows, int lhsCols, int rhsRows, int rhsCols>
-struct is_valid_sum<lhsRows, lhsCols, rhsRows, rhsCols,
-        typename std::enable_if<((lhsRows == rhsRows) || (lhsRows == Eigen::Dynamic) || (rhsRows == Eigen::Dynamic)) &&
-                                ((lhsCols == rhsCols) || (lhsCols == Eigen::Dynamic) || (rhsCols == Eigen::Dynamic))>::type> : std::true_type {};
-
-template <typename Matrix_lhs, typename Matrix_rhs, class Enabler = void>
-struct matrix_sum_return;
-
 template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
-struct matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
-        typename std::enable_if<is_valid_sum<lhsRows, lhsCols, rhsRows, rhsCols>::value>::type> {
-    typedef Eigen::Matrix<typename scalar_sum_return<Scalar_lhs, Scalar_rhs>::type, std::min(lhsRows, rhsRows), std::min(lhsCols, rhsCols)> type; //here we assume that Eigen::Dynamic == -1, thus, given that it is a valid sum, the minimum will be -1 if present, thus using Eigen::Dynamic as output
+struct sDiff::matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+        typename std::enable_if<sDiff::is_valid_sum<lhsRows, lhsCols, rhsRows, rhsCols>::value>::type> {
+    typedef Eigen::Matrix<typename sDiff::scalar_sum_return<Scalar_lhs, Scalar_rhs>::type, std::min(lhsRows, rhsRows), std::min(lhsCols, rhsCols)> type; //here we assume that Eigen::Dynamic == -1, thus, given that it is a valid sum, the minimum will be -1 if present, thus using Eigen::Dynamic as output
 };
 
 template<typename Scalar_lhs, typename Scalar_rhs>
-struct matrix_sum_return<Scalar_lhs, Scalar_rhs,
+struct sDiff::matrix_sum_return<Scalar_lhs, Scalar_rhs,
         typename std::enable_if<std::is_arithmetic<Scalar_lhs>::value && std::is_arithmetic<Scalar_rhs>::value>::type> {
-    typedef typename scalar_sum_return<Scalar_lhs, Scalar_rhs>::type type;
+    typedef typename sDiff::scalar_sum_return<Scalar_lhs, Scalar_rhs>::type type;
 };
 
 template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols>
-struct matrix_sum_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
-        typename std::enable_if<std::is_arithmetic<Scalar>::value && is_valid_sum<1,1, rhsRows, rhsCols>::value>::type> {
-    typedef Eigen::Matrix<typename scalar_sum_return<Scalar, Scalar_rhs>::type, rhsRows, rhsCols> type;
+struct sDiff::matrix_sum_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+        typename std::enable_if<std::is_arithmetic<Scalar>::value && sDiff::is_valid_sum<1,1, rhsRows, rhsCols>::value>::type> {
+    typedef Eigen::Matrix<typename sDiff::scalar_sum_return<Scalar, Scalar_rhs>::type, rhsRows, rhsCols> type;
 };
 
 template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols>
-struct matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
-        typename std::enable_if<std::is_arithmetic<Scalar>::value && is_valid_sum<1,1, lhsRows, lhsCols>::value>::type> {
-    typedef Eigen::Matrix<typename scalar_sum_return<Scalar, Scalar_lhs>::type, lhsRows, lhsCols> type;
+struct sDiff::matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
+        typename std::enable_if<std::is_arithmetic<Scalar>::value && sDiff::is_valid_sum<1,1, lhsRows, lhsCols>::value>::type> {
+    typedef Eigen::Matrix<typename sDiff::scalar_sum_return<Scalar, Scalar_lhs>::type, lhsRows, lhsCols> type;
 };
 
-template<int lhsRows, int lhsCols, int rhsRows, int rhsCols, class Enabler = void>
-struct is_valid_product : std::false_type {};
-
-template<int lhsRows, int lhsCols, int rhsRows, int rhsCols>
-struct is_valid_product<lhsRows, lhsCols, rhsRows, rhsCols,
-        typename std::enable_if<lhsCols == Eigen::Dynamic || rhsRows == Eigen::Dynamic || lhsCols == rhsRows>::type> : std::true_type {};
-
 template <typename Scalar_lhs, typename Scalar_rhs>
-struct scalar_product_return {
+struct sDiff::scalar_product_return {
     typedef decltype (std::declval<Scalar_lhs>() * std::declval<Scalar_rhs>()) type;
 };
 
-template <typename Matrix_lhs, typename Matrix_rhs, class Enabler = void>
-struct matrix_product_return;
 
 template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
-struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
-        typename std::enable_if<is_valid_product<lhsRows, lhsCols, rhsRows, rhsCols>::value>::type> {
-    typedef Eigen::Matrix<typename scalar_product_return<Scalar_lhs, Scalar_rhs>::type, lhsRows, rhsCols> type;
+struct sDiff::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+        typename std::enable_if<sDiff::is_valid_product<lhsRows, lhsCols, rhsRows, rhsCols>::value>::type> {
+    typedef Eigen::Matrix<typename sDiff::scalar_product_return<Scalar_lhs, Scalar_rhs>::type, lhsRows, rhsCols> type;
 };
 
 template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols>
-struct matrix_product_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+struct sDiff::matrix_product_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
         typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
-    typedef Eigen::Matrix<typename scalar_product_return<Scalar, Scalar_rhs>::type, rhsRows, rhsCols> type;
+    typedef Eigen::Matrix<typename sDiff::scalar_product_return<Scalar, Scalar_rhs>::type, rhsRows, rhsCols> type;
 };
 
 template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols>
-struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
+struct sDiff::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
         typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
-    typedef Eigen::Matrix<typename scalar_product_return<Scalar, Scalar_lhs>::type, lhsRows, lhsCols> type;
+    typedef Eigen::Matrix<typename sDiff::scalar_product_return<Scalar, Scalar_lhs>::type, lhsRows, lhsCols> type;
 };
 
 template <class LeftEvaluable, class RightEvaluable>
