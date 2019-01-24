@@ -7,7 +7,7 @@
 #ifndef SDIFF_OPERATORS_EVALUABLES_H
 #define SDIFF_OPERATORS_EVALUABLES_H
 
-#include <sDiff/Evaluable.h>
+#include <sDiff/BasicEvaluables.h>
 #include <sDiff/ForwardDeclarations.h>
 
 template <typename Scalar_lhs, typename Scalar_rhs>
@@ -81,56 +81,6 @@ template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols>
 struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
         typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
     typedef Eigen::Matrix<typename scalar_product_return<Scalar, Scalar_lhs>::type, lhsRows, lhsCols> type;
-};
-
-
-template <typename Matrix>
-class sDiff::ConstantEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> : public sDiff::Evaluable<Matrix>{
-public:
-
-    ConstantEvaluable(const Matrix& constant, std::string name)
-        : Evaluable<Matrix>(constant, name)
-    { }
-
-    ConstantEvaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
-        : Evaluable<Matrix>(rows, cols, name)
-    { }
-
-    virtual const Matrix& evaluate() final {
-        return this->m_evaluationBuffer;
-    }
-
-    virtual std::shared_ptr<typename sDiff::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                  std::shared_ptr<sDiff::VariableBase> variable) final {
-        return this->m_derivative;
-    }
-
-
-    void operator=(const Matrix& rhs) {
-        this->m_evaluationBuffer = rhs;
-    }
-};
-
-template <typename Scalar>
-class sDiff::ConstantEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public sDiff::Evaluable<Scalar>{
-public:
-
-    ConstantEvaluable(const Scalar& constant)
-        : Evaluable<Scalar>(constant)
-    { }
-
-    virtual const Scalar& evaluate() final {
-        return this->m_evaluationBuffer;
-    }
-
-    virtual std::shared_ptr<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                         std::shared_ptr<sDiff::VariableBase> variable) final {
-        return this->m_derivative;
-    }
-
-    void operator=(const Scalar& rhs) {
-        this->m_evaluationBuffer = rhs;
-    }
 };
 
 template <class LeftEvaluable, class RightEvaluable>
@@ -337,7 +287,7 @@ class sDiff::CastEvaluable : public sDiff::Evaluable<typename LeftEvaluable::mat
 public:
 
     CastEvaluable(std::shared_ptr<RightEvaluable> rhs)
-        : Evaluable<typename LeftEvaluable::matrix_type>(rhs->rows(), rhs->cols(), "")
+        : Evaluable<typename LeftEvaluable::matrix_type>(rhs->rows(), rhs->cols(), rhs->name())
         , m_rhs(rhs)
     { }
 

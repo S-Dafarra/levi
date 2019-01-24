@@ -39,6 +39,8 @@ int main() {
     Expression g = v * c;
     Expression k = V * g;
     std::cerr << g.name() << " " <<std::endl << g.evaluate() <<std::endl;
+    std::cerr << k.name() << " " <<std::endl << k.evaluate() <<std::endl;
+
 
     Scalar test(0.5);
     c = test* c;

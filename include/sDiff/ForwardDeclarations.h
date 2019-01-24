@@ -47,6 +47,24 @@ namespace sDiff {
     template <typename Scalar>
     class ConstantEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
 
+    template <typename Matrix, class Enabler = void>
+    class NullEvaluable;
+
+    template <typename Matrix>
+    class NullEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
+
+    template <typename Scalar>
+    class NullEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
+
+    template <typename Matrix, class Enabler = void>
+    class IdentityEvaluable;
+
+    template <typename Matrix>
+    class IdentityEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
+
+    template <typename Scalar>
+    class IdentityEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
+
     template <class LeftEvaluable, class RightEvaluable>
     class SumEvaluable;
 
