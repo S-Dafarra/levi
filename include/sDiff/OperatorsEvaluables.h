@@ -63,6 +63,12 @@ struct sDiff::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>,
     typedef Eigen::Matrix<typename sDiff::scalar_product_return<Scalar, Scalar_lhs>::type, lhsRows, lhsCols> type;
 };
 
+template<typename Scalar_lhs, typename Scalar_rhs>
+struct sDiff::matrix_product_return<Scalar_lhs, Scalar_rhs,
+        typename std::enable_if<std::is_arithmetic<Scalar_lhs>::value && std::is_arithmetic<Scalar_rhs>::value>::type> {
+    typedef typename sDiff::scalar_product_return<Scalar_lhs, Scalar_rhs>::type type;
+};
+
 template <class LeftEvaluable, class RightEvaluable>
 class sDiff::SumEvaluable : public sDiff::Evaluable<typename sDiff::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
 
@@ -133,15 +139,68 @@ template <class LeftEvaluable, class RightEvaluable>
 class sDiff::ProductEvaluable : public sDiff::Evaluable<typename sDiff::matrix_product_return<
         typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
 
-    sDiff::ExpressionComponent<LeftEvaluable> m_lhs;
-    sDiff::ExpressionComponent<RightEvaluable> m_rhs;
-
 public:
 
     typedef typename sDiff::matrix_product_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type product_type;
 
+private:
+
+    sDiff::ExpressionComponent<LeftEvaluable> m_lhs;
+    sDiff::ExpressionComponent<RightEvaluable> m_rhs;
+
+    typedef sDiff::ExpressionComponent<typename sDiff::Evaluable<product_type>::derivative_evaluable> derivative_expression;
+
+    template<bool lhsIsScalar, bool rhsIsScalar>
+    derivative_expression get_derivative(sDiff::bool_value<lhsIsScalar>, sDiff::bool_value<rhsIsScalar>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable);
+
+    derivative_expression get_derivative(sDiff::bool_value<true>, sDiff::bool_value<true>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+        derivative_expression derivative;
+
+        derivative = m_rhs * m_lhs.getColumnDerivative(column, variable); + m_lhs * m_rhs.getColumnDerivative(column, variable);
+
+        return derivative;
+
+    }
+
+    derivative_expression get_derivative(sDiff::bool_value<true>, sDiff::bool_value<false>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+
+        //k*A
+        derivative_expression derivative;
+
+        derivative = m_lhs * m_rhs.getColumnDerivative(column, variable) + m_rhs.col(column) * m_lhs.getColumnDerivative(0, variable);
+
+        return derivative;
+    }
+
+    derivative_expression get_derivative(sDiff::bool_value<false>, sDiff::bool_value<true>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+
+        //A*k
+        derivative_expression derivative;
+
+        derivative = m_rhs * m_lhs.getColumnDerivative(column, variable) + m_lhs.col(column) * m_rhs.getColumnDerivative(0, variable);
+
+        return derivative;
+    }
+
+    derivative_expression get_derivative(sDiff::bool_value<false>, sDiff::bool_value<false>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+        derivative_expression derivative;
+
+        derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
+
+        for (size_t i = 0; i < m_rhs.rows(); ++i) {
+            derivative = derivative + m_lhs.getColumnDerivative(i, variable) * m_rhs(i, column);
+        }
+
+        return derivative;
+    }
+
+public:
+
+
     ProductEvaluable(const sDiff::ExpressionComponent<LeftEvaluable>& lhs, const sDiff::ExpressionComponent<RightEvaluable>& rhs)
-        : sDiff::Evaluable<product_type>(lhs.rows(), rhs.cols(), lhs.name() + " * " + rhs.name())
+        : sDiff::Evaluable<product_type>((lhs.rows() == 1 && lhs.cols() == 1 && rhs.rows() != 1)? rhs.rows() : lhs.rows(),
+                                         (rhs.rows() == 1 && rhs.cols() == 1 && lhs.cols() != 1)? lhs.cols() : rhs.cols(),
+                                         lhs.name() + " * " + rhs.name())
         , m_lhs(lhs)
         , m_rhs(rhs)
     { }
@@ -153,10 +212,14 @@ public:
         return this->m_evaluationBuffer;
     }
 
-//    virtual std::shared_ptr<typename sDiff::Evaluable<product_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-//                                                                                                               std::shared_ptr<sDiff::VariableBase> variable) final {
-//        return this->m_derivative;
-//    }
+    virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<product_type>::derivative_evaluable>
+    getColumnDerivative(Eigen::Index column,
+                        std::shared_ptr<sDiff::VariableBase> variable) final {
+
+        return get_derivative(sDiff::bool_value<std::is_arithmetic<typename LeftEvaluable::matrix_type>::value>(),
+                              sDiff::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>(),
+                              column, variable);
+    }
 
 };
 
@@ -208,6 +271,68 @@ public:
     }
 
     virtual const typename EvaluableT::row_type& evaluate() final {
+        this->m_evaluationBuffer = m_expression.evaluate();
+
+        return this->m_evaluationBuffer;
+    }
+
+    virtual sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                      std::shared_ptr<sDiff::VariableBase> variable) final {
+        assert(column == 0);
+
+        return m_expression.getColumnDerivative(0, variable);
+    }
+};
+
+template <typename EvaluableT>
+class sDiff::ColEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
+        : public sDiff::Evaluable<typename EvaluableT::col_type>
+{
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
+    Eigen::Index m_col;
+
+public:
+
+    ColEvaluable(const sDiff::ExpressionComponent<EvaluableT>& evaluable, Eigen::Index col)
+        : sDiff::Evaluable<typename EvaluableT::col_type>(evaluable.rows(), 1, "(" + evaluable.name() + ")(:," + std::to_string(col) + ")")
+        , m_expression(evaluable)
+        , m_col(col)
+    { }
+
+    virtual const typename EvaluableT::col_type& evaluate() final {
+        this->m_evaluationBuffer = m_expression.evaluate().col(m_col);
+
+        return this->m_evaluationBuffer;
+    }
+
+    virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                                                           std::shared_ptr<sDiff::VariableBase> variable) final {
+        assert(column == 0);
+        sDiff::ExpressionComponent<typename sDiff::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> newDerivative;
+
+        newDerivative = m_expression.getColumnDerivative(m_col, variable);
+
+        return newDerivative;
+    }
+
+};
+
+template <typename EvaluableT>
+class sDiff::ColEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
+        : public sDiff::Evaluable<typename EvaluableT::col_type>
+{
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
+
+public:
+
+    ColEvaluable(const sDiff::ExpressionComponent<EvaluableT>& expression, Eigen::Index col)
+        : sDiff::Evaluable<typename EvaluableT::col_type>(expression.name())
+        , m_expression(expression)
+    {
+        assert(col == 0);
+    }
+
+    virtual const typename EvaluableT::col_type& evaluate() final {
         this->m_evaluationBuffer = m_expression.evaluate();
 
         return this->m_evaluationBuffer;

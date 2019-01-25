@@ -124,6 +124,10 @@ namespace sDiff {
     struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
             typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
 
+    template<typename Scalar_lhs, typename Scalar_rhs>
+    struct matrix_product_return<Scalar_lhs, Scalar_rhs,
+            typename std::enable_if<std::is_arithmetic<Scalar_lhs>::value && std::is_arithmetic<Scalar_rhs>::value>::type>;
+
     template <class LeftEvaluable, class RightEvaluable>
     class SumEvaluable;
 
@@ -141,6 +145,15 @@ namespace sDiff {
 
     template <typename EvaluableT>
     class RowEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
+
+    template<class Evaluable, class Enabler = void>
+    class ColEvaluable;
+
+    template <typename EvaluableT>
+    class ColEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
+
+    template <typename EvaluableT>
+    class ColEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
 
     template<class EvaluableT, class Enabler = void>
     class ElementEvaluable;

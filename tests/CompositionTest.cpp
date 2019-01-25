@@ -46,8 +46,14 @@ int main() {
     c = test* c;
     std::cerr << c.name() << ": " <<std::endl << c.evaluate() <<std::endl;
 
-    c = 0.5* c;
+    c = 0.5* c + c * 0.5;
     std::cerr << c.name() << ": " <<std::endl << c.evaluate() <<std::endl;
+
+    Expression d = 1.0 * c;
+
+    assert(d.evaluate() == c.evaluate());
+
+    d = 1.0 * d + c;
 
     VectorXd x_value(3);
     x_value.setRandom();
@@ -66,7 +72,15 @@ int main() {
 
     assert(row1.evaluate() == c.evaluate().row(0));
 
+    auto col1 = c.col(0);
+
+    col1.evaluate();
+
+    assert(col1.evaluate() == c.evaluate().col(0));
+
     auto testRow = test.row(0);
+
+    auto testCol = test.col(0);
 
     auto cElement = c(0, 1);
     std::cerr << cElement.name() << " " <<std::endl << cElement.evaluate() <<std::endl;

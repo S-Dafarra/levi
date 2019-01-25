@@ -215,6 +215,17 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>> sDif
     return selectedRow;
 }
 
+template <class EvaluableT>
+sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::col_type>> sDiff::ExpressionComponent<EvaluableT>::col(Eigen::Index col) {
+    assert(col < this->cols());
+    assert(m_evaluable && "Cannot extract a column from this expression");
+
+    sDiff::ExpressionComponent<sDiff::ColEvaluable<EvaluableT>> selectedCol(*this, col);
+    assert(selectedCol.m_evaluable);
+
+    return selectedCol;
+}
+
 template<class EvaluableT>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> sDiff::ExpressionComponent<EvaluableT>::operator()(Eigen::Index row, Eigen::Index col)
 {

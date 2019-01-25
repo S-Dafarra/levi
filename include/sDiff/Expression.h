@@ -106,6 +106,8 @@ public:
 
     ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>> row(Eigen::Index row);
 
+    ExpressionComponent<sDiff::Evaluable<typename EvaluableT::col_type>> col(Eigen::Index col);
+
     ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> operator()(Eigen::Index row, Eigen::Index col);
 
     template<typename VariableType>

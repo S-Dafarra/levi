@@ -29,5 +29,18 @@ int main() {
 
     std::cerr << sumDerivative.name() << std::endl << sumDerivative.evaluate() << std::endl;
 
+    MatrixXd A(MatrixXd::Identity(3,3));
+    Constant a(MatrixXd::Identity(3,3), "a");
+    Matrix<double,3,3> B;
+    B.setIdentity();
+    Constant b(3,3,"b");
+
+    b = B;
+
+    Expression expr = 2.0 * a * b * x + b*y;
+
+    Expression exprDerivative = expr.getColumnDerivative(0, x);
+
+    std::cerr << exprDerivative.name() << std::endl << exprDerivative.evaluate() << std::endl;
 
 }
