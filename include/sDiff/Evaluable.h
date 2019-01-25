@@ -31,7 +31,6 @@ public:
 protected:
 
     Matrix m_evaluationBuffer;
-    std::shared_ptr<derivative_evaluable> m_derivative;
 
 public:
 
@@ -39,13 +38,11 @@ public:
 
     Evaluable(const std::string& name)
         : m_name(name)
-        , m_derivative(nullptr)
     { }
 
     Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(rows, cols)
-        , m_derivative(nullptr)
     {
         m_evaluationBuffer.setZero();
     }
@@ -53,7 +50,6 @@ public:
     Evaluable(const Matrix& initialValue, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(initialValue)
-        , m_derivative(nullptr)
     { }
 
     template <typename OtherMatrix>
@@ -82,8 +78,8 @@ public:
 
     virtual const Matrix& evaluate() = 0;
 
-    virtual std::shared_ptr<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
-        return nullptr;
+    virtual sDiff::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+        return sDiff::ExpressionComponent<derivative_evaluable>();
     }
 
     Evaluable<Matrix>& operator=(const Evaluable& other) = delete;
@@ -118,27 +114,22 @@ protected:
 
     Scalar m_evaluationBuffer;
 
-    std::shared_ptr<derivative_evaluable> m_derivative;
-
 public:
 
     Evaluable() = delete;
 
     Evaluable(const std::string& name)
         : m_name(name)
-        , m_derivative(nullptr)
     { }
 
     Evaluable(const Scalar& initialValue, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(initialValue)
-        , m_derivative(nullptr)
     { }
 
     Evaluable(const Scalar& initialValue)
         : m_name(std::to_string(initialValue))
         , m_evaluationBuffer(initialValue)
-        , m_derivative(nullptr)
     { }
 
     template <typename OtherMatrix, typename OtherDerivativeEvaluable>
@@ -163,8 +154,8 @@ public:
 
     virtual const Scalar& evaluate() = 0;
 
-    virtual std::shared_ptr<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
-        return nullptr;
+    virtual sDiff::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+        return sDiff::ExpressionComponent<derivative_evaluable>();
     }
 
     Evaluable<Scalar>& operator=(const Evaluable& other) = delete;

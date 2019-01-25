@@ -24,4 +24,6 @@ macro(add_sdiff_test classname)
 endmacro()
 
 add_sdiff_test(Composition)
+add_sdiff_test(Derivative)
+
 

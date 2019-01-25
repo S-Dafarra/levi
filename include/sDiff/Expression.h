@@ -108,6 +108,10 @@ public:
 
     ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> operator()(Eigen::Index row, Eigen::Index col);
 
+    template<typename VariableType>
+    ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, const ExpressionComponent<sDiff::EvaluableVariable<VariableType>>& variable);
+
+    ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable);
 };
 
 

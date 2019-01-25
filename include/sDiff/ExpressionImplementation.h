@@ -228,6 +228,28 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> sD
     return selectedElement;
 }
 
+template<typename EvaluableT>
+template<typename VariableType>
+sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> sDiff::ExpressionComponent<EvaluableT>::getColumnDerivative(Eigen::Index column,
+                                                                                                                                  const sDiff::ExpressionComponent<sDiff::EvaluableVariable<VariableType>> &variable)
+{
+    assert(m_evaluable && "Cannot compute the derivative of this expression.");
+    assert(column < cols());
+    assert(variable.m_evaluable && "Invalid variable.");
+
+    return m_evaluable->getColumnDerivative(column, variable.m_evaluable);
+}
+
+template<typename EvaluableT>
+sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> sDiff::ExpressionComponent<EvaluableT>::getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable)
+{
+    assert(m_evaluable && "Cannot compute the derivative of this expression.");
+    assert(column < cols());
+    assert(variable && "Empty variable pointer.");
+
+    return m_evaluable->getColumnDerivative(column, variable);
+}
+
 //end of ExpressionComponent implementation
 
 template <typename Matrix, class EvaluableT>
