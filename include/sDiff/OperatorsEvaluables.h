@@ -106,6 +106,16 @@ struct sDiff::matrix_product_return<Scalar_lhs, Scalar_rhs,
     typedef typename sDiff::scalar_product_return<Scalar_lhs, Scalar_rhs>::type type;
 };
 
+template<typename Matrix>
+struct sDiff::dynamic_block_return<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> {
+    typedef Eigen::Matrix<typename Matrix::value_type, Eigen::Dynamic, Eigen::Dynamic> type;
+};
+
+template<typename Scalar>
+struct sDiff::dynamic_block_return<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
+    typedef Scalar type;
+};
+
 
 /**
  * @brief The SumEvaluable. Implements the sum of two evaluables.
@@ -448,7 +458,7 @@ public:
 };
 
 /**
- * @brief The RowEvaluable. To retrieve a specified row from an evaluble. Specialization for matrix valued evaluables.
+ * @brief The RowEvaluable. To retrieve a specified row from an evaluable. Specialization for matrix valued evaluables.
  */
 template <typename EvaluableT>
 class sDiff::RowEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
@@ -487,7 +497,7 @@ public:
 };
 
 /**
- * @brief The RowEvaluable. To retrieve a specified row from an evaluble. Specialization for scalar valued evaluables.
+ * @brief The RowEvaluable. To retrieve a specified row from an evaluable. Specialization for scalar valued evaluables.
  */
 template <typename EvaluableT>
 class sDiff::RowEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
@@ -523,7 +533,7 @@ public:
 };
 
 /**
- * @brief The ColEvaluable. To retrieve a specified column from an evaluble. Specialization for matrix valued evaluables.
+ * @brief The ColEvaluable. To retrieve a specified column from an evaluable. Specialization for matrix valued evaluables.
  */
 template <typename EvaluableT>
 class sDiff::ColEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
@@ -563,7 +573,7 @@ public:
 };
 
 /**
- * @brief The ColEvaluable. To retrieve a specified column from an evaluble. Specialization for scalar valued evaluables.
+ * @brief The ColEvaluable. To retrieve a specified column from an evaluable. Specialization for scalar valued evaluables.
  */
 template <typename EvaluableT>
 class sDiff::ColEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
@@ -599,7 +609,7 @@ public:
 };
 
 /**
- * @brief The ElementEvaluable. To retrieve a specified element from an evaluble. Specialization for matrix valued evaluables.
+ * @brief The ElementEvaluable. To retrieve a specified element from an evaluable. Specialization for matrix valued evaluables.
  */
 template <typename EvaluableT>
 class sDiff::ElementEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
@@ -639,7 +649,7 @@ public:
 };
 
 /**
- * @brief The ElementEvaluable. To retrieve a specified element from an evaluble. Specialization for scalar valued evaluables.
+ * @brief The ElementEvaluable. To retrieve a specified element from an evaluable. Specialization for scalar valued evaluables.
  */
 template <typename EvaluableT>
 class sDiff::ElementEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
@@ -663,6 +673,85 @@ public:
 
     virtual sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                       std::shared_ptr<sDiff::VariableBase> variable) final {
+        assert(column == 0);
+
+        return m_expression.getColumnDerivative(0, variable);
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
+    }
+};
+
+/**
+ * @brief The BlockEvaluable. To retrieve a specified block from an evaluable. Specialization for matrix valued evaluables.
+ */
+template <typename EvaluableT>
+class sDiff::BlockEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
+        : public sDiff::Evaluable<typename sDiff::dynamic_block_return<typename EvaluableT::matrix_type>::type>
+{
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
+    Eigen::Index m_startRow, m_startCol;
+
+public:
+
+    typedef typename sDiff::dynamic_block_return<typename EvaluableT::matrix_type>::type block_type;
+
+    BlockEvaluable(const sDiff::ExpressionComponent<EvaluableT>& expression, Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
+        : sDiff::Evaluable<block_type>(numberOfRows, numberOfCols, "[" + expression.name() + "](" + std::to_string(startRow) + ":" + std::to_string(startRow + numberOfRows) + ", " + std::to_string(startCol) + ":" + std::to_string(startCol + numberOfCols) + ")")
+        , m_expression(expression)
+        , m_startRow(startRow)
+        , m_startCol(startCol)
+    {
+        assert(((startRow + numberOfRows) <= expression.rows()) && ((startCol + numberOfCols) <= expression.cols()));
+    }
+
+    virtual const block_type& evaluate() final {
+        this->m_evaluationBuffer = m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols());
+
+        return this->m_evaluationBuffer;
+    }
+
+    virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<block_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) final {
+        sDiff::ExpressionComponent<typename sDiff::Evaluable<block_type>::derivative_evaluable> newDerivative;
+
+        newDerivative = m_expression.getColumnDerivative(m_startCol + column, variable).block(m_startRow, 0, this->rows(), variable->dimension());
+
+        return newDerivative;
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
+    }
+};
+
+/**
+ * @brief The BlockEvaluable. To retrieve a specified block from an evaluable. Specialization for scalar valued evaluables.
+ */
+template <typename EvaluableT>
+class sDiff::BlockEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
+        : public sDiff::Evaluable<typename sDiff::dynamic_block_return<typename EvaluableT::matrix_type>::type> {
+
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
+
+public:
+
+    typedef typename sDiff::dynamic_block_return<typename EvaluableT::matrix_type>::type block_type;
+
+    BlockEvaluable(const sDiff::ExpressionComponent<EvaluableT>& expression, Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
+        : sDiff::Evaluable<block_type>(expression.name())
+        , m_expression(expression)
+    {
+        assert(startRow == 0 && startCol == 0 && numberOfRows == 1 && numberOfCols == 1);
+    }
+
+    virtual const block_type& evaluate() final {
+        this->m_evaluationBuffer = m_expression.evaluate();
+        return this->m_evaluationBuffer;
+    }
+
+    virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<block_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                                        std::shared_ptr<sDiff::VariableBase> variable) final {
         assert(column == 0);
 
         return m_expression.getColumnDerivative(0, variable);

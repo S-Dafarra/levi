@@ -128,6 +128,15 @@ namespace sDiff {
     struct matrix_product_return<Scalar_lhs, Scalar_rhs,
             typename std::enable_if<std::is_arithmetic<Scalar_lhs>::value && std::is_arithmetic<Scalar_rhs>::value>::type>;
 
+    template<typename Matrix, class Enabler = void>
+    struct dynamic_block_return;
+
+    template<typename Matrix>
+    struct dynamic_block_return<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
+
+    template<typename Scalar>
+    struct dynamic_block_return<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
+
     template <class LeftEvaluable, class RightEvaluable>
     class SumEvaluable;
 
@@ -166,6 +175,15 @@ namespace sDiff {
 
     template <typename EvaluableT>
     class ElementEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
+
+    template<class EvaluableT, class Enabler = void>
+    class BlockEvaluable;
+
+    template <typename EvaluableT>
+    class BlockEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
+
+    template <typename EvaluableT>
+    class BlockEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
 
     template <class LeftEvaluable, class RightEvaluable>
     class CastEvaluable;

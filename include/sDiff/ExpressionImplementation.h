@@ -250,6 +250,17 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> sD
     return selectedElement;
 }
 
+template<class EvaluableT>
+sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::dynamic_block_return<typename EvaluableT::matrix_type>::type>> sDiff::ExpressionComponent<EvaluableT>::block(Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
+{
+    assert(m_evaluable && "Cannot extract a block from this expression");
+    assert(((startRow + numberOfRows) <= rows()) && ((startCol + numberOfCols) <= cols()) && "Invalid block settings.");
+
+    sDiff::ExpressionComponent<sDiff::BlockEvaluable<EvaluableT>> selectedBlock(*this, startRow, startCol, numberOfRows, numberOfCols);
+
+    return selectedBlock;
+}
+
 template<typename EvaluableT>
 template<typename VariableType>
 sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> sDiff::ExpressionComponent<EvaluableT>::getColumnDerivative(Eigen::Index column,

@@ -88,6 +88,10 @@ int main() {
 
     auto testElement = test(0,0);
 
+    auto testBlock = c.block(1,1, 2, 2);
+    std::cerr << testBlock.name() << " " <<std::endl << testBlock.evaluate() <<std::endl;
+    assert(testBlock.evaluate() == c.evaluate().block(1,1,2,2));
+
 
     return 0;
 }

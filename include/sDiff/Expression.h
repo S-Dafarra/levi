@@ -289,6 +289,16 @@ public:
     ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> operator()(Eigen::Index row, Eigen::Index col);
 
     /**
+     * @brief Accessor to element (read only)
+     * @param startRow The starting row to be considered in the block
+     * @param startCol The starting column to be considered in the block
+     * @param numberOfRows The number of rows of the block
+     * @param numberOfCols The number of columns of the block
+     * @return An expression pointing to an evaluable taking only the specified block out of the current evaluable.
+     */
+    ExpressionComponent<sDiff::Evaluable<typename sDiff::dynamic_block_return<typename EvaluableT::matrix_type>::type>> block(Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols);
+
+    /**
      * @brief Retrieve the column derivative with respect to the specified variable
      *
      * @param column The column of interest
