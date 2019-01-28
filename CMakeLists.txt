@@ -23,7 +23,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # include macros for warnings
 include(AddWarningsConfigurationToTargets)
-
+include(CMakeFindDependencyMacro)
 include(CMakePackageConfigHelpers)
 
 project(sDiff
@@ -48,26 +48,13 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
   endif()
 endif()
 
-find_package(Eigen3 REQUIRED)
+find_dependency(Eigen3 REQUIRED)
 
-include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
-
-#set(SDIFF_SOURCES src/Evaluable.cpp
-#                  src/Expression.cpp
-#                  src/OperatorsEvaluables.cpp)
-
-#set(SDIFF_HEADERS include/sDiff/Evaluable.h
-#                  include/sDiff/Expression.h
-#                  include/sDiff/Variable.h
-#                  include/sDiff/OperatorsEvaluables.h
-#                  include/sDiff/sDiff.h)
-
-#add_library(sDiff ${SDIFF_HEADERS} ${SDIFF_SOURCES})
 add_library(sDiff INTERFACE)
+target_include_directories(sDiff INTERFACE ${EIGEN3_INCLUDE_DIR})
 target_include_directories(sDiff INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_include_directories(sDiff INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-#set_property(TARGET sDiff PROPERTY PUBLIC_HEADER ${SDIFF_HEADERS})
 
 # install
 install(TARGETS sDiff
@@ -81,15 +68,15 @@ install(TARGETS sDiff
 install(EXPORT sDiff
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/sDiff)
 
-configure_package_config_file(${CMAKE_SOURCE_DIR}/cmake/sDiffConfig.cmake.in
-                              ${CMAKE_BINARY_DIR}/sDiffConfig.cmake
+configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/sDiffConfig.cmake.in
+                              ${PROJECT_BINARY_DIR}/sDiffConfig.cmake
                               INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/sDiff)
 
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/sDiffConfigVersion.cmake  VERSION ${sDiff_VERSION} COMPATIBILITY SameMajorVersion )
+write_basic_package_version_file(${PROJECT_BINARY_DIR}/sDiffConfigVersion.cmake  VERSION ${sDiff_VERSION} COMPATIBILITY SameMajorVersion )
 
-install(FILES ${CMAKE_BINARY_DIR}/sDiffConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/sDiffConfigVersion.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/sDiff)
+install(FILES ${PROJECT_BINARY_DIR}/sDiffConfig.cmake ${PROJECT_BINARY_DIR}/sDiffConfigVersion.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/sDiff)
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION include)
 
 include(AddUninstallTarget)
 
