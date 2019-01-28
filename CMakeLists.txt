@@ -23,7 +23,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # include macros for warnings
 include(AddWarningsConfigurationToTargets)
-include(CMakeFindDependencyMacro)
 include(CMakePackageConfigHelpers)
 
 project(sDiff
@@ -48,7 +47,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
   endif()
 endif()
 
-find_dependency(Eigen3 REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 add_library(sDiff INTERFACE)
 target_include_directories(sDiff INTERFACE ${EIGEN3_INCLUDE_DIR})
