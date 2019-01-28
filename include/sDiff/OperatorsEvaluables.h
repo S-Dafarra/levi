@@ -11,64 +11,105 @@
 #include <sDiff/ForwardDeclarations.h>
 #include <sDiff/Expression.h>
 
+/**
+ * Helper struct for determining the type resulting from an addition
+ */
 template <typename Scalar_lhs, typename Scalar_rhs>
 struct sDiff::scalar_sum_return {
+    //decltype allow to get the return type of the addition of a variable of type Scalar_lhs to a variable of type Scalar_rhs.
     typedef decltype (std::declval<Scalar_lhs>() + std::declval<Scalar_rhs>()) type;
 };
 
+/**
+ * Helper struct for determining the type resulting from an addition of two matrices. Specialization for two matrices
+ *
+ */
 template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
 struct sDiff::matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
         typename std::enable_if<sDiff::is_valid_sum<lhsRows, lhsCols, rhsRows, rhsCols>::value>::type> {
     typedef Eigen::Matrix<typename sDiff::scalar_sum_return<Scalar_lhs, Scalar_rhs>::type, std::min(lhsRows, rhsRows), std::min(lhsCols, rhsCols)> type; //here we assume that Eigen::Dynamic == -1, thus, given that it is a valid sum, the minimum will be -1 if present, thus using Eigen::Dynamic as output
 };
 
+/**
+ * Helper struct for determining the type resulting from an addition of two matrices. Specialization for two scalars.
+ *
+ */
 template<typename Scalar_lhs, typename Scalar_rhs>
 struct sDiff::matrix_sum_return<Scalar_lhs, Scalar_rhs,
         typename std::enable_if<std::is_arithmetic<Scalar_lhs>::value && std::is_arithmetic<Scalar_rhs>::value>::type> {
     typedef typename sDiff::scalar_sum_return<Scalar_lhs, Scalar_rhs>::type type;
 };
 
+/**
+ * Helper struct for determining the type resulting from an addition of two matrices. Specialization for a scalar and a matrix.
+ *
+ */
 template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols>
 struct sDiff::matrix_sum_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
         typename std::enable_if<std::is_arithmetic<Scalar>::value && sDiff::is_valid_sum<1,1, rhsRows, rhsCols>::value>::type> {
     typedef Eigen::Matrix<typename sDiff::scalar_sum_return<Scalar, Scalar_rhs>::type, rhsRows, rhsCols> type;
 };
 
+/**
+ * Helper struct for determining the type resulting from an addition of two matrices. Specialization for a matrix and a scalar
+ *
+ */
 template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols>
 struct sDiff::matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
         typename std::enable_if<std::is_arithmetic<Scalar>::value && sDiff::is_valid_sum<1,1, lhsRows, lhsCols>::value>::type> {
     typedef Eigen::Matrix<typename sDiff::scalar_sum_return<Scalar, Scalar_lhs>::type, lhsRows, lhsCols> type;
 };
 
+/**
+ * Helper struct for determining the type resulting from a multiplication
+ */
 template <typename Scalar_lhs, typename Scalar_rhs>
 struct sDiff::scalar_product_return {
+    //decltype allow to get the return type of the multiplication of a variable of type Scalar_lhs to a variable of type Scalar_rhs.
     typedef decltype (std::declval<Scalar_lhs>() * std::declval<Scalar_rhs>()) type;
 };
 
+/**
+ * Helper struct for determining the type resulting from a multiplication of two matrices. Specialization for two matrices
+ *
+ */
 template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
 struct sDiff::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
         typename std::enable_if<sDiff::is_valid_product<lhsRows, lhsCols, rhsRows, rhsCols>::value>::type> {
     typedef Eigen::Matrix<typename sDiff::scalar_product_return<Scalar_lhs, Scalar_rhs>::type, lhsRows, rhsCols> type;
 };
 
+/**
+ * Helper struct for determining the type resulting from a multiplication of two matrices. Specialization for a scalar and a matrix
+ */
 template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols>
 struct sDiff::matrix_product_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
         typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
     typedef Eigen::Matrix<typename sDiff::scalar_product_return<Scalar, Scalar_rhs>::type, rhsRows, rhsCols> type;
 };
 
+/**
+ * Helper struct for determining the type resulting from a multiplication of two matrices. Specialization for a matrix and a scalar.
+ */
 template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols>
 struct sDiff::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
         typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
     typedef Eigen::Matrix<typename sDiff::scalar_product_return<Scalar, Scalar_lhs>::type, lhsRows, lhsCols> type;
 };
 
+/**
+ * Helper struct for determining the type resulting from a multiplication of two matrices. Specialization for two scalars.
+ */
 template<typename Scalar_lhs, typename Scalar_rhs>
 struct sDiff::matrix_product_return<Scalar_lhs, Scalar_rhs,
         typename std::enable_if<std::is_arithmetic<Scalar_lhs>::value && std::is_arithmetic<Scalar_rhs>::value>::type> {
     typedef typename sDiff::scalar_product_return<Scalar_lhs, Scalar_rhs>::type type;
 };
 
+
+/**
+ * @brief The SumEvaluable. Implements the sum of two evaluables.
+ */
 template <class LeftEvaluable, class RightEvaluable>
 class sDiff::SumEvaluable : public sDiff::Evaluable<typename sDiff::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
 
@@ -102,6 +143,9 @@ public:
 
 };
 
+/**
+ * @brief The SubtractionEvaluable. Implements the subtraction of two evaluables.
+ */
 template <class LeftEvaluable, class RightEvaluable>
 class sDiff::SubtractionEvaluable : public sDiff::Evaluable<typename sDiff::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
 
@@ -135,6 +179,9 @@ public:
 
 };
 
+/**
+ * @brief The ProductEvaluable. Implements the product of two evaluables.
+ */
 template <class LeftEvaluable, class RightEvaluable>
 class sDiff::ProductEvaluable : public sDiff::Evaluable<typename sDiff::matrix_product_return<
         typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
@@ -153,15 +200,21 @@ private:
     template<bool lhsIsScalar, bool rhsIsScalar>
     derivative_expression get_derivative(sDiff::bool_value<lhsIsScalar>, sDiff::bool_value<rhsIsScalar>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable);
 
+    /**
+     * @brief Helper function for the derivative of the multiplication between two scalars
+     */
     derivative_expression get_derivative(sDiff::bool_value<true>, sDiff::bool_value<true>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
         derivative_expression derivative;
 
-        derivative = m_rhs * m_lhs.getColumnDerivative(column, variable); + m_lhs * m_rhs.getColumnDerivative(column, variable);
+        derivative = m_rhs * m_lhs.getColumnDerivative(column, variable) + m_lhs * m_rhs.getColumnDerivative(column, variable);
 
         return derivative;
 
     }
 
+    /**
+     * @brief Helper function for the derivative of the multiplication between a scalar and a matrix.
+     */
     derivative_expression get_derivative(sDiff::bool_value<true>, sDiff::bool_value<false>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
 
         //k*A
@@ -172,6 +225,9 @@ private:
         return derivative;
     }
 
+    /**
+     * @brief Helper function for the derivative of the multiplication between a matrix and a scalar.
+     */
     derivative_expression get_derivative(sDiff::bool_value<false>, sDiff::bool_value<true>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
 
         //A*k
@@ -182,6 +238,9 @@ private:
         return derivative;
     }
 
+    /**
+     * @brief Helper function for the derivative of the multiplication between two matrices.
+     */
     derivative_expression get_derivative(sDiff::bool_value<false>, sDiff::bool_value<false>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
         derivative_expression derivative;
 
@@ -223,6 +282,9 @@ public:
 
 };
 
+/**
+ * @brief The RowEvaluable. To retrieve a specified row from an evaluble. Specialization for matrix valued evaluables.
+ */
 template <typename EvaluableT>
 class sDiff::RowEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
         : public sDiff::Evaluable<typename EvaluableT::row_type>
@@ -255,6 +317,9 @@ public:
 
 };
 
+/**
+ * @brief The RowEvaluable. To retrieve a specified row from an evaluble. Specialization for scalar valued evaluables.
+ */
 template <typename EvaluableT>
 class sDiff::RowEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
         : public sDiff::Evaluable<typename EvaluableT::row_type>
@@ -284,6 +349,9 @@ public:
     }
 };
 
+/**
+ * @brief The ColEvaluable. To retrieve a specified column from an evaluble. Specialization for matrix valued evaluables.
+ */
 template <typename EvaluableT>
 class sDiff::ColEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
         : public sDiff::Evaluable<typename EvaluableT::col_type>
@@ -317,6 +385,9 @@ public:
 
 };
 
+/**
+ * @brief The ColEvaluable. To retrieve a specified column from an evaluble. Specialization for scalar valued evaluables.
+ */
 template <typename EvaluableT>
 class sDiff::ColEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
         : public sDiff::Evaluable<typename EvaluableT::col_type>
@@ -346,6 +417,9 @@ public:
     }
 };
 
+/**
+ * @brief The ElementEvaluable. To retrieve a specified element from an evaluble. Specialization for matrix valued evaluables.
+ */
 template <typename EvaluableT>
 class sDiff::ElementEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
         : public sDiff::Evaluable<typename EvaluableT::value_type>
@@ -379,6 +453,9 @@ public:
     }
 };
 
+/**
+ * @brief The ElementEvaluable. To retrieve a specified element from an evaluble. Specialization for scalar valued evaluables.
+ */
 template <typename EvaluableT>
 class sDiff::ElementEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
         : public sDiff::Evaluable<typename EvaluableT::value_type> {
@@ -407,6 +484,11 @@ public:
     }
 };
 
+/**
+ * @brief The CastEvaluable.
+ *
+ * It allows to assign an evaluable to an expression whose pointer cannot be directly casted. It assumes that the two evaluation buffers can be casted.
+ */
 template <class LeftEvaluable, class RightEvaluable>
 class sDiff::CastEvaluable : public sDiff::Evaluable<typename LeftEvaluable::matrix_type> {
 

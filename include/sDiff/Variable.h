@@ -11,6 +11,12 @@
 #include <sDiff/VariableBase.h>
 #include <sDiff/BasicEvaluables.h>
 
+/**
+ * @brief The EvaluableVariable class, specialized for vector values.
+ *
+ * This class inherits from both VariableBase and Evaluable. This allows to use the variables inside expressions as they were evaluables,
+ * thus allowing for seamless application of arithmetic operators.
+ */
 template <typename Vector>
 class sDiff::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type> : public sDiff::VariableBase, public sDiff::Evaluable<Vector> {
 public:
@@ -31,7 +37,11 @@ public:
     template <typename otherVector>
     EvaluableVariable(EvaluableVariable<otherVector>&& other) = delete;
 
-
+    /**
+     * @brief Assignement operator to set the values of the variable.
+     *
+     * The right hand side has to be a vector.
+     */
     template<typename otherVector>
     void operator=(const otherVector& rhs) {
         static_assert (otherVector::ColsAtCompileTime == 1, "The chosen VectorType for the rhs should have exactly one column at compile time.");
@@ -39,6 +49,9 @@ public:
         this->m_evaluationBuffer = rhs;
     }
 
+    /**
+     * @brief Assignement operator to set the values of the variable equal to another variable.
+     */
     template<typename OtherVector>
     void operator=(const EvaluableVariable<OtherVector>& rhs) {
         static_assert (OtherVector::ColsAtCompileTime == 1, "The chosen VectorType for the rhs should have exactly one column at compile time.");
@@ -64,6 +77,12 @@ public:
 
 };
 
+/**
+ * @brief The EvaluableVariable class, specialized for scalar values.
+ *
+ * This class inherits from both VariableBase and Evaluable. This allows to use the variables inside expressions as they were evaluables,
+ * thus allowing for seamless application of arithmetic operators.
+ */
 template <typename Scalar>
 class sDiff::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public sDiff::VariableBase, public sDiff::Evaluable<Scalar> {
 
@@ -80,13 +99,19 @@ public:
     template <typename otherVector>
     EvaluableVariable(EvaluableVariable<otherVector>&& other) = delete;
 
+    /**
+     * @brief Assignement operator to set the values of the variable.
+     *
+     * The right hand side has to be a scalar.
+     */
     void operator=(const Scalar& rhs) {
-        assert(rhs.size() == this->dimension());
         this->m_evaluationBuffer = rhs;
     }
 
+    /**
+     * @brief Assignement operator to set the values of the variable equal to another variable.
+     */
     void operator=(const EvaluableVariable<Scalar>& rhs) {
-        assert(rhs.dimension() == this->dimension());
         this->m_evaluationBuffer = rhs.evaluate();
     }
 
