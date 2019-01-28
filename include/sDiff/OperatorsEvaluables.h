@@ -136,9 +136,32 @@ public:
                                                                                                                       std::shared_ptr<sDiff::VariableBase> variable) final {
         sDiff::ExpressionComponent<typename sDiff::Evaluable<sum_type>::derivative_evaluable> sumDerivative;
 
-        sumDerivative = m_lhs.getColumnDerivative(column, variable) + m_rhs.getColumnDerivative(column, variable);
+        bool isLeftDependent = m_lhs.isDependentFrom(variable);
+        bool isRightDependent = m_rhs.isDependentFrom(variable);
 
-        return sumDerivative;
+        if (isLeftDependent && isRightDependent) {
+            sumDerivative = m_lhs.getColumnDerivative(column, variable) + m_rhs.getColumnDerivative(column, variable);
+
+            return sumDerivative;
+        }
+
+        if (!isLeftDependent && !isRightDependent) {
+            sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<sum_type>::derivative_evaluable::matrix_type>> nullDerivative(this->rows(), this->cols(), "d" + this->name() + "/d" + variable->variableName());
+            sumDerivative = nullDerivative;
+            return sumDerivative;
+        }
+
+        if (isLeftDependent) {
+            sumDerivative = m_lhs.getColumnDerivative(column, variable);
+            return sumDerivative;
+        } else {
+            sumDerivative = m_rhs.getColumnDerivative(column, variable);
+            return sumDerivative;
+        }
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_lhs.isDependentFrom(variable) || m_rhs.isDependentFrom(variable);
     }
 
 };
@@ -172,11 +195,66 @@ public:
                                                                                                                       std::shared_ptr<sDiff::VariableBase> variable) final {
         sDiff::ExpressionComponent<typename sDiff::Evaluable<sum_type>::derivative_evaluable> sumDerivative;
 
-        sumDerivative = m_lhs.getColumnDerivative(column, variable) - m_rhs.getColumnDerivative(column, variable);
+        bool isLeftDependent = m_lhs.isDependentFrom(variable);
+        bool isRightDependent = m_rhs.isDependentFrom(variable);
 
-        return sumDerivative;
+        if (isLeftDependent && isRightDependent) {
+            sumDerivative = m_lhs.getColumnDerivative(column, variable) - m_rhs.getColumnDerivative(column, variable);
+
+            return sumDerivative;
+        }
+
+        if (!isLeftDependent && !isRightDependent) {
+            sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<sum_type>::derivative_evaluable::matrix_type>> nullDerivative(this->rows(), this->cols(), "d" + this->name() + "/d" + variable->variableName());
+            sumDerivative = nullDerivative;
+            return sumDerivative;
+        }
+
+        if (isLeftDependent) {
+            sumDerivative = m_lhs.getColumnDerivative(column, variable);
+            return sumDerivative;
+        } else {
+            sumDerivative = - m_rhs.getColumnDerivative(column, variable);
+            return sumDerivative;
+        }
     }
 
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_lhs.isDependentFrom(variable) || m_rhs.isDependentFrom(variable);
+    }
+
+};
+
+template <class EvaluableT>
+class sDiff::SignInvertedEvaluable : public sDiff::Evaluable<typename EvaluableT::matrix_type>{
+
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
+
+public:
+
+    SignInvertedEvaluable(const sDiff::ExpressionComponent<EvaluableT>& expression)
+        : sDiff::Evaluable<typename EvaluableT::matrix_type>(expression.rows(), expression.cols(), "-" + expression.name())
+        , m_expression(expression)
+    { }
+
+    virtual const typename EvaluableT::matrix_type& evaluate() final {
+        this->m_evaluationBuffer = -m_expression.evaluate();
+
+        return this->m_evaluationBuffer;
+    }
+
+    sDiff::ExpressionComponent<typename sDiff::Evaluable<typename EvaluableT::matrix_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                                                      std::shared_ptr<sDiff::VariableBase> variable) final {
+        sDiff::ExpressionComponent<typename sDiff::Evaluable<typename EvaluableT::matrix_type>::derivative_evaluable> derivative;
+
+        derivative = -m_expression.getColumnDerivative(column, variable);
+
+        return derivative;
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
+    }
 };
 
 /**
@@ -206,10 +284,27 @@ private:
     derivative_expression get_derivative(sDiff::bool_value<true>, sDiff::bool_value<true>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
         derivative_expression derivative;
 
-        derivative = m_rhs * m_lhs.getColumnDerivative(column, variable) + m_lhs * m_rhs.getColumnDerivative(column, variable);
+        bool isLeftDependent = m_lhs.isDependentFrom(variable);
+        bool isRightDependent = m_rhs.isDependentFrom(variable);
 
-        return derivative;
+        if (isLeftDependent && isRightDependent) {
+            derivative = m_rhs * m_lhs.getColumnDerivative(column, variable) + m_lhs * m_rhs.getColumnDerivative(column, variable);
+            return derivative;
+        }
 
+        if (!isLeftDependent && !isRightDependent) {
+            sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<product_type>::derivative_evaluable::matrix_type>> nullDerivative(this->rows(), this->cols(), "d" + this->name() + "/d" + variable->variableName());
+            derivative = nullDerivative;
+            return derivative;
+        }
+
+        if (isLeftDependent) {
+            derivative = m_rhs * m_lhs.getColumnDerivative(column, variable);
+            return derivative;
+        } else {
+            derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
+            return derivative;
+        }
     }
 
     /**
@@ -220,9 +315,27 @@ private:
         //k*A
         derivative_expression derivative;
 
-        derivative = m_lhs * m_rhs.getColumnDerivative(column, variable) + m_rhs.col(column) * m_lhs.getColumnDerivative(0, variable);
+        bool isLeftDependent = m_lhs.isDependentFrom(variable);
+        bool isRightDependent = m_rhs.isDependentFrom(variable);
 
-        return derivative;
+        if (isLeftDependent && isRightDependent) {
+            derivative = m_lhs * m_rhs.getColumnDerivative(column, variable) + m_rhs.col(column) * m_lhs.getColumnDerivative(0, variable);
+            return derivative;
+        }
+
+        if (!isLeftDependent && !isRightDependent) {
+            sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<product_type>::derivative_evaluable::matrix_type>> nullDerivative(this->rows(), this->cols(), "d" + this->name() + "/d" + variable->variableName());
+            derivative = nullDerivative;
+            return derivative;
+        }
+
+        if (isLeftDependent) {
+            derivative = m_rhs.col(column) * m_lhs.getColumnDerivative(0, variable);
+            return derivative;
+        } else {
+            derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
+            return derivative;
+        }
     }
 
     /**
@@ -233,9 +346,27 @@ private:
         //A*k
         derivative_expression derivative;
 
-        derivative = m_rhs * m_lhs.getColumnDerivative(column, variable) + m_lhs.col(column) * m_rhs.getColumnDerivative(0, variable);
+        bool isLeftDependent = m_lhs.isDependentFrom(variable);
+        bool isRightDependent = m_rhs.isDependentFrom(variable);
 
-        return derivative;
+        if (isLeftDependent && isRightDependent) {
+            derivative = m_rhs * m_lhs.getColumnDerivative(column, variable) + m_lhs.col(column) * m_rhs.getColumnDerivative(0, variable);
+            return derivative;
+        }
+
+        if (!isLeftDependent && !isRightDependent) {
+            sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<product_type>::derivative_evaluable::matrix_type>> nullDerivative(this->rows(), this->cols(), "d" + this->name() + "/d" + variable->variableName());
+            derivative = nullDerivative;
+            return derivative;
+        }
+
+        if (isLeftDependent) {
+            derivative = m_rhs * m_lhs.getColumnDerivative(column, variable);
+            return derivative;
+        } else {
+            derivative = m_lhs.col(column) * m_rhs.getColumnDerivative(0, variable);
+            return derivative;
+        }
     }
 
     /**
@@ -244,13 +375,43 @@ private:
     derivative_expression get_derivative(sDiff::bool_value<false>, sDiff::bool_value<false>, Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
         derivative_expression derivative;
 
-        derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
+        bool isLeftDependent = m_lhs.isDependentFrom(variable);
+        bool isRightDependent = m_rhs.isDependentFrom(variable);
 
-        for (size_t i = 0; i < m_rhs.rows(); ++i) {
-            derivative = derivative + m_lhs.getColumnDerivative(i, variable) * m_rhs(i, column);
+        if (isLeftDependent && isRightDependent) {
+
+            derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
+
+            for (size_t i = 0; i < m_rhs.rows(); ++i) {
+                derivative = derivative + m_lhs.getColumnDerivative(i, variable) * m_rhs(i, column);
+            }
+
+            return derivative;
         }
 
-        return derivative;
+        if (!isLeftDependent && !isRightDependent) {
+            sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<product_type>::derivative_evaluable::matrix_type>> nullDerivative(this->rows(), this->cols(), "d" + this->name() + "/d" + variable->variableName());
+            derivative = nullDerivative;
+            return derivative;
+        }
+
+        if (isLeftDependent) {
+
+            derivative = m_lhs.getColumnDerivative(0, variable) * m_rhs(0, column);
+
+            for (size_t i = 1; i < m_rhs.rows(); ++i) {
+                derivative = derivative + m_lhs.getColumnDerivative(i, variable) * m_rhs(i, column);
+            }
+
+            return derivative;
+
+        } else {
+
+            derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
+
+            return derivative;
+        }
+
     }
 
 public:
@@ -278,6 +439,10 @@ public:
         return get_derivative(sDiff::bool_value<std::is_arithmetic<typename LeftEvaluable::matrix_type>::value>(),
                               sDiff::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>(),
                               column, variable);
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_lhs.isDependentFrom(variable) || m_rhs.isDependentFrom(variable);
     }
 
 };
@@ -315,6 +480,10 @@ public:
         return newDerivative;
     }
 
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
+    }
+
 };
 
 /**
@@ -346,6 +515,10 @@ public:
         assert(column == 0);
 
         return m_expression.getColumnDerivative(0, variable);
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
     }
 };
 
@@ -383,6 +556,10 @@ public:
         return newDerivative;
     }
 
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
+    }
+
 };
 
 /**
@@ -414,6 +591,10 @@ public:
         assert(column == 0);
 
         return m_expression.getColumnDerivative(0, variable);
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
     }
 };
 
@@ -451,6 +632,10 @@ public:
 
         return newDerivative;
     }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
+    }
 };
 
 /**
@@ -481,6 +666,10 @@ public:
         assert(column == 0);
 
         return m_expression.getColumnDerivative(0, variable);
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
     }
 };
 
@@ -514,6 +703,10 @@ public:
         sDiff::ExpressionComponent<CastEvaluable<typename sDiff::Evaluable<typename LeftEvaluable::matrix_type>::derivative_evaluable, typename RightEvaluable::derivative_evaluable>> newCast(rightDerivative);
 
         return newCast;
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_rhs.isDependentFrom(variable);
     }
 };
 

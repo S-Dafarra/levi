@@ -75,6 +75,10 @@ public:
         }
     }
 
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension()));
+    }
+
 };
 
 /**
@@ -127,6 +131,10 @@ public:
         } else {
             return sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension());
         }
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension()));
     }
 
 };

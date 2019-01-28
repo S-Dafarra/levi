@@ -134,6 +134,9 @@ namespace sDiff {
     template <class LeftEvaluable, class RightEvaluable>
     class SubtractionEvaluable;
 
+    template <class EvaluableT>
+    class SignInvertedEvaluable;
+
     template <class LeftEvaluable, class RightEvaluable>
     class ProductEvaluable;
 

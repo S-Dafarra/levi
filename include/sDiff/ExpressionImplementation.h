@@ -157,6 +157,17 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<ty
     return operator-(constant);
 }
 
+template<class EvaluableT>
+sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::matrix_type>> sDiff::ExpressionComponent<EvaluableT>::operator-()
+{
+    assert(m_evaluable);
+    sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::matrix_type>> newExpression;
+
+    newExpression = sDiff::ExpressionComponent<sDiff::SignInvertedEvaluable<EvaluableT>>(*this);
+
+    return newExpression;
+}
+
 template <class EvaluableT>
 template<class EvaluableRhs>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> sDiff::ExpressionComponent<EvaluableT>::operator*(const sDiff::ExpressionComponent<EvaluableRhs>& rhs) {
@@ -259,6 +270,25 @@ sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> sDiff::Exp
     assert(variable && "Empty variable pointer.");
 
     return m_evaluable->getColumnDerivative(column, variable);
+}
+
+template<typename EvaluableT>
+template<typename VariableType>
+bool sDiff::ExpressionComponent<EvaluableT>::isDependentFrom(const sDiff::ExpressionComponent<sDiff::EvaluableVariable<VariableType>> &variable)
+{
+    assert(m_evaluable && "Cannot compute the derivative of this expression.");
+    assert(variable.m_evaluable && "Invalid variable.");
+
+    return m_evaluable->isDependentFrom(variable.m_evaluable);
+}
+
+template<typename EvaluableT>
+bool sDiff::ExpressionComponent<EvaluableT>::isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable)
+{
+    assert(m_evaluable && "Cannot compute the derivative of this expression.");
+    assert(variable && "Empty variable pointer.");
+
+    return m_evaluable->isDependentFrom(variable);
 }
 
 //end of ExpressionComponent implementation

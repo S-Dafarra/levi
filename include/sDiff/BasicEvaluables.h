@@ -37,6 +37,10 @@ public:
         return sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
     }
 
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return false;
+    }
+
     void operator=(const Matrix& rhs) {
         this->m_evaluationBuffer = rhs;
     }
@@ -63,6 +67,10 @@ public:
     virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                     std::shared_ptr<sDiff::VariableBase> variable) final {
         return sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return false;
     }
 
     void operator=(const Scalar& rhs) {
@@ -100,6 +108,10 @@ public:
                                                                                                                     std::shared_ptr<sDiff::VariableBase> variable) final {
         return sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
     }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return false;
+    }
 };
 
 /**
@@ -125,6 +137,10 @@ public:
     virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                     std::shared_ptr<sDiff::VariableBase> variable) final {
         return sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return false;
     }
 };
 
@@ -159,6 +175,10 @@ public:
                                                                                                                     std::shared_ptr<sDiff::VariableBase> variable) final {
         return sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
     }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return false;
+    }
 };
 
 /**
@@ -182,6 +202,10 @@ public:
     virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                     std::shared_ptr<sDiff::VariableBase> variable) final {
         return sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return false;
     }
 };
 

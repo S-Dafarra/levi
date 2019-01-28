@@ -172,6 +172,17 @@ public:
         return sDiff::ExpressionComponent<derivative_evaluable>();
     }
 
+    /**
+     * @brief Check whether the evaluable depends on a specified variable
+     * @param variable The variable of interest
+     * @return True if dependent
+     *
+     * User should override this method to reduce callings to getColumnDerivative.
+     */
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) {
+        return true;
+    }
+
     Evaluable<Matrix>& operator=(const Evaluable& other) = delete;
 
     void operator=(Evaluable&& other) = delete;
@@ -312,6 +323,17 @@ public:
      */
     virtual sDiff::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
         return sDiff::ExpressionComponent<derivative_evaluable>();
+    }
+
+    /**
+     * @brief Check whether the evaluable depends on a specified variable
+     * @param variable The variable of interest
+     * @return True if dependent
+     *
+     * User should override this method to reduce callings to getColumnDerivative.
+     */
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) {
+        return true;
     }
 
     Evaluable<Scalar>& operator=(const Evaluable& other) = delete;

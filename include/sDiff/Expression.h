@@ -205,6 +205,13 @@ public:
     ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& rhs);
 
     /**
+     * @brief Operator -
+     *
+     * @return An expression which points to an evaluable inverting the sign.
+     */
+    ExpressionComponent<sDiff::Evaluable<typename EvaluableT::matrix_type>> operator-();
+
+    /**
      * @brief Operator *
      *
      * @return An expression which points to an evaluable performing the multiplication.
@@ -299,6 +306,21 @@ public:
      * @return An expression pointing to the column derivative.
      */
     ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable);
+
+    /**
+     * @brief Check whether the pointed evaluable depends on a specified variable
+     * @param variable The variable of interest
+     * @return True if dependent
+     */
+    template<typename VariableType>
+    bool isDependentFrom(const ExpressionComponent<sDiff::EvaluableVariable<VariableType>>& variable);
+
+    /**
+     * @brief Check whether the pointed evaluable depends on a specified variable
+     * @param variable The variable of interest
+     * @return True if dependent
+     */
+    bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable);
 };
 
 
