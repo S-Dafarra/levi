@@ -320,6 +320,12 @@ sDiff::ExpressionComponent<EvaluableT> sDiff::ExpressionComponent<EvaluableT>::C
     return sDiff::ExpressionComponent<sDiff::ConstructorByRows<EvaluableT>>(rows, name);
 }
 
+template<class EvaluableT>
+sDiff::ExpressionComponent<EvaluableT> sDiff::ExpressionComponent<EvaluableT>::ComposeByCols(const std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::col_type>>> &cols, std::string name)
+{
+    return sDiff::ExpressionComponent<sDiff::ConstructorByCols<EvaluableT>>(cols, name);
+}
+
 //end of ExpressionComponent implementation
 
 template <typename Matrix, class EvaluableT>

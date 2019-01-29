@@ -21,6 +21,12 @@ int main() {
     Variable x(2, "x");
     auto derivative = antiIdentity.getColumnDerivative(1, x);
 
+    Expression antiIdentity2 = Expression::ComposeByCols({identity.col(2), identity.col(1), identity.col(0)}, "Anti-identity2");
+
+    std::cerr << antiIdentity2.evaluate() << std::endl;
+
+    auto derivative2 = antiIdentity2.getColumnDerivative(1, x);
+
     return 0;
 
 }

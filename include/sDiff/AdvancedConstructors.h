@@ -60,6 +60,8 @@ public:
         sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> derivative;
 
         derivative = sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable>::ComposeByRows(m_derivatives, "d(" + this->name() + ")/d" + variable->variableName());
+
+        return derivative;
     }
 
     virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) {
@@ -67,6 +69,63 @@ public:
 
         for (size_t i = 0; i < m_rows.size(); ++i) {
             isDependent = isDependent || m_rows[i].isDependentFrom(variable);
+        }
+
+        return isDependent;
+    }
+
+};
+
+/**
+ * The ConstructorByCols.
+ *
+ * Constructs an evaluable by aligning the columns specified in the constructor.
+ */
+template <typename EvaluableT>
+class sDiff::ConstructorByCols : public sDiff::Evaluable<typename EvaluableT::matrix_type> {
+
+    std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::col_type>>> m_cols;
+
+public:
+
+    ConstructorByCols(const std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::col_type>>>& cols, std::string name)
+        : sDiff::Evaluable<typename EvaluableT::matrix_type>(name)
+        , m_cols(cols)
+    {
+        assert(m_cols.size() != 0);
+        assert((EvaluableT::cols_at_compile_time == Eigen::Dynamic) || (EvaluableT::cols_at_compile_time == m_cols.size()));
+        Eigen::Index nRows;
+
+        nRows = m_cols.front().rows();
+
+        for (size_t i = 1; i < m_cols.size(); ++i) {
+            assert(m_cols[i].rows() == nRows);
+        }
+
+        this->resize(nRows, m_cols.size());
+    }
+
+    virtual const typename EvaluableT::matrix_type& evaluate() final {
+        for (size_t i = 0; i < m_cols.size(); ++i) {
+            this->m_evaluationBuffer.col(i) = m_cols[i].evaluate();
+        }
+        return this->m_evaluationBuffer;
+    }
+
+    virtual sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+
+        sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> derivative;
+
+        derivative = m_cols[column].getColumnDerivative(0, variable);
+
+        return derivative;
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) {
+        bool isDependent = false;
+
+        for (size_t i = 0; i < m_cols.size(); ++i) {
+            isDependent = isDependent || m_cols[i].isDependentFrom(variable);
         }
 
         return isDependent;
