@@ -851,7 +851,7 @@ public:
 
             sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col1(m_derivativeBuffer, "LeviCivita_ij0");
 
-            derivative = col1 * m_expression.getColumnDerivative(column, variable);
+            derivative = col1 * m_expression.getColumnDerivative(0, variable);
             return derivative;
 
         }
@@ -864,7 +864,7 @@ public:
 
             sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col2(m_derivativeBuffer, "LeviCivita_ij1");
 
-            derivative = col2 * m_expression.getColumnDerivative(column, variable);
+            derivative = col2 * m_expression.getColumnDerivative(0, variable);
             return derivative;
 
         }
@@ -877,7 +877,7 @@ public:
 
             sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col3(m_derivativeBuffer, "LeviCivita_ij2");
 
-            derivative = col3 * m_expression.getColumnDerivative(column, variable);
+            derivative = col3 * m_expression.getColumnDerivative(0, variable);
             return derivative;
 
         }
