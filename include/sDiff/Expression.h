@@ -299,6 +299,13 @@ public:
     ExpressionComponent<sDiff::Evaluable<typename sDiff::dynamic_block_return<typename EvaluableT::matrix_type>::type>> block(Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols);
 
     /**
+     * @brief Computes the skew symmetric matrix out of the current evaluable
+     * @return An expression pointing to an evaluable which computes the skew symmetric matrix
+     * @note This works only with three dimensional vectors.
+     */
+    ExpressionComponent<sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> skew();
+
+    /**
      * @brief Retrieve the column derivative with respect to the specified variable
      *
      * @param column The column of interest

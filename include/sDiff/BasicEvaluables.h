@@ -156,7 +156,7 @@ public:
 
 
     IdentityEvaluable(Eigen::Index rows, Eigen::Index cols)
-        : sDiff::Evaluable<Matrix>(rows, cols, "1")
+        : sDiff::Evaluable<Matrix>(rows, cols, "I")
     {
         this->m_evaluationBuffer.setIdentity();
     }

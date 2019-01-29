@@ -188,6 +188,9 @@ namespace sDiff {
     template <class LeftEvaluable, class RightEvaluable>
     class CastEvaluable;
 
+    template <typename EvaluableT>
+    class SkewEvaluable;
+
     typedef ExpressionComponent<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic >>> Expression;
 
     typedef ExpressionComponent<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , 1 >>> ColumnExpression;
@@ -195,6 +198,8 @@ namespace sDiff {
     typedef ExpressionComponent<EvaluableVariable<Eigen::Matrix< double , Eigen::Dynamic , 1>>> Variable;
 
     typedef ExpressionComponent<ConstantEvaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic>>> Constant;
+
+    typedef ExpressionComponent<IdentityEvaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic>>> Identity;
 
     typedef ExpressionComponent<ConstantEvaluable<double>> Scalar;
 }

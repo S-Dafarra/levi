@@ -25,5 +25,6 @@ endmacro()
 
 add_sdiff_test(Composition)
 add_sdiff_test(Derivative)
+add_sdiff_test(Rotation)
 
 

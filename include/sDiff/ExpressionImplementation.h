@@ -261,6 +261,17 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::dynamic_block_return
     return selectedBlock;
 }
 
+template<class EvaluableT>
+sDiff::ExpressionComponent<sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> sDiff::ExpressionComponent<EvaluableT>::skew()
+{
+    static_assert (((EvaluableT::rows_at_compile_time == Eigen::Dynamic) ||(EvaluableT::rows_at_compile_time == 3)) &&
+                   ((EvaluableT::cols_at_compile_time == Eigen::Dynamic) ||(EvaluableT::cols_at_compile_time == 1)) , "Skew can be applied only to three dimensional vectors.");
+    assert(m_evaluable && "Cannot compute the skew symmetric matrix from this expression.");
+    assert(rows() == 3 && cols() == 1 && "skew can be applied only to three dimensional vectors.");
+
+    return sDiff::ExpressionComponent<sDiff::SkewEvaluable<EvaluableT>>(*this);
+}
+
 template<typename EvaluableT>
 template<typename VariableType>
 sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> sDiff::ExpressionComponent<EvaluableT>::getColumnDerivative(Eigen::Index column,

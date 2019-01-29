@@ -43,4 +43,5 @@ int main() {
 
     std::cerr << exprDerivative.name() << std::endl << exprDerivative.evaluate() << std::endl;
 
+    return 0;
 }

@@ -249,11 +249,24 @@ public:
      * @brief Constructor
      * @param  Name of the evaluable
      *
-     * The evaluation buffer (m_evaluationBuffer) is not initialized nor resized.
+     * The evaluation buffer (m_evaluationBuffer) is not initialized.
      */
     Evaluable(const std::string& name)
         : m_name(name)
     { }
+
+    /**
+     * @brief Constructor (for compatibility with the matrix version)
+     * @param rows The number of rows (has to be equal to 1)
+     * @param cols The number of cols (has to be equal to 1)
+     * @param name Name of the evaluable.
+     */
+    Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
+        : m_name(name)
+    {
+        assert(rows == 1 && cols == 1);
+        m_evaluationBuffer = 0;
+    }
 
     /**
      * @brief Constructor

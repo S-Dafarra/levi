@@ -799,4 +799,96 @@ public:
     }
 };
 
+template <typename EvaluableT>
+class sDiff::SkewEvaluable : public sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>> {
+
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
+    Eigen::Matrix<typename EvaluableT::value_type, 3, 1> m_vector;
+    Eigen::Matrix<typename EvaluableT::value_type, 3, 3> m_derivativeBuffer;
+
+public:
+
+    SkewEvaluable(const sDiff::ExpressionComponent<EvaluableT>& expression)
+        : sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>("skew(" + expression.name() + ")")
+        , m_expression(expression)
+    {
+        assert((expression.rows() == 3) && (expression.cols() == 1));
+    }
+
+    virtual const Eigen::Matrix<typename EvaluableT::value_type, 3, 3>& evaluate() final {
+        m_vector = m_expression.evaluate();
+
+        this->m_evaluationBuffer(0,0) = 0.0;
+        this->m_evaluationBuffer(0,1) = -m_vector[2];
+        this->m_evaluationBuffer(0,2) = m_vector[1];
+        this->m_evaluationBuffer(1,0) = m_vector[2];
+        this->m_evaluationBuffer(1,1) = 0.0;
+        this->m_evaluationBuffer(1,2) = -m_vector[0];
+        this->m_evaluationBuffer(2,0) = -m_vector[1];
+        this->m_evaluationBuffer(2,1) = m_vector[0];
+        this->m_evaluationBuffer(2,2) = 0.0;
+
+        return this->m_evaluationBuffer;
+    }
+
+    virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                                                                                  std::shared_ptr<sDiff::VariableBase> variable) final {
+
+        assert( column < 3);
+        sDiff::ExpressionComponent<typename sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::derivative_evaluable> derivative;
+
+        if (!m_expression.isDependentFrom(variable)) {
+            sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::derivative_evaluable::matrix_type>> nullDerivative(this->rows(), this->cols(), "d" + this->name() + "/d" + variable->variableName());
+            derivative = nullDerivative;
+            return derivative;
+        }
+
+        if (column == 0) {
+
+            m_derivativeBuffer.setZero();
+            m_derivativeBuffer(1,2) = 1;
+            m_derivativeBuffer(2,1) = -1;
+
+            sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col1(m_derivativeBuffer, "LeviCivita_ij0");
+
+            derivative = col1 * m_expression.getColumnDerivative(column, variable);
+            return derivative;
+
+        }
+
+        if (column == 1) {
+
+            m_derivativeBuffer.setZero();
+            m_derivativeBuffer(0,2) = -1;
+            m_derivativeBuffer(2,0) = 1;
+
+            sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col2(m_derivativeBuffer, "LeviCivita_ij1");
+
+            derivative = col2 * m_expression.getColumnDerivative(column, variable);
+            return derivative;
+
+        }
+
+        if (column == 2) {
+
+            m_derivativeBuffer.setZero();
+            m_derivativeBuffer(0,1) = 1;
+            m_derivativeBuffer(1,0) = -1;
+
+            sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col3(m_derivativeBuffer, "LeviCivita_ij2");
+
+            derivative = col3 * m_expression.getColumnDerivative(column, variable);
+            return derivative;
+
+        }
+
+        return derivative;
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
+    }
+
+};
+
 #endif // SDIFF_OPERATORS_H

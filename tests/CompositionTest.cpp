@@ -92,6 +92,8 @@ int main() {
     std::cerr << testBlock.name() << " " <<std::endl << testBlock.evaluate() <<std::endl;
     assert(testBlock.evaluate() == c.evaluate().block(1,1,2,2));
 
+    auto testSkew = x.skew();
+
 
     return 0;
 }
