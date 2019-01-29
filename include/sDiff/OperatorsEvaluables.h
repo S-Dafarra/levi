@@ -635,7 +635,7 @@ public:
 
     virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                                              std::shared_ptr<sDiff::VariableBase> variable) final {
-        assert(column == m_col);
+        assert(column == 0);
         sDiff::ExpressionComponent<typename sDiff::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> newDerivative;
 
         newDerivative = sDiff::ExpressionComponent<sDiff::RowEvaluable<typename EvaluableT::derivative_evaluable>>(m_expression.getColumnDerivative(m_col, variable), m_row);
@@ -799,6 +799,11 @@ public:
     }
 };
 
+/**
+ * @brief The SkewEvaluable.
+ *
+ * It allows to compute the skew symmetric matrix out of a three dimensional vector.
+ */
 template <typename EvaluableT>
 class sDiff::SkewEvaluable : public sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>> {
 

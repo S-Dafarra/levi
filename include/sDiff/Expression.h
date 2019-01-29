@@ -338,6 +338,14 @@ public:
      * @return True if dependent
      */
     bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable);
+
+    /**
+     * @brief Create an epression from a vector of rows
+     * @param rows The vector containing the expressionion composing the rows of the new expression
+     * @param name The name of the new expression
+     * @return An expression made up by the specified rows
+     */
+    static ExpressionComponent<EvaluableT> ComposeByRows(const std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>>>& rows, std::string name);
 };
 
 

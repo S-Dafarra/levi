@@ -21,6 +21,7 @@ int main() {
 
     Expression rotation;
 
+    //Rodriguez formula
     rotation = Identity(3,3) + 2.0 * quaternion(0,0) * quaternion.block(1,0,3,1).skew() + 2.0 * quaternion.block(1,0,3,1).skew() * quaternion.block(1,0,3,1).skew();
 
     std::cerr << rotation.name() << std::endl;

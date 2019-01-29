@@ -9,6 +9,7 @@
 
 #include <Eigen/Core>
 
+#include <vector>
 #include <type_traits>
 #include <memory>
 #include <string>
@@ -190,6 +191,12 @@ namespace sDiff {
 
     template <typename EvaluableT>
     class SkewEvaluable;
+
+    template <typename EvaluableT>
+    class ConstructorByRows;
+
+    template <typename EvaluableT>
+    class ConstructorByCols;
 
     typedef ExpressionComponent<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic >>> Expression;
 

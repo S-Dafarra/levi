@@ -9,6 +9,7 @@
 
 #include <sDiff/Expression.h>
 #include <sDiff/OperatorsEvaluables.h>
+#include <sDiff/AdvancedConstructors.h>
 #include <sDiff/Variable.h>
 
 template<bool value, typename T>
@@ -311,6 +312,12 @@ bool sDiff::ExpressionComponent<EvaluableT>::isDependentFrom(std::shared_ptr<sDi
     assert(variable && "Empty variable pointer.");
 
     return m_evaluable->isDependentFrom(variable);
+}
+
+template<class EvaluableT>
+sDiff::ExpressionComponent<EvaluableT> sDiff::ExpressionComponent<EvaluableT>::ComposeByRows(const std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>>> &rows, std::string name)
+{
+    return sDiff::ExpressionComponent<sDiff::ConstructorByRows<EvaluableT>>(rows, name);
 }
 
 //end of ExpressionComponent implementation
