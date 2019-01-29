@@ -138,6 +138,15 @@ namespace sDiff {
     template<typename Scalar>
     struct dynamic_block_return<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
 
+    template<typename EvaluableT, class Enabler = void>
+    struct transpose_type;
+
+    template<typename EvaluableT>
+    struct transpose_type<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
+
+    template<typename EvaluableT>
+    struct transpose_type<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
+
     template <class LeftEvaluable, class RightEvaluable>
     class SumEvaluable;
 
@@ -191,6 +200,9 @@ namespace sDiff {
 
     template <typename EvaluableT>
     class SkewEvaluable;
+
+    template <typename EvaluableT>
+    class TransposeEvaluable;
 
     template <typename EvaluableT>
     class ConstructorByRows;

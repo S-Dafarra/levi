@@ -27,6 +27,23 @@ int main() {
 
     auto derivative2 = antiIdentity2.getColumnDerivative(1, x);
 
+    Variable k(3, "k");
+
+    Expression kSquared = k.transpose() * k;
+
+    Eigen::Vector3d k_values;
+    k_values = Eigen::Vector3d::Random();
+    k = k_values;
+
+    Eigen::MatrixXd squaredNorm(1,1);
+    squaredNorm(0,0) = k_values.squaredNorm();
+
+    assert((kSquared.evaluate() - squaredNorm).cwiseAbs().maxCoeff() < 1e-10);
+
+    Expression kSquaredDerivative = kSquared.getColumnDerivative(0, k);
+
+    assert((kSquaredDerivative.evaluate() - 2*k_values.transpose()).cwiseAbs().maxCoeff() < 1e-10);
+
     return 0;
 
 }

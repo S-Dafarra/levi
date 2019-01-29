@@ -273,6 +273,14 @@ sDiff::ExpressionComponent<sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::v
     return sDiff::ExpressionComponent<sDiff::SkewEvaluable<EvaluableT>>(*this);
 }
 
+template<class EvaluableT>
+sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::transpose_type<EvaluableT>::type> > sDiff::ExpressionComponent<EvaluableT>::transpose()
+{
+    assert(m_evaluable && "Cannot compute the transpose from this expression.");
+
+    return sDiff::ExpressionComponent<sDiff::TransposeEvaluable<EvaluableT>>(*this);
+}
+
 template<typename EvaluableT>
 template<typename VariableType>
 sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> sDiff::ExpressionComponent<EvaluableT>::getColumnDerivative(Eigen::Index column,

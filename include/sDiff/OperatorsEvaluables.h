@@ -116,6 +116,16 @@ struct sDiff::dynamic_block_return<Scalar, typename std::enable_if<std::is_arith
     typedef Scalar type;
 };
 
+template<typename EvaluableT>
+struct sDiff::transpose_type<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type> {
+    typedef Eigen::Matrix<typename EvaluableT::value_type, EvaluableT::cols_at_compile_time, EvaluableT::rows_at_compile_time> type;
+};
+
+template<typename EvaluableT>
+struct sDiff::transpose_type<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type> {
+    typedef typename EvaluableT::matrix_type type;
+};
+
 
 /**
  * @brief The SumEvaluable. Implements the sum of two evaluables.
@@ -888,6 +898,42 @@ public:
         }
 
         return derivative;
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+        return m_expression.isDependentFrom(variable);
+    }
+
+};
+
+template <typename EvaluableT>
+class sDiff::TransposeEvaluable : public sDiff::Evaluable<typename sDiff::transpose_type<EvaluableT>::type> {
+
+    sDiff::ExpressionComponent<EvaluableT> m_expression;
+    std::vector<sDiff::ExpressionComponent<typename sDiff::Evaluable<typename EvaluableT::value_type>::derivative_evaluable>> m_derivatives;
+
+public:
+
+    TransposeEvaluable(const sDiff::ExpressionComponent<EvaluableT>& expression)
+        : sDiff::Evaluable<typename sDiff::transpose_type<EvaluableT>::type>(expression.cols(), expression.rows(), expression.name() + "^T")
+        , m_expression(expression)
+    { }
+
+    virtual const typename sDiff::Evaluable<typename sDiff::transpose_type<EvaluableT>::type>::matrix_type & evaluate() final {
+        this->m_evaluationBuffer = m_expression.evaluate().transpose();
+
+        return this->m_evaluationBuffer;
+    }
+
+    sDiff::ExpressionComponent<typename sDiff::Evaluable<typename sDiff::transpose_type<EvaluableT>::type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                                                                      std::shared_ptr<sDiff::VariableBase> variable) final {
+        m_derivatives.resize(this->rows());
+
+        for (size_t j = 0; j < this->rows(); ++j) {
+            m_derivatives[j] = m_expression(column, j).getColumnDerivative(0, variable);
+        }
+
+        return sDiff::ExpressionComponent<typename sDiff::Evaluable<typename sDiff::transpose_type<EvaluableT>::type>::derivative_evaluable>::ComposeByRows(m_derivatives, "d(" + this->name() + ")/d" + variable->variableName());
     }
 
     virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{

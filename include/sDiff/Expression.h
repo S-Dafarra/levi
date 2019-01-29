@@ -305,6 +305,9 @@ public:
      */
     ExpressionComponent<sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> skew();
 
+
+    ExpressionComponent<sDiff::Evaluable<typename sDiff::transpose_type<EvaluableT>::type>> transpose();
+
     /**
      * @brief Retrieve the column derivative with respect to the specified variable
      *
