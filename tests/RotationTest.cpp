@@ -67,12 +67,12 @@ int main() {
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     testSpeed = quaternionEigen.toRotationMatrix();
     std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
-    std::cout << "Elapsed time us (eigen): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) <<std::endl;
+    std::cout << "Elapsed time ms (eigen): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 
     begin = std::chrono::steady_clock::now();
     testSpeed = rotation.evaluate();
     end= std::chrono::steady_clock::now();
-    std::cout << "Elapsed time us (evaluate): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) <<std::endl;
+    std::cout << "Elapsed time ms (evaluate): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 
     //-------------------------Validation of first derivative
 
@@ -96,7 +96,11 @@ int main() {
 
     Expression rotatedVectorDerivative = rotatedVector.getColumnDerivative(0, quaternion);
 
-    Eigen::MatrixXd derivativeValue = rotatedVectorDerivative.evaluate();
+    Eigen::MatrixXd derivativeValue(rotatedVectorDerivative.rows(), rotatedVectorDerivative.cols());
+    begin = std::chrono::steady_clock::now();
+    derivativeValue = rotatedVectorDerivative.evaluate();
+    end= std::chrono::steady_clock::now();
+    std::cout << "Elapsed time ms (evaluate first derivative): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 
 //    std::cerr << rotatedVectorDerivative.name() << std::endl;
 
@@ -125,6 +129,49 @@ int main() {
 
         assert ((firstOrderTaylor - perturbedOutput).cwiseAbs().maxCoeff() < perturbationValue/50.0);
 
+    }
+
+    //-------------------------Validation of second derivative
+
+    for (Eigen::Index j = 0 ; j < rotatedVectorDerivative.cols(); ++j) {
+        quaternion = quaternionValue;
+
+        output = rotatedVectorDerivative.col(j).evaluate();
+
+        Expression rotatedVectorDoubleDerivative = rotatedVectorDerivative.getColumnDerivative(j, quaternion);
+
+        Eigen::MatrixXd doubleDerivativeValue(rotatedVectorDoubleDerivative.rows(), rotatedVectorDoubleDerivative.cols());
+
+        begin = std::chrono::steady_clock::now();
+        doubleDerivativeValue = rotatedVectorDoubleDerivative.evaluate();
+        end= std::chrono::steady_clock::now();
+        std::cout << "Elapsed time ms (evaluate second derivative, column " << j<<"): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+
+        // Test separetly the derivative of quaternion
+        for (unsigned int i = 0; i < 4; i++)
+        {
+            quaternionPerturbed = quaternionValue;
+            quaternionPerturbed(i) = quaternionPerturbed(i) + perturbationValue;
+
+            //ensure validity of obtained quaternion even if the quaternion is no more a step different than
+            //the original
+            quaternionPerturbed = quaternionPerturbed.array().min(maxQuaternion.array());
+            quaternionPerturbed = quaternionPerturbed.array().max(minQuaternion.array());
+    //        quaternionPerturbed.normalize();
+
+            perturbation = quaternionPerturbed - quaternionValue;
+
+            quaternion = quaternionPerturbed;
+
+            perturbedOutput = rotatedVectorDerivative.evaluate().col(j);
+
+            firstOrderTaylor = doubleDerivativeValue * perturbation;
+
+            firstOrderTaylor += output;
+
+            assert ((firstOrderTaylor - perturbedOutput).cwiseAbs().maxCoeff() < perturbationValue/20.0);
+
+        }
     }
 
     return 0;
