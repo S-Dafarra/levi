@@ -224,6 +224,10 @@ public:
 
     typedef Scalar value_type;
 
+    static const Eigen::Index rows_at_compile_time = 1;
+
+    static const Eigen::Index cols_at_compile_time = 1;
+
     typedef Scalar row_type;
 
     typedef Scalar col_type;

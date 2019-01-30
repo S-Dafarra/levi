@@ -94,6 +94,19 @@ int main() {
 
     auto testSkew = x.skew();
 
+    Variable z(1,"z");
+
+    ScalarExpression zInverted = z.pow(-1);
+    z = 2;
+    assert(zInverted.evaluate() == 0.5);
+
+    Expression zSquared = z/zInverted;
+
+    assert(zSquared.evaluate()(0,0) == 4.0);
+
+    assert(zSquared.getColumnDerivative(0, z).evaluate()(0,0) == 4.0);
+
+    assert(zSquared.getColumnDerivative(0, z).getColumnDerivative(0, z).evaluate()(0,0) == 2.0);
 
     return 0;
 }

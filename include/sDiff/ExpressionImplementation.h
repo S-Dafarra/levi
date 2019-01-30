@@ -193,6 +193,46 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_retur
 
 template <class EvaluableT>
 template<class EvaluableRhs>
+sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::value_type>::type>>
+sDiff::ExpressionComponent<EvaluableT>::operator/(const sDiff::ExpressionComponent<EvaluableRhs> &rhs)
+{
+    static_assert ((EvaluableRhs::rows_at_compile_time == Eigen::Dynamic || EvaluableRhs::rows_at_compile_time == 1) && (EvaluableRhs::cols_at_compile_time == Eigen::Dynamic || EvaluableRhs::cols_at_compile_time == 1),
+                   "The operator/ can be used only when the rhs is a scalar or a 1x1 matrix.");
+
+    assert(rhs.rows() == 1 && rhs.cols() == 1 && "The operator/ can be used only when the rhs is a scalar or a 1x1 matrix.");
+    assert(m_evaluable);
+    assert(rhs.m_evaluable);
+
+    sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::value_type>::type>> newExpression;
+
+    newExpression = sDiff::ExpressionComponent<sDiff::DivisionEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
+
+    return newExpression;
+}
+
+template <class EvaluableT>
+template<typename Scalar>
+sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, Scalar>::type>> sDiff::ExpressionComponent<EvaluableT>::operator/(const Scalar &rhs)
+{
+    static_assert (std::is_arithmetic<Scalar>::value, "The rhs has to be a scalar.");
+    assert(m_evaluable);
+
+    sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Scalar>> constant(rhs);
+
+    return operator/(constant);
+}
+
+template<class EvaluableT>
+sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type> > sDiff::ExpressionComponent<EvaluableT>::pow(typename EvaluableT::value_type exponent)
+{
+    static_assert ((EvaluableT::rows_at_compile_time == Eigen::Dynamic || EvaluableT::rows_at_compile_time == 1) && (EvaluableT::cols_at_compile_time == Eigen::Dynamic || EvaluableT::cols_at_compile_time == 1),
+                   "pow can be used only with scalars or 1x1 matrices.");
+    assert(rows() == 1 && cols() == 1 && "pow can be used only with scalars or 1x1 matrices.");
+    return ExpressionComponent<sDiff::PowEvaluable<EvaluableT>>(*this, exponent);
+}
+
+template <class EvaluableT>
+template<class EvaluableRhs>
 sDiff::ExpressionComponent<EvaluableT>& sDiff::ExpressionComponent<EvaluableT>::operator=(const sDiff::ExpressionComponent<EvaluableRhs>& rhs) {
     static_assert (!std::is_base_of<sDiff::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
     casted_assignement(sDiff::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs);
@@ -361,6 +401,15 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_retur
             sDiff::build_constant<Matrix>(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
 
     return newConstant * rhs;
+}
+
+template <typename Matrix, class EvaluableT>
+sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<Matrix, typename EvaluableT::value_type>::type>> operator/(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs) {
+
+    sDiff::ExpressionComponent<sDiff::ConstantEvaluable<Matrix>> newConstant =
+            sDiff::build_constant<Matrix>(sDiff::bool_value<std::is_arithmetic<Matrix>::value>(), lhs);
+
+    return newConstant / rhs;
 }
 
 #endif // SDIFF_EXPRESSIONIMPLEMENTATION_H

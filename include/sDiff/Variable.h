@@ -19,6 +19,28 @@
  */
 template <typename Vector>
 class sDiff::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type> : public sDiff::VariableBase, public sDiff::Evaluable<Vector> {
+
+    template<typename OtherVector, bool isScalar>
+    void copy_constant(bool_value<isScalar>, const OtherVector& rhs);
+
+    template<typename OtherVector>
+    void copy_constant(bool_value<true>, const OtherVector& rhs) {
+        static_assert (this->rows_at_compile_time == Eigen::Dynamic || this->rows_at_compile_time == 1, "Cannot copy a scalar to this variable.");
+
+        if (this->rows_at_compile_time == Eigen::Dynamic) {
+            this->resize(1,1);
+        }
+
+        this->m_evaluationBuffer(0,0) = rhs;
+    }
+
+    template<typename OtherVector>
+    void copy_constant(bool_value<false>, const OtherVector& rhs) {
+        static_assert (OtherVector::ColsAtCompileTime == 1, "The chosen VectorType for the rhs should have exactly one column at compile time.");
+        assert(rhs.size() == this->dimension());
+        this->m_evaluationBuffer = rhs;
+    }
+
 public:
 
     EvaluableVariable(Eigen::Index dimension, const std::string& name)
@@ -44,9 +66,7 @@ public:
      */
     template<typename otherVector>
     void operator=(const otherVector& rhs) {
-        static_assert (otherVector::ColsAtCompileTime == 1, "The chosen VectorType for the rhs should have exactly one column at compile time.");
-        assert(rhs.size() == this->dimension());
-        this->m_evaluationBuffer = rhs;
+        copy_constant(bool_value<std::is_arithmetic<otherVector>::value>(), rhs);
     }
 
     /**

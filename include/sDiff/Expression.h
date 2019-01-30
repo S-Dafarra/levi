@@ -230,6 +230,33 @@ public:
     ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, Matrix>::type>> operator*(const Matrix& rhs);
 
     /**
+     * @brief Operator /
+     *
+     * @return An expression which points to an evaluable performing the division by a scalar.
+     */
+    template<class EvaluableRhs>
+    ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::value_type>::type>> operator/(const ExpressionComponent<EvaluableRhs>& rhs);
+
+    /**
+     * @brief Operator /
+     *
+     * The other addend will be inserted in a ConstantEvaluable containing the rhs.
+     *
+     * @return An expression which points to an evaluable performing the division.
+     */
+    template <typename Scalar>
+    ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, Scalar>::type>> operator/(const Scalar& rhs);
+
+    /**
+     * @brief Computes the power of the current evaluable
+     * @param exponent The exponent of the power
+     * @return An expression computing the power
+     *
+     * @note This can be used only with scalars or 1x1 matrices.
+     */
+    ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> pow(typename EvaluableT::value_type exponent);
+
+    /**
      * @brief Assignement operator
      *
      * Assigns the current expression to the rhs. If the EvaluableT is not a base class for EvaluableRhs,
@@ -306,6 +333,12 @@ public:
     ExpressionComponent<sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> skew();
 
 
+    /**
+     * @brief Computes the transpose of the current expression
+     * @return An expression whose evaluable computes the transpose of the current evaluable.
+     *
+     * @note The column derivative needs to call the derivative of every column. This may be expensive.
+     */
     ExpressionComponent<sDiff::Evaluable<typename sDiff::transpose_type<EvaluableT>::type>> transpose();
 
     /**
@@ -389,6 +422,16 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<ty
  */
 template <typename Matrix, class EvaluableT>
 sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<Matrix, typename EvaluableT::matrix_type>::type>> operator*(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs);
+
+/**
+ * @brief Operator /
+ *
+ * The other addend will be inserted in a ConstantEvaluable containing the lhs.
+ *
+ * @return An expression which points to an evaluable performing the division.
+ */
+template <typename Matrix, class EvaluableT>
+sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<Matrix, typename EvaluableT::value_type>::type>> operator/(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs);
 
 
 #endif // SDIFF_EXPRESSION_COMPONENT_H

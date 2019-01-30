@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <cassert>
+#include <cmath>
 
 namespace sDiff {
 
@@ -168,6 +169,12 @@ namespace sDiff {
     template <class LeftEvaluable, class RightEvaluable>
     class ProductEvaluable;
 
+    template <class EvaluableT>
+    class PowEvaluable;
+
+    template <class LeftEvaluable, class RightEvaluable>
+    class DivisionEvaluable;
+
     template<class Evaluable, class Enabler = void>
     class RowEvaluable;
 
@@ -220,6 +227,8 @@ namespace sDiff {
     class ConstructorByCols;
 
     typedef ExpressionComponent<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic >>> Expression;
+
+    typedef ExpressionComponent<Evaluable<double>> ScalarExpression;
 
     typedef ExpressionComponent<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , 1 >>> ColumnExpression;
 
