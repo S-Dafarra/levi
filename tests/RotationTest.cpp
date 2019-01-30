@@ -17,12 +17,14 @@ int main() {
 
     Variable quaternion(4, "q");
 
+    Expression normalizedQuaternion = quaternion/(quaternion.transpose() * quaternion).pow(0.5);
+
     Variable x(3, "x");
 
     Expression rotation;
 
     //Rodriguez formula
-    rotation = Identity(3,3) + 2.0 * quaternion(0,0) * quaternion.block(1,0,3,1).skew() + 2.0 * quaternion.block(1,0,3,1).skew() * quaternion.block(1,0,3,1).skew();
+    rotation = Identity(3,3) + 2.0 * normalizedQuaternion(0,0) * normalizedQuaternion.block(1,0,3,1).skew() + 2.0 * normalizedQuaternion.block(1,0,3,1).skew() * normalizedQuaternion.block(1,0,3,1).skew();
 
     std::cerr << rotation.name() << std::endl;
 
@@ -39,24 +41,25 @@ int main() {
     assert(rotation.evaluate() == testRotation);
 
     quaternionValue = Eigen::Vector4d::Random();
-    quaternionValue.normalize();
 
     quaternion = quaternionValue;
 
-    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> skew;
-    skew << 0.0, -quaternionValue[3], quaternionValue[2],
-          quaternionValue[3], 0.0, -quaternionValue[1],
-         -quaternionValue[2], quaternionValue[1], 0.0;
+    Eigen::Vector4d quaternionValueNormalized = quaternionValue.normalized();
 
-    testRotation = Eigen::MatrixXd::Identity(3,3) + 2.0 * quaternionValue(0) * skew + 2.0 * skew * skew;
+    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> skew;
+    skew << 0.0, -quaternionValueNormalized[3], quaternionValueNormalized[2],
+          quaternionValueNormalized[3], 0.0, -quaternionValueNormalized[1],
+         -quaternionValueNormalized[2], quaternionValueNormalized[1], 0.0;
+
+    testRotation = Eigen::MatrixXd::Identity(3,3) + 2.0 * quaternionValueNormalized(0) * skew + 2.0 * skew * skew;
 
     assert(rotation.evaluate() == testRotation);
 
     Eigen::Quaterniond quaternionEigen;
-    quaternionEigen.w() = quaternionValue[0];
-    quaternionEigen.x() = quaternionValue[1];
-    quaternionEigen.y() = quaternionValue[2];
-    quaternionEigen.z() = quaternionValue[3];
+    quaternionEigen.w() = quaternionValueNormalized[0];
+    quaternionEigen.x() = quaternionValueNormalized[1];
+    quaternionEigen.y() = quaternionValueNormalized[2];
+    quaternionEigen.z() = quaternionValueNormalized[3];
 
     assert(rotation.evaluate() == quaternionEigen.toRotationMatrix());
 
@@ -95,7 +98,7 @@ int main() {
 
     Eigen::MatrixXd derivativeValue = rotatedVectorDerivative.evaluate();
 
-    std::cerr << rotatedVectorDerivative.name() << std::endl;
+//    std::cerr << rotatedVectorDerivative.name() << std::endl;
 
 
     // Test separetly the derivative of quaternion
@@ -108,7 +111,7 @@ int main() {
         //the original
         quaternionPerturbed = quaternionPerturbed.array().min(maxQuaternion.array());
         quaternionPerturbed = quaternionPerturbed.array().max(minQuaternion.array());
-        quaternionPerturbed.normalize();
+//        quaternionPerturbed.normalize();
 
         perturbation = quaternionPerturbed - quaternionValue;
 

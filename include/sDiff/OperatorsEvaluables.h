@@ -487,7 +487,7 @@ class sDiff::PowEvaluable : public sDiff::Evaluable<typename EvaluableT::value_t
 public:
 
     PowEvaluable(const sDiff::ExpressionComponent<EvaluableT>& expression, typename EvaluableT::value_type exponent)
-        : sDiff::Evaluable<typename EvaluableT::value_type>(expression.name() + "^(" + std::to_string(exponent) + ")")
+        : sDiff::Evaluable<typename EvaluableT::value_type>("(" +expression.name() + ")^(" + std::to_string(exponent) + ")")
         , m_expression(expression)
         , m_exponent(exponent)
     {
