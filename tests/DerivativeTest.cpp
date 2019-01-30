@@ -6,12 +6,12 @@
  */
 
 
-#include <sDiff/sDiff.h>
+#include <levi/levi.h>
 #include <iostream>
 
 int main() {
     using namespace Eigen;
-    using namespace sDiff;
+    using namespace levi;
 
     Variable x(3, "x"), y(3, "y");
 

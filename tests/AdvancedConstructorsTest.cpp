@@ -5,12 +5,12 @@
  *
  */
 
-#include <sDiff/sDiff.h>
+#include <levi/levi.h>
 #include <iostream>
 
 
 int main() {
-    using namespace sDiff;
+    using namespace levi;
 
     Identity identity(3,3);
 

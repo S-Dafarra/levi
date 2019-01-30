@@ -4,13 +4,13 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  *
  */
-#ifndef SDIFF_ADVANCEDCONSTRUCTORS_H
-#define SDIFF_ADVANCEDCONSTRUCTORS_H
+#ifndef LEVI_ADVANCEDCONSTRUCTORS_H
+#define LEVI_ADVANCEDCONSTRUCTORS_H
 
-#include <sDiff/ForwardDeclarations.h>
-#include <sDiff/Evaluable.h>
-#include <sDiff/VariableBase.h>
-#include <sDiff/Expression.h>
+#include <levi/ForwardDeclarations.h>
+#include <levi/Evaluable.h>
+#include <levi/VariableBase.h>
+#include <levi/Expression.h>
 
 /**
  * The ConstructorByRows.
@@ -18,15 +18,15 @@
  * Constructs an evaluable by stacking the specified rows in the constructor.
  */
 template <typename EvaluableT>
-class sDiff::ConstructorByRows : public sDiff::Evaluable<typename EvaluableT::matrix_type> {
+class levi::ConstructorByRows : public levi::Evaluable<typename EvaluableT::matrix_type> {
 
-    std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>>> m_rows;
-    std::vector<sDiff::ExpressionComponent<typename sDiff::Evaluable<typename EvaluableT::row_type>::derivative_evaluable>> m_derivatives;
+    std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>>> m_rows;
+    std::vector<levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::row_type>::derivative_evaluable>> m_derivatives;
 
 public:
 
-    ConstructorByRows(const std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>>>& rows, std::string name)
-        : sDiff::Evaluable<typename EvaluableT::matrix_type>(name)
+    ConstructorByRows(const std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>>>& rows, std::string name)
+        : levi::Evaluable<typename EvaluableT::matrix_type>(name)
         , m_rows(rows)
     {
         assert(m_rows.size() != 0);
@@ -51,20 +51,20 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
 
         for (size_t i = 0; i < m_rows.size(); ++i) {
             m_derivatives[i] = m_rows[i](0, column).getColumnDerivative(0, variable); //the i-th row of the column derivative corresponds to the (only) column derivative of the element (i, column)
         }
 
-        sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> derivative;
+        levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> derivative;
 
-        derivative = sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable>::ComposeByRows(m_derivatives, "d(" + this->name() + ")/d" + variable->variableName());
+        derivative = levi::ExpressionComponent<typename EvaluableT::derivative_evaluable>::ComposeByRows(m_derivatives, "d(" + this->name() + ")/d" + variable->variableName());
 
         return derivative;
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) {
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
         bool isDependent = false;
 
         for (size_t i = 0; i < m_rows.size(); ++i) {
@@ -82,14 +82,14 @@ public:
  * Constructs an evaluable by aligning the columns specified in the constructor.
  */
 template <typename EvaluableT>
-class sDiff::ConstructorByCols : public sDiff::Evaluable<typename EvaluableT::matrix_type> {
+class levi::ConstructorByCols : public levi::Evaluable<typename EvaluableT::matrix_type> {
 
-    std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::col_type>>> m_cols;
+    std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>>> m_cols;
 
 public:
 
-    ConstructorByCols(const std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::col_type>>>& cols, std::string name)
-        : sDiff::Evaluable<typename EvaluableT::matrix_type>(name)
+    ConstructorByCols(const std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>>>& cols, std::string name)
+        : levi::Evaluable<typename EvaluableT::matrix_type>(name)
         , m_cols(cols)
     {
         assert(m_cols.size() != 0);
@@ -112,16 +112,16 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
+    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
 
-        sDiff::ExpressionComponent<typename EvaluableT::derivative_evaluable> derivative;
+        levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> derivative;
 
         derivative = m_cols[column].getColumnDerivative(0, variable);
 
         return derivative;
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) {
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
         bool isDependent = false;
 
         for (size_t i = 0; i < m_cols.size(); ++i) {
@@ -133,4 +133,4 @@ public:
 
 };
 
-#endif // SDIFF_ADVANCEDCONSTRUCTORS_H
+#endif // LEVI_ADVANCEDCONSTRUCTORS_H

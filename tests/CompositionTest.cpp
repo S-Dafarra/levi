@@ -5,12 +5,12 @@
  *
  */
 
-#include <sDiff/sDiff.h>
+#include <levi/levi.h>
 #include <iostream>
 
 int main() {
     using namespace Eigen;
-    using namespace sDiff;
+    using namespace levi;
     MatrixXd A(MatrixXd::Identity(3,3));
     Constant a(MatrixXd::Identity(3,3), "a");
     Matrix<double,3,3> B;

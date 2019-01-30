@@ -6,14 +6,14 @@
  */
 
 
-#include <sDiff/sDiff.h>
+#include <levi/levi.h>
 #include <Eigen/Geometry>
 #include <iostream>
 #include <chrono>
 
 
 int main() {
-    using namespace sDiff;
+    using namespace levi;
 
     Variable quaternion(4, "q");
 

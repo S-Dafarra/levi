@@ -25,7 +25,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(AddWarningsConfigurationToTargets)
 include(CMakePackageConfigHelpers)
 
-project(sDiff
+project(levi
         LANGUAGES CXX
         VERSION 0.0.100)
 
@@ -49,31 +49,31 @@ endif()
 
 find_package(Eigen3 REQUIRED)
 
-add_library(sDiff INTERFACE)
-target_include_directories(sDiff INTERFACE ${EIGEN3_INCLUDE_DIR})
-target_include_directories(sDiff INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-target_include_directories(sDiff INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+add_library(levi INTERFACE)
+target_include_directories(levi INTERFACE ${EIGEN3_INCLUDE_DIR})
+target_include_directories(levi INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+target_include_directories(levi INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 
 # install
-install(TARGETS sDiff
-        EXPORT sDiff
+install(TARGETS levi
+        EXPORT levi
         COMPONENT runtime
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(EXPORT sDiff
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/sDiff)
+install(EXPORT levi
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/levi)
 
-configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/sDiffConfig.cmake.in
-                              ${PROJECT_BINARY_DIR}/sDiffConfig.cmake
-                              INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/sDiff)
+configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/leviConfig.cmake.in
+                              ${PROJECT_BINARY_DIR}/leviConfig.cmake
+                              INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/levi)
 
-write_basic_package_version_file(${PROJECT_BINARY_DIR}/sDiffConfigVersion.cmake  VERSION ${sDiff_VERSION} COMPATIBILITY SameMajorVersion )
+write_basic_package_version_file(${PROJECT_BINARY_DIR}/leviConfigVersion.cmake  VERSION ${levi_VERSION} COMPATIBILITY SameMajorVersion )
 
-install(FILES ${PROJECT_BINARY_DIR}/sDiffConfig.cmake ${PROJECT_BINARY_DIR}/sDiffConfigVersion.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/sDiff)
+install(FILES ${PROJECT_BINARY_DIR}/leviConfig.cmake ${PROJECT_BINARY_DIR}/leviConfigVersion.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/levi)
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION include)
 

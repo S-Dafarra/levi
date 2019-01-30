@@ -4,12 +4,12 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  *
  */
-#ifndef SDIFF_VARIABLE_H
-#define SDIFF_VARIABLE_H
+#ifndef LEVI_VARIABLE_H
+#define LEVI_VARIABLE_H
 
-#include <sDiff/ForwardDeclarations.h>
-#include <sDiff/VariableBase.h>
-#include <sDiff/BasicEvaluables.h>
+#include <levi/ForwardDeclarations.h>
+#include <levi/VariableBase.h>
+#include <levi/BasicEvaluables.h>
 
 /**
  * @brief The EvaluableVariable class, specialized for vector values.
@@ -18,7 +18,7 @@
  * thus allowing for seamless application of arithmetic operators.
  */
 template <typename Vector>
-class sDiff::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type> : public sDiff::VariableBase, public sDiff::Evaluable<Vector> {
+class levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type> : public levi::VariableBase, public levi::Evaluable<Vector> {
 
     template<typename OtherVector, bool isScalar>
     void copy_constant(bool_value<isScalar>, const OtherVector& rhs);
@@ -44,8 +44,8 @@ class sDiff::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmet
 public:
 
     EvaluableVariable(Eigen::Index dimension, const std::string& name)
-        : sDiff::VariableBase(dimension, name)
-        , sDiff::Evaluable<Vector>(dimension, 1, name)
+        : levi::VariableBase(dimension, name)
+        , levi::Evaluable<Vector>(dimension, 1, name)
     {
         static_assert (Vector::ColsAtCompileTime == 1, "The chosen VectorType for the Variable should have exactly one column at compile time.");
 
@@ -83,19 +83,19 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<Vector>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                    std::shared_ptr<sDiff::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename levi::Evaluable<Vector>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                                  std::shared_ptr<levi::VariableBase> variable) final {
         assert(column == 0);
         if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
-            return sDiff::ExpressionComponent<sDiff::IdentityEvaluable<typename sDiff::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension(),
-                                                                                                                                              "d " + variableName() + "/(d " + variable->variableName() + ")");
+            return levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension(),
+                                                                                                                                           "d " + variableName() + "/(d " + variable->variableName() + ")");
         } else {
-            return sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension(),
-                                                                                                                                          "d " + variableName() + "/(d " + variable->variableName() + ")");
+            return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension(),
+                                                                                                                                       "d " + variableName() + "/(d " + variable->variableName() + ")");
         }
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension()));
     }
 
@@ -108,13 +108,13 @@ public:
  * thus allowing for seamless application of arithmetic operators.
  */
 template <typename Scalar>
-class sDiff::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public sDiff::VariableBase, public sDiff::Evaluable<Scalar> {
+class levi::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public levi::VariableBase, public levi::Evaluable<Scalar> {
 
 public:
 
     EvaluableVariable(const std::string& name)
-    : sDiff::VariableBase(1, name)
-    , sDiff::Evaluable<Scalar>(0, name)
+        : levi::VariableBase(1, name)
+        , levi::Evaluable<Scalar>(0, name)
     { }
 
     template <typename otherVector>
@@ -143,21 +143,21 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual sDiff::ExpressionComponent<typename sDiff::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                    std::shared_ptr<sDiff::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename levi::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                                  std::shared_ptr<levi::VariableBase> variable) final {
         assert(column == 0);
         if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
-            return sDiff::ExpressionComponent<sDiff::IdentityEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension());
+            return levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension());
         } else {
-            return sDiff::ExpressionComponent<sDiff::NullEvaluable<typename sDiff::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension());
+            return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension());
         }
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) final{
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension()));
     }
 
 };
 
 
-#endif // SDIFF_VARIABLE_H
+#endif // LEVI_VARIABLE_H

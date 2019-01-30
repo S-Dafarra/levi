@@ -4,17 +4,17 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  *
  */
-#ifndef SDIFF_VARIABLEBASE_H
-#define SDIFF_VARIABLEBASE_H
+#ifndef LEVI_VARIABLEBASE_H
+#define LEVI_VARIABLEBASE_H
 
-#include <sDiff/ForwardDeclarations.h>
+#include <levi/ForwardDeclarations.h>
 
 /**
  * @brief The VariableBase class
  *
  * Base class for variables.
  */
-class sDiff::VariableBase {
+class levi::VariableBase {
 
 protected:
     /**
@@ -59,4 +59,4 @@ public:
 
 };
 
-#endif // SDIFF_VARIABLEBASE_H
+#endif // LEVI_VARIABLEBASE_H

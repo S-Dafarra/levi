@@ -4,10 +4,10 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  *
  */
-#ifndef SDIFF_EVALUABLE_H
-#define SDIFF_EVALUABLE_H
+#ifndef LEVI_EVALUABLE_H
+#define LEVI_EVALUABLE_H
 
-#include <sDiff/ForwardDeclarations.h>
+#include <levi/ForwardDeclarations.h>
 
 /**
  * @brief Evaluable class (for matrix type)
@@ -20,7 +20,7 @@
  * Take a look at the ExpressionComponent documentation to place an evaluable into an expression.
  */
 template<typename Matrix>
-class sDiff::Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> {
+class levi::Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> {
 
     /**
      * @brief Name of the evaluable
@@ -168,8 +168,8 @@ public:
      * @param variable The variable with respect to the derivative has to be computed.
      * @return An expression containing an evaluable of type derivative_evaluable.
      */
-    virtual sDiff::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
-        return sDiff::ExpressionComponent<derivative_evaluable>();
+    virtual levi::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
+        return levi::ExpressionComponent<derivative_evaluable>();
     }
 
     /**
@@ -179,7 +179,7 @@ public:
      *
      * User should override this method to reduce callings to getColumnDerivative.
      */
-    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) {
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
         return true;
     }
 
@@ -206,7 +206,7 @@ public:
  * Take a look at the ExpressionComponent documentation to place an evaluable into an expression.
  */
 template <typename Scalar>
-class sDiff::Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
+class levi::Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
 
     /**
      * @brief Name of the evaluable
@@ -338,8 +338,8 @@ public:
      * @param variable The variable with respect to the derivative has to be computed.
      * @return An expression containing an evaluable of type derivative_evaluable.
      */
-    virtual sDiff::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable) {
-        return sDiff::ExpressionComponent<derivative_evaluable>();
+    virtual levi::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
+        return levi::ExpressionComponent<derivative_evaluable>();
     }
 
     /**
@@ -349,7 +349,7 @@ public:
      *
      * User should override this method to reduce callings to getColumnDerivative.
      */
-    virtual bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable) {
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
         return true;
     }
 
@@ -365,4 +365,4 @@ public:
 
 };
 
-#endif // SDIFF_EVALUABLE_H
+#endif // LEVI_EVALUABLE_H

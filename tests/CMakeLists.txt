@@ -9,13 +9,13 @@
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 
-macro(add_sdiff_test classname)
+macro(add_LEVI_test classname)
     set(testsrc ${classname}Test.cpp)
     set(testbinary ${classname}UnitTest)
     set(testname   UnitTest${classname})
     add_executable(${testbinary} ${testsrc})
     target_include_directories(${testbinary} PRIVATE ${IDYNTREE_TREE_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
-    target_link_libraries(${testbinary} PRIVATE sDiff)
+    target_link_libraries(${testbinary} PRIVATE levi)
     add_test(NAME ${testname} COMMAND ${testbinary})
 
     if(RUN_VALGRIND_TESTS)
@@ -23,9 +23,9 @@ macro(add_sdiff_test classname)
     endif()
 endmacro()
 
-add_sdiff_test(Composition)
-add_sdiff_test(Derivative)
-add_sdiff_test(AdvancedConstructors)
-add_sdiff_test(Rotation)
+add_LEVI_test(Composition)
+add_LEVI_test(Derivative)
+add_LEVI_test(AdvancedConstructors)
+add_LEVI_test(Rotation)
 
 

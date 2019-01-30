@@ -4,27 +4,27 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  *
  */
-#ifndef SDIFF_EXPRESSION_COMPONENT_H
-#define SDIFF_EXPRESSION_COMPONENT_H
+#ifndef LEVI_EXPRESSION_COMPONENT_H
+#define LEVI_EXPRESSION_COMPONENT_H
 
-#include <sDiff/ForwardDeclarations.h>
+#include <levi/ForwardDeclarations.h>
 
-namespace sDiff {
+namespace levi {
 
     template<bool value, typename T>
     static ExpressionComponent<ConstantEvaluable<T>> build_constant(bool_value<value>, const T& rhs);
 
     /**
-     * @brief Return an expression containing a constant evaluable (arithmetic type)
-     */
+    * @brief Return an expression containing a constant evaluable (arithmetic type)
+    */
     template<typename T>
     static ExpressionComponent<ConstantEvaluable<T>> build_constant(bool_value<true>, const T& rhs);
 
     /**
-     * @brief Return an expression containing a constant evaluable (matrix type)
-     *
-     * The name of the constant will be "UnnamedMatrix"
-     */
+    * @brief Return an expression containing a constant evaluable (matrix type)
+    *
+    * The name of the constant will be "UnnamedMatrix"
+    */
     template<typename T>
     static ExpressionComponent<ConstantEvaluable<T>> build_constant(bool_value<false>, const T& rhs);
 
@@ -37,7 +37,7 @@ namespace sDiff {
  * This allows to perform operations between evaluable, without carrying around the evaluation buffers.
  */
 template <class EvaluableT>
-class sDiff::ExpressionComponent {
+class levi::ExpressionComponent {
 
     template <class OtherEvaluable>
     friend class ExpressionComponent;
@@ -51,17 +51,17 @@ class sDiff::ExpressionComponent {
      * Template declaration for a helper method used when calling the default constructor of the ExpressionComponent
      */
     template<bool value>
-    void default_constructor(sDiff::bool_value<value>);
+    void default_constructor(levi::bool_value<value>);
 
     /**
      * Template specialization for the case in which the default constructor is available.
      */
-    void default_constructor(sDiff::bool_value<true>);
+    void default_constructor(levi::bool_value<true>);
 
     /**
      * Template specialization for the case in which the default constructor is *not* available.
      */
-    void default_constructor(sDiff::bool_value<false>);
+    void default_constructor(levi::bool_value<false>);
 
     /**
      * Template declaration of a struct used to detect whether the equal operator is available.
@@ -80,19 +80,19 @@ class sDiff::ExpressionComponent {
      * Template declaration of a function used to perform casting when during assignements.
      */
     template<bool value, typename OtherEvaluable>
-    void casted_assignement(sDiff::bool_value<value>, const ExpressionComponent<OtherEvaluable>& other);
+    void casted_assignement(levi::bool_value<value>, const ExpressionComponent<OtherEvaluable>& other);
 
     /**
      * Template specialization in case the two pointers are directly castable.
      */
     template<typename OtherEvaluable>
-    void casted_assignement(sDiff::bool_value<true>, const sDiff::ExpressionComponent<OtherEvaluable>& other);
+    void casted_assignement(levi::bool_value<true>, const levi::ExpressionComponent<OtherEvaluable>& other);
 
     /**
      * Template specialization in case the two pointers are not directly castable.
      */
     template<typename OtherEvaluable>
-    void casted_assignement(sDiff::bool_value<false>, const sDiff::ExpressionComponent<OtherEvaluable>& other);
+    void casted_assignement(levi::bool_value<false>, const levi::ExpressionComponent<OtherEvaluable>& other);
 
 public:
 
@@ -174,7 +174,7 @@ public:
      * @return An expression which points to an evaluable performing the additions.
      */
     template<class EvaluableRhs>
-    ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator+(const ExpressionComponent<EvaluableRhs>& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator+(const ExpressionComponent<EvaluableRhs>& rhs);
 
     /**
      * @brief Operator +
@@ -184,7 +184,7 @@ public:
      * @return An expression which points to an evaluable performing the addition.
      */
     template <typename Matrix>
-    ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator+(const Matrix& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator+(const Matrix& rhs);
 
     /**
      * @brief Operator -
@@ -192,7 +192,7 @@ public:
      * @return An expression which points to an evaluable performing the subtraction.
      */
     template<class EvaluableRhs>
-    ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator-(const ExpressionComponent<EvaluableRhs>& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator-(const ExpressionComponent<EvaluableRhs>& rhs);
 
     /**
      * @brief Operator -
@@ -202,14 +202,14 @@ public:
      * @return An expression which points to an evaluable performing the subtraction.
      */
     template <typename Matrix>
-    ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& rhs);
 
     /**
      * @brief Operator -
      *
      * @return An expression which points to an evaluable inverting the sign.
      */
-    ExpressionComponent<sDiff::Evaluable<typename EvaluableT::matrix_type>> operator-();
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> operator-();
 
     /**
      * @brief Operator *
@@ -217,7 +217,7 @@ public:
      * @return An expression which points to an evaluable performing the multiplication.
      */
     template<class EvaluableRhs>
-    ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator*(const ExpressionComponent<EvaluableRhs>& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator*(const ExpressionComponent<EvaluableRhs>& rhs);
 
     /**
      * @brief Operator *
@@ -227,7 +227,7 @@ public:
      * @return An expression which points to an evaluable performing the multiplication.
      */
     template <typename Matrix>
-    ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, Matrix>::type>> operator*(const Matrix& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Matrix>::type>> operator*(const Matrix& rhs);
 
     /**
      * @brief Operator /
@@ -235,7 +235,7 @@ public:
      * @return An expression which points to an evaluable performing the division by a scalar.
      */
     template<class EvaluableRhs>
-    ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::value_type>::type>> operator/(const ExpressionComponent<EvaluableRhs>& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::value_type>::type>> operator/(const ExpressionComponent<EvaluableRhs>& rhs);
 
     /**
      * @brief Operator /
@@ -245,7 +245,7 @@ public:
      * @return An expression which points to an evaluable performing the division.
      */
     template <typename Scalar>
-    ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<typename EvaluableT::matrix_type, Scalar>::type>> operator/(const Scalar& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Scalar>::type>> operator/(const Scalar& rhs);
 
     /**
      * @brief Computes the power of the current evaluable
@@ -254,7 +254,7 @@ public:
      *
      * @note This can be used only with scalars or 1x1 matrices.
      */
-    ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> pow(typename EvaluableT::value_type exponent);
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> pow(typename EvaluableT::value_type exponent);
 
     /**
      * @brief Assignement operator
@@ -293,7 +293,7 @@ public:
      *
      * @Note This has to be considered as read only accessor.
      */
-    ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>> row(Eigen::Index row);
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>> row(Eigen::Index row);
 
     /**
      * @brief Returns an expression corresponding to a column of the current evaluable
@@ -302,7 +302,7 @@ public:
      *
      * @Note This has to be considered as read only accessor.
      */
-    ExpressionComponent<sDiff::Evaluable<typename EvaluableT::col_type>> col(Eigen::Index col);
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>> col(Eigen::Index col);
 
     /**
      * @brief Accessor to element (read only)
@@ -313,7 +313,7 @@ public:
      * @Note This has to be considered as read only accessor.
      *
      */
-    ExpressionComponent<sDiff::Evaluable<typename EvaluableT::value_type>> operator()(Eigen::Index row, Eigen::Index col);
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> operator()(Eigen::Index row, Eigen::Index col);
 
     /**
      * @brief Accessor to element (read only)
@@ -323,14 +323,14 @@ public:
      * @param numberOfCols The number of columns of the block
      * @return An expression pointing to an evaluable taking only the specified block out of the current evaluable.
      */
-    ExpressionComponent<sDiff::Evaluable<typename sDiff::dynamic_block_return<typename EvaluableT::matrix_type>::type>> block(Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols);
+    ExpressionComponent<levi::Evaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>> block(Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols);
 
     /**
      * @brief Computes the skew symmetric matrix out of the current evaluable
      * @return An expression pointing to an evaluable which computes the skew symmetric matrix
      * @note This works only with three dimensional vectors.
      */
-    ExpressionComponent<sDiff::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> skew();
+    ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> skew();
 
 
     /**
@@ -339,7 +339,7 @@ public:
      *
      * @note The column derivative needs to call the derivative of every column. This may be expensive.
      */
-    ExpressionComponent<sDiff::Evaluable<typename sDiff::transpose_type<EvaluableT>::type>> transpose();
+    ExpressionComponent<levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>> transpose();
 
     /**
      * @brief Retrieve the column derivative with respect to the specified variable
@@ -349,7 +349,7 @@ public:
      * @return An expression pointing to the column derivative.
      */
     template<typename VariableType>
-    ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, const ExpressionComponent<sDiff::EvaluableVariable<VariableType>>& variable);
+    ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, const ExpressionComponent<levi::EvaluableVariable<VariableType>>& variable);
 
     /**
      * @brief Retrieve the column derivative with respect to the specified variable
@@ -358,7 +358,7 @@ public:
      * @param variable Shared pointer to the variable of interest
      * @return An expression pointing to the column derivative.
      */
-    ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<sDiff::VariableBase> variable);
+    ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable);
 
     /**
      * @brief Check whether the pointed evaluable depends on a specified variable
@@ -366,14 +366,14 @@ public:
      * @return True if dependent
      */
     template<typename VariableType>
-    bool isDependentFrom(const ExpressionComponent<sDiff::EvaluableVariable<VariableType>>& variable);
+    bool isDependentFrom(const ExpressionComponent<levi::EvaluableVariable<VariableType>>& variable);
 
     /**
      * @brief Check whether the pointed evaluable depends on a specified variable
      * @param variable The variable of interest
      * @return True if dependent
      */
-    bool isDependentFrom(std::shared_ptr<sDiff::VariableBase> variable);
+    bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable);
 
     /**
      * @brief Create an epression from a vector of rows
@@ -381,7 +381,7 @@ public:
      * @param name The name of the new expression
      * @return An expression made of the specified rows
      */
-    static ExpressionComponent<EvaluableT> ComposeByRows(const std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::row_type>>>& rows, std::string name);
+    static ExpressionComponent<EvaluableT> ComposeByRows(const std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>>>& rows, std::string name);
 
     /**
      * @brief Create an epression from a vector of cols
@@ -389,7 +389,7 @@ public:
      * @param name The name of the new expression
      * @return An expression made of the specified columns
      */
-    static ExpressionComponent<EvaluableT> ComposeByCols(const std::vector<sDiff::ExpressionComponent<sDiff::Evaluable<typename EvaluableT::col_type>>>& cols, std::string name);
+    static ExpressionComponent<EvaluableT> ComposeByCols(const std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>>>& cols, std::string name);
 };
 
 
@@ -401,7 +401,7 @@ public:
  * @return An expression which points to an evaluable performing the addition.
  */
 template <typename Matrix, class EvaluableT>
-sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator+(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs);
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator+(const Matrix& lhs, const levi::ExpressionComponent<EvaluableT> &rhs);
 
 /**
  * @brief Operator -
@@ -411,7 +411,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<ty
  * @return An expression which points to an evaluable performing the subrraction.
  */
 template <typename Matrix, class EvaluableT>
-sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs);
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& lhs, const levi::ExpressionComponent<EvaluableT> &rhs);
 
 /**
  * @brief Operator *
@@ -421,7 +421,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_sum_return<ty
  * @return An expression which points to an evaluable performing the multiplication.
  */
 template <typename Matrix, class EvaluableT>
-sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<Matrix, typename EvaluableT::matrix_type>::type>> operator*(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs);
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<Matrix, typename EvaluableT::matrix_type>::type>> operator*(const Matrix& lhs, const levi::ExpressionComponent<EvaluableT> &rhs);
 
 /**
  * @brief Operator /
@@ -431,7 +431,7 @@ sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_retur
  * @return An expression which points to an evaluable performing the division.
  */
 template <typename Matrix, class EvaluableT>
-sDiff::ExpressionComponent<sDiff::Evaluable<typename sDiff::matrix_product_return<Matrix, typename EvaluableT::value_type>::type>> operator/(const Matrix& lhs, const sDiff::ExpressionComponent<EvaluableT> &rhs);
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<Matrix, typename EvaluableT::value_type>::type>> operator/(const Matrix& lhs, const levi::ExpressionComponent<EvaluableT> &rhs);
 
 
-#endif // SDIFF_EXPRESSION_COMPONENT_H
+#endif // LEVI_EXPRESSION_COMPONENT_H

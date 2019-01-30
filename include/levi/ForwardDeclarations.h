@@ -4,8 +4,8 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  *
  */
-#ifndef SDIFF_FORWARDDECLARATIONS_H
-#define SDIFF_FORWARDDECLARATIONS_H
+#ifndef LEVI_FORWARDDECLARATIONS_H
+#define LEVI_FORWARDDECLARATIONS_H
 
 #include <Eigen/Core>
 
@@ -16,7 +16,7 @@
 #include <cassert>
 #include <cmath>
 
-namespace sDiff {
+namespace levi {
 
     template<bool T>
     struct bool_value { };
@@ -80,7 +80,7 @@ namespace sDiff {
     template<int lhsRows, int lhsCols, int rhsRows, int rhsCols>
     struct is_valid_sum<lhsRows, lhsCols, rhsRows, rhsCols,
             typename std::enable_if<((lhsRows == rhsRows) || (lhsRows == Eigen::Dynamic) || (rhsRows == Eigen::Dynamic)) &&
-                                    ((lhsCols == rhsCols) || (lhsCols == Eigen::Dynamic) || (rhsCols == Eigen::Dynamic))>::type> : std::true_type {};
+    ((lhsCols == rhsCols) || (lhsCols == Eigen::Dynamic) || (rhsCols == Eigen::Dynamic))>::type> : std::true_type {};
 
     template <typename Matrix_lhs, typename Matrix_rhs, class Enabler = void>
     struct matrix_sum_return;
@@ -117,7 +117,7 @@ namespace sDiff {
     template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
     struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
             typename std::enable_if<is_valid_product<lhsRows, lhsCols, rhsRows, rhsCols>::value &&
-                                    !(lhsRows == 1 && lhsCols == 1) && !(rhsRows == 1 && rhsCols == 1)>::type>;
+            !(lhsRows == 1 && lhsCols == 1) && !(rhsRows == 1 && rhsCols == 1)>::type>;
 
     template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
     struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
@@ -241,4 +241,4 @@ namespace sDiff {
     typedef ExpressionComponent<ConstantEvaluable<double>> Scalar;
 }
 
-#endif // SDIFF_FORWARDDECLARATIONS_H
+#endif // LEVI_FORWARDDECLARATIONS_H

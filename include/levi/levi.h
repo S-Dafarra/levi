@@ -4,12 +4,12 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  *
  */
-#ifndef SDIFF_H
-#define SDIFF_H
+#ifndef LEVI_H
+#define LEVI_H
 
 #include "Evaluable.h"
 #include "Variable.h"
 #include "Expression.h"
 #include "ExpressionImplementation.h"
 
-#endif // SDIFF_H
+#endif // LEVI_H
