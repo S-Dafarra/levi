@@ -9,6 +9,7 @@
 
 #include <sDiff/Expression.h>
 #include <sDiff/OperatorsEvaluables.h>
+#include <sDiff/AccessorEvaluables.h>
 #include <sDiff/AdvancedConstructors.h>
 #include <sDiff/Variable.h>
 
