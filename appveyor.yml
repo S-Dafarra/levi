@@ -33,10 +33,19 @@ build:
 
 build_script:
   # Build the library
+
+  - ps: cd c:\dev
+  - ps: hg clone https://bitbucket.org/eigen/eigen
+  - ps: cd eigen
+  - ps: hg checkout 3.3-beta2
+  - ps: md build
+  - ps: cd build
+  - ps: cmake ..
+  - ps: cmake --build . --config Release --target INSTALL
   - ps: cd c:\dev\levi
   - ps: md build
   - ps: cd build
-  - ps: cmake -G"$env:CMAKE_GENERATOR" -DBUILD_TESTING:BOOL=ON -DCMAKE_CXX_FLAGS:STRING="/W4" ..
+  - ps: cmake -G"$env:CMAKE_GENERATOR" -DEIGEN3_INCLUDE_DIR="C:/Program Files (x86)/Eigen/include/eigen3" -DBUILD_TESTING:BOOL=ON -DCMAKE_CXX_FLAGS:STRING="/W4" ..
 
   # Build the library for Release and Debug
   - ps: cmake --build . --config Debug
