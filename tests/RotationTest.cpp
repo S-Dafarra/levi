@@ -113,8 +113,8 @@ int main() {
 
         //ensure validity of obtained quaternion even if the quaternion is no more a step different than
         //the original
-        quaternionPerturbed = quaternionPerturbed.array().min(maxQuaternion.array());
-        quaternionPerturbed = quaternionPerturbed.array().max(minQuaternion.array());
+//        quaternionPerturbed = quaternionPerturbed.array().min(maxQuaternion.array());
+//        quaternionPerturbed = quaternionPerturbed.array().max(minQuaternion.array());
 //        quaternionPerturbed.normalize();
 
         perturbation = quaternionPerturbed - quaternionValue;
@@ -155,8 +155,8 @@ int main() {
 
             //ensure validity of obtained quaternion even if the quaternion is no more a step different than
             //the original
-            quaternionPerturbed = quaternionPerturbed.array().min(maxQuaternion.array());
-            quaternionPerturbed = quaternionPerturbed.array().max(minQuaternion.array());
+//            quaternionPerturbed = quaternionPerturbed.array().min(maxQuaternion.array());
+//            quaternionPerturbed = quaternionPerturbed.array().max(minQuaternion.array());
     //        quaternionPerturbed.normalize();
 
             perturbation = quaternionPerturbed - quaternionValue;
