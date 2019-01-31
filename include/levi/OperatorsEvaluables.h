@@ -27,7 +27,7 @@ struct levi::scalar_sum_return {
 template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
 struct levi::matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
         typename std::enable_if<levi::is_valid_sum<lhsRows, lhsCols, rhsRows, rhsCols>::value>::type> {
-    typedef Eigen::Matrix<typename levi::scalar_sum_return<Scalar_lhs, Scalar_rhs>::type, std::min(lhsRows, rhsRows), std::min(lhsCols, rhsCols)> type; //here we assume that Eigen::Dynamic == -1, thus, given that it is a valid sum, the minimum will be -1 if present, thus using Eigen::Dynamic as output
+    typedef Eigen::Matrix<typename levi::scalar_sum_return<Scalar_lhs, Scalar_rhs>::type, (lhsRows < rhsRows) ? lhsRows : rhsRows, (lhsCols < rhsCols) ? lhsCols : rhsCols> type; //here we assume that Eigen::Dynamic == -1, thus, given that it is a valid sum, the minimum will be -1 if present, thus using Eigen::Dynamic as output
 };
 
 /**
