@@ -18,6 +18,8 @@
 
 namespace levi {
 
+    template <typename... Args> inline void unused(Args&&...) {}
+
     template<bool T>
     struct bool_value { };
 

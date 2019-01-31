@@ -27,9 +27,7 @@ class levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmeti
     void copy_constant(bool_value<true>, const OtherVector& rhs) {
         static_assert (this->rows_at_compile_time == Eigen::Dynamic || this->rows_at_compile_time == 1, "Cannot copy a scalar to this variable.");
 
-        if (this->rows_at_compile_time == Eigen::Dynamic) {
-            this->resize(1,1);
-        }
+        this->resize(1,1);
 
         this->m_evaluationBuffer(0,0) = rhs;
     }

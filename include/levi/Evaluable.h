@@ -169,6 +169,7 @@ public:
      * @return An expression containing an evaluable of type derivative_evaluable.
      */
     virtual levi::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
+        levi::unused(column, variable);
         return levi::ExpressionComponent<derivative_evaluable>();
     }
 
@@ -339,6 +340,7 @@ public:
      * @return An expression containing an evaluable of type derivative_evaluable.
      */
     virtual levi::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
+        levi::unused(column, variable);
         return levi::ExpressionComponent<derivative_evaluable>();
     }
 
@@ -350,6 +352,7 @@ public:
      * User should override this method to reduce callings to getColumnDerivative.
      */
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
+        levi::unused(variable);
         return true;
     }
 

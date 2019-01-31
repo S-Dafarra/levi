@@ -34,10 +34,12 @@ public:
     }
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) final{
+        levi::unused(column);
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+        levi::unused(variable);
         return false;
     }
 
@@ -66,10 +68,12 @@ public:
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                   std::shared_ptr<levi::VariableBase> variable) final {
+        levi::unused(column);
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+        levi::unused(variable);
         return false;
     }
 
@@ -106,10 +110,12 @@ public:
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                   std::shared_ptr<levi::VariableBase> variable) final {
+        levi::unused(column);
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+        levi::unused(variable);
         return false;
     }
 };
@@ -136,10 +142,12 @@ public:
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                   std::shared_ptr<levi::VariableBase> variable) final {
+        levi::unused(column);
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+        levi::unused(variable);
         return false;
     }
 };
@@ -173,10 +181,12 @@ public:
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                   std::shared_ptr<levi::VariableBase> variable) final {
+        levi::unused(column);
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+        levi::unused(variable);
         return false;
     }
 };
@@ -201,10 +211,12 @@ public:
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                   std::shared_ptr<levi::VariableBase> variable) final {
+        levi::unused(column);
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+        levi::unused(variable);
         return false;
     }
 };
