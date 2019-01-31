@@ -35,20 +35,20 @@ namespace levi {
     template <typename Matrix_lhs, typename Matrix_rhs, class Enabler = void>
     struct matrix_sum_return;
 
-    template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
-    struct matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+    template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+    struct matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
             typename std::enable_if<is_valid_sum<lhsRows, lhsCols, rhsRows, rhsCols>::value>::type>;
 
     template<typename Scalar_lhs, typename Scalar_rhs>
     struct matrix_sum_return<Scalar_lhs, Scalar_rhs,
             typename std::enable_if<std::is_arithmetic<Scalar_lhs>::value && std::is_arithmetic<Scalar_rhs>::value>::type>;
 
-    template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols>
-    struct matrix_sum_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+    template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+    struct matrix_sum_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
             typename std::enable_if<std::is_arithmetic<Scalar>::value && is_valid_sum<1,1, rhsRows, rhsCols>::value>::type>;
 
-    template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols>
-    struct matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
+    template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar>
+    struct matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Scalar,
             typename std::enable_if<std::is_arithmetic<Scalar>::value && is_valid_sum<1,1, lhsRows, lhsCols>::value>::type>;
 
     template<int lhsRows, int lhsCols, int rhsRows, int rhsCols, class Enabler = void>
@@ -64,25 +64,25 @@ namespace levi {
     template <typename Matrix_lhs, typename Matrix_rhs, class Enabler = void>
     struct matrix_product_return;
 
-    template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
-    struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+    template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+    struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
             typename std::enable_if<is_valid_product<lhsRows, lhsCols, rhsRows, rhsCols>::value &&
             !(lhsRows == 1 && lhsCols == 1) && !(rhsRows == 1 && rhsCols == 1)>::type>;
 
-    template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
-    struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+    template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+    struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
             typename std::enable_if<lhsRows == 1 && lhsCols == 1>::type>;
 
-    template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
-    struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+    template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+    struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
             typename std::enable_if<rhsRows == 1 && rhsCols == 1>::type>;
 
-    template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols>
-    struct matrix_product_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+    template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+    struct matrix_product_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
             typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
 
-    template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols>
-    struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
+    template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols>
+    struct matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Scalar,
             typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
 
     template<typename Scalar_lhs, typename Scalar_rhs>

@@ -24,8 +24,8 @@ struct levi::scalar_sum_return {
  * Helper struct for determining the type resulting from an addition of two matrices. Specialization for two matrices
  *
  */
-template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
-struct levi::matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+struct levi::matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
         typename std::enable_if<levi::is_valid_sum<lhsRows, lhsCols, rhsRows, rhsCols>::value>::type> {
     typedef Eigen::Matrix<typename levi::scalar_sum_return<Scalar_lhs, Scalar_rhs>::type, (lhsRows < rhsRows) ? lhsRows : rhsRows, (lhsCols < rhsCols) ? lhsCols : rhsCols> type; //here we assume that Eigen::Dynamic == -1, thus, given that it is a valid sum, the minimum will be -1 if present, thus using Eigen::Dynamic as output
 };
@@ -44,8 +44,8 @@ struct levi::matrix_sum_return<Scalar_lhs, Scalar_rhs,
  * Helper struct for determining the type resulting from an addition of two matrices. Specialization for a scalar and a matrix.
  *
  */
-template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols>
-struct levi::matrix_sum_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+struct levi::matrix_sum_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
         typename std::enable_if<std::is_arithmetic<Scalar>::value && levi::is_valid_sum<1,1, rhsRows, rhsCols>::value>::type> {
     typedef Eigen::Matrix<typename levi::scalar_sum_return<Scalar, Scalar_rhs>::type, rhsRows, rhsCols> type;
 };
@@ -54,8 +54,8 @@ struct levi::matrix_sum_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCol
  * Helper struct for determining the type resulting from an addition of two matrices. Specialization for a matrix and a scalar
  *
  */
-template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols>
-struct levi::matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
+template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar>
+struct levi::matrix_sum_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Scalar,
         typename std::enable_if<std::is_arithmetic<Scalar>::value && levi::is_valid_sum<1,1, lhsRows, lhsCols>::value>::type> {
     typedef Eigen::Matrix<typename levi::scalar_sum_return<Scalar, Scalar_lhs>::type, lhsRows, lhsCols> type;
 };
@@ -73,8 +73,8 @@ struct levi::scalar_product_return {
  * Helper struct for determining the type resulting from a multiplication of two matrices. Specialization for two matrices
  *
  */
-template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
-struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
         typename std::enable_if<levi::is_valid_product<lhsRows, lhsCols, rhsRows, rhsCols>::value && !(lhsRows == 1 && lhsCols == 1) && !(rhsRows == 1 && rhsCols == 1)>::type> {
     typedef Eigen::Matrix<typename levi::scalar_product_return<Scalar_lhs, Scalar_rhs>::type, lhsRows, rhsCols> type;
 };
@@ -83,8 +83,8 @@ struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, 
  * Helper struct for determining the type resulting from a multiplication of two matrices. Specialization in the case the lhs has exactly one row and one column.
  *
  */
-template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
-struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
         typename std::enable_if<lhsRows == 1 && lhsCols == 1>::type> {
     typedef Eigen::Matrix<typename levi::scalar_product_return<Scalar_lhs, Scalar_rhs>::type, rhsRows, rhsCols> type;
 };
@@ -94,8 +94,8 @@ struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, 
  * Helper struct for determining the type resulting from a multiplication of two matrices. Specialization in the case the rhs has exactly one row and one column.
  *
  */
-template<typename Scalar_lhs, int lhsRows, int lhsCols, typename Scalar_rhs, int rhsRows, int rhsCols>
-struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
         typename std::enable_if<rhsRows == 1 && rhsCols == 1>::type> {
     typedef Eigen::Matrix<typename levi::scalar_product_return<Scalar_lhs, Scalar_rhs>::type, lhsRows, lhsCols> type;
 };
@@ -103,8 +103,8 @@ struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, 
 /**
  * Helper struct for determining the type resulting from a multiplication of two matrices. Specialization for a scalar and a matrix
  */
-template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols>
-struct levi::matrix_product_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols>,
+template<typename Scalar, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+struct levi::matrix_product_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
         typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
     typedef Eigen::Matrix<typename levi::scalar_product_return<Scalar, Scalar_rhs>::type, rhsRows, rhsCols> type;
 };
@@ -112,8 +112,8 @@ struct levi::matrix_product_return<Scalar, Eigen::Matrix<Scalar_rhs, rhsRows, rh
 /**
  * Helper struct for determining the type resulting from a multiplication of two matrices. Specialization for a matrix and a scalar.
  */
-template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols>
-struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols>, Scalar,
+template<typename Scalar, typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols>
+struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Scalar,
         typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
     typedef Eigen::Matrix<typename levi::scalar_product_return<Scalar, Scalar_lhs>::type, lhsRows, lhsCols> type;
 };
@@ -402,7 +402,7 @@ private:
 
             derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
 
-            for (size_t i = 0; i < m_rhs.rows(); ++i) {
+            for (Eigen::Index i = 0; i < m_rhs.rows(); ++i) {
                 derivative = derivative + m_lhs.getColumnDerivative(i, variable) * m_rhs(i, column);
             }
 
@@ -419,7 +419,7 @@ private:
 
             derivative = m_lhs.getColumnDerivative(0, variable) * m_rhs(0, column);
 
-            for (size_t i = 1; i < m_rhs.rows(); ++i) {
+            for (Eigen::Index i = 1; i < m_rhs.rows(); ++i) {
                 derivative = derivative + m_lhs.getColumnDerivative(i, variable) * m_rhs(i, column);
             }
 
@@ -692,7 +692,7 @@ public:
                                                                                                                                                    std::shared_ptr<levi::VariableBase> variable) final {
         m_derivatives.resize(this->rows());
 
-        for (size_t j = 0; j < this->rows(); ++j) {
+        for (Eigen::Index j = 0; j < this->rows(); ++j) {
             m_derivatives[j] = m_expression(column, j).getColumnDerivative(0, variable);
         }
 

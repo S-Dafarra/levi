@@ -9,11 +9,11 @@
 #include <iostream>
 
 int main() {
-    using namespace Eigen;
     using namespace levi;
-    MatrixXd A(MatrixXd::Identity(3,3));
-    Constant a(MatrixXd::Identity(3,3), "a");
-    Matrix<double,3,3> B;
+
+    Eigen::MatrixXd A(Eigen::MatrixXd::Identity(3,3));
+    Constant a(Eigen::MatrixXd::Identity(3,3), "a");
+    Eigen::Matrix<double,3,3> B;
     B.setIdentity();
     Constant b(3,3,"b");
 
@@ -32,12 +32,12 @@ int main() {
 
     auto f = x + y;
 
-    Matrix<double,3,3> V;
+    Eigen::Matrix<double,3,3> V;
     V.setIdentity();
     V *= 3;
     Constant v(V, "V");
     Expression g = v * c;
-    Expression k = V * g;
+    Expression k = g * V;
     std::cerr << g.name() << " " <<std::endl << g.evaluate() <<std::endl;
     std::cerr << k.name() << " " <<std::endl << k.evaluate() <<std::endl;
 
@@ -55,7 +55,7 @@ int main() {
 
     d = 1.0 * d + c;
 
-    VectorXd x_value(3);
+    Eigen::VectorXd x_value(3);
     x_value.setRandom();
     x = x_value;
     ColumnExpression testX = g*x;

@@ -27,15 +27,16 @@ public:
 
     ConstructorByRows(const std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>>>& rows, std::string name)
         : levi::Evaluable<typename EvaluableT::matrix_type>(name)
-        , m_rows(rows)
     {
-        assert(m_rows.size() != 0);
-        assert((EvaluableT::rows_at_compile_time == Eigen::Dynamic) || (EvaluableT::rows_at_compile_time == m_rows.size()));
+        assert(rows.size() != 0);
+        assert((EvaluableT::rows_at_compile_time == Eigen::Dynamic) || (EvaluableT::rows_at_compile_time == rows.size()));
         Eigen::Index nCols;
 
+        m_rows.push_back(rows.front());
         nCols = m_rows.front().cols();
 
-        for (size_t i = 1; i < m_rows.size(); ++i) {
+        for (size_t i = 1; i < rows.size(); ++i) {
+            m_rows.push_back(rows[i]);
             assert(m_rows[i].cols() == nCols);
         }
 
@@ -90,15 +91,16 @@ public:
 
     ConstructorByCols(const std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>>>& cols, std::string name)
         : levi::Evaluable<typename EvaluableT::matrix_type>(name)
-        , m_cols(cols)
     {
-        assert(m_cols.size() != 0);
-        assert((EvaluableT::cols_at_compile_time == Eigen::Dynamic) || (EvaluableT::cols_at_compile_time == m_cols.size()));
+        assert(cols.size() != 0);
+        assert((EvaluableT::cols_at_compile_time == Eigen::Dynamic) || (EvaluableT::cols_at_compile_time == cols.size()));
         Eigen::Index nRows;
 
+        m_cols.push_back(cols.front());
         nRows = m_cols.front().rows();
 
-        for (size_t i = 1; i < m_cols.size(); ++i) {
+        for (size_t i = 1; i < cols.size(); ++i) {
+            m_cols.push_back(cols[i]);
             assert(m_cols[i].rows() == nRows);
         }
 
