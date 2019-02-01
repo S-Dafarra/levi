@@ -141,7 +141,7 @@ public:
      *
      * @Note This method should be called only if the matrix storage type is dynamic.
      */
-    void resize(Eigen::Index newRows, Eigen::Index newCols) {
+    virtual void resize(Eigen::Index newRows, Eigen::Index newCols) {
         m_evaluationBuffer.resize(newRows, newCols);
     }
 

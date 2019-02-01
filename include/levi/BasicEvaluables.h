@@ -104,6 +104,11 @@ public:
         this->m_evaluationBuffer.setZero();
     }
 
+    virtual void resize(Eigen::Index newRows, Eigen::Index newCols) final {
+        this->m_evaluationBuffer.resize(newRows, newCols);
+        this->m_evaluationBuffer.setZero();
+    }
+
     virtual const Matrix& evaluate() final {
         return this->m_evaluationBuffer;
     }
@@ -172,6 +177,11 @@ public:
     IdentityEvaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : levi::Evaluable<Matrix>(rows, cols, name)
     {
+        this->m_evaluationBuffer.setIdentity();
+    }
+
+    virtual void resize(Eigen::Index newRows, Eigen::Index newCols) final {
+        this->m_evaluationBuffer.resize(newRows, newCols);
         this->m_evaluationBuffer.setIdentity();
     }
 
