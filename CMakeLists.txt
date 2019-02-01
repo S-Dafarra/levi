@@ -49,31 +49,35 @@ endif()
 
 find_package(Eigen3 REQUIRED)
 
-add_library(levi INTERFACE)
-target_include_directories(levi INTERFACE ${EIGEN3_INCLUDE_DIR})
-target_include_directories(levi INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-target_include_directories(levi INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+set(LIBRARY_TARGET_NAME ${PROJECT_NAME})
+
+add_library(${LIBRARY_TARGET_NAME} INTERFACE)
+add_library(${PROJECT_NAME}::${LIBRARY_TARGET_NAME} ALIAS ${LIBRARY_TARGET_NAME})
+target_include_directories(${LIBRARY_TARGET_NAME} INTERFACE ${EIGEN3_INCLUDE_DIR})
+target_include_directories(${LIBRARY_TARGET_NAME} INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+target_include_directories(${LIBRARY_TARGET_NAME} INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 
 # install
-install(TARGETS levi
-        EXPORT levi
+install(TARGETS ${LIBRARY_TARGET_NAME}
+        EXPORT ${PROJECT_NAME}
         COMPONENT runtime
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT bin
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shlib
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(EXPORT levi
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/levi)
+install(EXPORT ${LIBRARY_TARGET_NAME}
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
 
-configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/leviConfig.cmake.in
-                              ${PROJECT_BINARY_DIR}/leviConfig.cmake
-                              INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/levi)
+configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in
+                              ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+                              INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
 
-write_basic_package_version_file(${PROJECT_BINARY_DIR}/leviConfigVersion.cmake  VERSION ${levi_VERSION} COMPATIBILITY SameMajorVersion )
+write_basic_package_version_file(${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake  VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion )
 
-install(FILES ${PROJECT_BINARY_DIR}/leviConfig.cmake ${PROJECT_BINARY_DIR}/leviConfigVersion.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/levi)
+install(FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
 
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION include)
 
