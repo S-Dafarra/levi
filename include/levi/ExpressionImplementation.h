@@ -14,7 +14,7 @@
 #include <levi/Variable.h>
 
 template<bool value, typename T>
-static levi::ExpressionComponent<levi::ConstantEvaluable<T>> levi::build_constant(levi::bool_value<value>, const T& rhs) { }
+static levi::ExpressionComponent<levi::ConstantEvaluable<T>> levi::build_constant(levi::bool_value<value>, const T& ) { }
 
 template<typename T>
 static levi::ExpressionComponent<levi::ConstantEvaluable<T>> levi::build_constant(levi::bool_value<true>, const T& rhs) {
@@ -45,7 +45,7 @@ void levi::ExpressionComponent<EvaluableT>::default_constructor(levi::bool_value
 
 template <class EvaluableT>
 template<bool value, typename OtherEvaluable>
-void levi::ExpressionComponent<EvaluableT>::casted_assignement(levi::bool_value<value>, const levi::ExpressionComponent<OtherEvaluable>& other) {}
+void levi::ExpressionComponent<EvaluableT>::casted_assignement(levi::bool_value<value>, const levi::ExpressionComponent<OtherEvaluable>&) {}
 
 template <class EvaluableT>
 template<typename OtherEvaluable>

@@ -83,6 +83,7 @@ public:
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<Vector>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                   std::shared_ptr<levi::VariableBase> variable) final {
+        levi::unused(column);
         assert(column == 0);
         if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
             return levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension(),
@@ -143,6 +144,7 @@ public:
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                   std::shared_ptr<levi::VariableBase> variable) final {
+        levi::unused(column);
         assert(column == 0);
         if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
             return levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension());

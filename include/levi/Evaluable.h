@@ -77,7 +77,7 @@ public:
 
     /**
      * @brief Constructor
-     * @param  Name of the evaluable
+     * @param name Name of the evaluable
      *
      * The evaluation buffer (m_evaluationBuffer) is not initialized nor resized.
      */
@@ -181,6 +181,7 @@ public:
      * User should override this method to reduce callings to getColumnDerivative.
      */
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
+        levi::unused(variable);
         return true;
     }
 
@@ -252,7 +253,7 @@ public:
 
     /**
      * @brief Constructor
-     * @param  Name of the evaluable
+     * @param name Name of the evaluable
      *
      * The evaluation buffer (m_evaluationBuffer) is not initialized.
      */
@@ -269,6 +270,7 @@ public:
     Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : m_name(name)
     {
+        levi::unused(rows, cols);
         assert(rows == 1 && cols == 1);
         m_evaluationBuffer = 0;
     }
