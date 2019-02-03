@@ -71,6 +71,20 @@ protected:
      */
     Matrix m_evaluationBuffer;
 
+    /**
+     * @brief Register to keep track of which parent read the new values.
+     */
+    std::vector<bool> m_evaluationRegister;
+
+    /**
+     * @brief Reset the evaluation register to notify of new values
+     */
+    void resetEvaluationRegister() {
+        for (size_t i = 0; i < m_evaluationRegister.size(); ++i) {
+            m_evaluationRegister[i] = false;
+        }
+    }
+
 public:
 
     Evaluable() = delete;
@@ -133,6 +147,50 @@ public:
     }
 
     /**
+     * @brief Return the name of the evaluable
+     * @return The name of the evaluable
+     */
+    std::string name() const {
+        return m_name;
+    }
+
+    /**
+     * @brief Evaluate the evaluable keeping track of the caller
+     *
+     * @return const reference to the evaluation buffer.
+     */
+    const Matrix& evaluate(size_t callerID) {
+        if (callerID < m_evaluationRegister.size()) {
+            if (this->isNew(callerID)) {
+                const Matrix& output = evaluate();
+                m_evaluationRegister[callerID] = true;
+                return output;
+            } else {
+                return m_evaluationBuffer;
+            }
+        }
+        return evaluate();
+    }
+
+    /**
+     * @brief Get a new ID to check whether the evaluable has a new value
+     * @return An ID to use to check whether the evaluable has already been called since new data has come in.
+     */
+    size_t getNewCallerID() {
+        m_evaluationRegister.push_back(false);
+        return m_evaluationRegister.size() -1;
+    }
+
+    /**
+     * @brief Check if the evaluable has a new value which has not been read by the caller
+     * @param callerID The ID of caller
+     * @return True if new
+     */
+    virtual bool isNew(size_t callerID) {
+        return !m_evaluationRegister[callerID];
+    }
+
+    /**
      * @brief Resize the evaluation buffer.
      * @param newRows New number of rows
      * @param newCols New number of columns
@@ -144,15 +202,6 @@ public:
     virtual void resize(Eigen::Index newRows, Eigen::Index newCols) {
         m_evaluationBuffer.resize(newRows, newCols);
     }
-
-    /**
-     * @brief Return the name of the evaluable
-     * @return The name of the evaluable
-     */
-    std::string name() const {
-        return m_name;
-    }
-
     /**
      * @brief Evaluate the evaluable
      *
@@ -247,6 +296,20 @@ protected:
      */
     Scalar m_evaluationBuffer;
 
+    /**
+     * @brief Register to keep track of which parent read the new values.
+     */
+    std::vector<bool> m_evaluationRegister;
+
+    /**
+     * @brief Reset the evaluation register to notify of new values
+     */
+    void resetEvaluationRegister() {
+        for (size_t i = 0; i < m_evaluationRegister.size(); ++i) {
+            m_evaluationRegister[i] = false;
+        }
+    }
+
 public:
 
     Evaluable() = delete;
@@ -324,6 +387,41 @@ public:
      */
     std::string name() const {
         return m_name;
+    }
+
+    /**
+     * @brief Evaluate the evaluable keeping track of the caller
+     *
+     * @return const reference to the evaluation buffer.
+     */
+    const Scalar& evaluate(size_t callerID) {
+        if (callerID < m_evaluationRegister.size()) {
+            if (this->isNew(callerID)) {
+                m_evaluationRegister[callerID] = true;
+            } else {
+                return m_evaluationBuffer;
+            }
+        }
+
+        return evaluate();
+    }
+
+    /**
+     * @brief Get a new ID to check whether the evaluable has a new value
+     * @return An ID to use to check whether the evaluable has already been called since new data has come in.
+     */
+    size_t getNewCallerID() {
+        m_evaluationRegister.push_back(false);
+        return m_evaluationRegister.size() -1;
+    }
+
+    /**
+     * @brief Check if the evaluable has a new value which has not been read by the caller
+     * @param callerID The ID of caller
+     * @return True if new
+     */
+    virtual bool isNew(size_t callerID) {
+        return !m_evaluationRegister[callerID];
     }
 
     /**

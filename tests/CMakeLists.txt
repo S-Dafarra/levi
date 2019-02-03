@@ -8,24 +8,24 @@
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-
-macro(add_LEVI_test classname)
+macro(add_levi_test classname)
     set(testsrc ${classname}Test.cpp)
     set(testbinary ${classname}UnitTest)
     set(testname   UnitTest${classname})
     add_executable(${testbinary} ${testsrc})
-    target_include_directories(${testbinary} PRIVATE ${IDYNTREE_TREE_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
-    target_link_libraries(${testbinary} PRIVATE levi)
+    target_include_directories(${testbinary} PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(${testbinary} PRIVATE levi::levi)
     add_test(NAME ${testname} COMMAND ${testbinary})
 
-    if(RUN_VALGRIND_TESTS)
-        add_test(NAME memcheck_${testname} COMMAND ${MEMCHECK_COMMAND_COMPLETE} $<TARGET_FILE:${testbinary}>)
-    endif()
+#    if(RUN_VALGRIND_TESTS)
+#        add_test(NAME memcheck_${testname} COMMAND ${MEMCHECK_COMMAND_COMPLETE} $<TARGET_FILE:${testbinary}>)
+#    endif()
 endmacro()
 
-add_LEVI_test(Composition)
-add_LEVI_test(Derivative)
-add_LEVI_test(AdvancedConstructors)
-add_LEVI_test(Rotation)
+add_levi_test(Composition)
+add_levi_test(Derivative)
+add_levi_test(AdvancedConstructors)
+add_levi_test(Cache)
+add_levi_test(Rotation)
 
 

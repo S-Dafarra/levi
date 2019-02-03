@@ -48,6 +48,11 @@ class levi::ExpressionComponent {
     std::shared_ptr<EvaluableT> m_evaluable;
 
     /**
+     * @brief CallerID associated to this expression for the specific evaluable;
+     */
+    size_t m_callerID;
+
+    /**
      * Template declaration for a helper method used when calling the default constructor of the ExpressionComponent
      */
     template<bool value>
@@ -109,11 +114,15 @@ public:
     template<class EvaluableOther>
     ExpressionComponent(const ExpressionComponent<EvaluableOther>& other);
 
+    ExpressionComponent(const ExpressionComponent<EvaluableT>& other);
+
     /**
      * @brief Move constructor
      */
     template<class EvaluableOther>
     ExpressionComponent(ExpressionComponent<EvaluableOther>&& other);
+
+    ExpressionComponent(ExpressionComponent<EvaluableT>&& other);
 
     /**
      * @brief Constructor
@@ -121,7 +130,7 @@ public:
      * Use this constructor to instantiate all the custom evaluables.
      * All the input arguments will be passed to the constructor of the Evaluable pointed inside the ExpressionComponent.
      */
-    template<class... Args >
+    template<class... Args, typename = typename std::enable_if<std::is_constructible<EvaluableT, Args...>::value>::type>
     ExpressionComponent(Args&&... args);
 
     /**
@@ -159,6 +168,12 @@ public:
      * @return The number of cols of the expression
      */
     Eigen::Index cols() const;
+
+    /**
+     * @brief Check if the expression has a new value
+     * @return True if new
+     */
+    bool isNew();
 
     /**
      * @brief Evaluate the pointed evaluable.
@@ -266,7 +281,9 @@ public:
      * it will be deleted.
      */
     template<class EvaluableRhs>
-    ExpressionComponent<EvaluableT>& operator=(const ExpressionComponent<EvaluableRhs>& rhs);
+    void operator=(const ExpressionComponent<EvaluableRhs>& rhs);
+
+    void operator=(const ExpressionComponent<EvaluableT>& rhs);
 
     /**
      * @brief Move assignement operator
@@ -275,7 +292,9 @@ public:
      * a new evaluable will be created which will cast the evaluation buffers.
      */
     template<class EvaluableRhs>
-    ExpressionComponent<EvaluableT>& operator=(const ExpressionComponent<EvaluableRhs>&& rhs);
+    void operator=(const ExpressionComponent<EvaluableRhs>&& rhs);
+
+    void operator=(const ExpressionComponent<EvaluableT>&& rhs);
 
     /**
      * @brief Assignement operator to a matrix

@@ -65,6 +65,7 @@ public:
     template<typename otherVector>
     void operator=(const otherVector& rhs) {
         copy_constant(bool_value<std::is_arithmetic<otherVector>::value>(), rhs);
+        this->resetEvaluationRegister();
     }
 
     /**
@@ -75,6 +76,7 @@ public:
         static_assert (OtherVector::ColsAtCompileTime == 1, "The chosen VectorType for the rhs should have exactly one column at compile time.");
         assert(rhs.dimension() == this->dimension());
         this->m_evaluationBuffer = rhs.evaluate();
+        this->resetEvaluationRegister();
     }
 
     virtual const Vector& evaluate() final {
@@ -129,6 +131,7 @@ public:
      */
     void operator=(const Scalar& rhs) {
         this->m_evaluationBuffer = rhs;
+        this->resetEvaluationRegister();
     }
 
     /**
@@ -136,6 +139,7 @@ public:
      */
     void operator=(const EvaluableVariable<Scalar>& rhs) {
         this->m_evaluationBuffer = rhs.evaluate();
+        this->resetEvaluationRegister();
     }
 
     virtual const Scalar& evaluate() final {

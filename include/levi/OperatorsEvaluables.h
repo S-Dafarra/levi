@@ -146,6 +146,13 @@ public:
         , m_rhs(rhs)
     { }
 
+    virtual bool isNew(size_t callerID) final{
+        if (m_lhs.isNew() || m_rhs.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const sum_type& evaluate() final {
         this->m_evaluationBuffer = m_lhs.evaluate() + m_rhs.evaluate();
 
@@ -205,6 +212,13 @@ public:
         , m_rhs(rhs)
     { }
 
+    virtual bool isNew(size_t callerID) final{
+        if (m_lhs.isNew() || m_rhs.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const sum_type& evaluate() final {
         this->m_evaluationBuffer = m_lhs.evaluate() - m_rhs.evaluate();
 
@@ -256,6 +270,13 @@ public:
         : levi::Evaluable<typename EvaluableT::matrix_type>(expression.rows(), expression.cols(), "-" + expression.name())
         , m_expression(expression)
     { }
+
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
 
     virtual const typename EvaluableT::matrix_type& evaluate() final {
         this->m_evaluationBuffer = -m_expression.evaluate();
@@ -445,6 +466,13 @@ public:
         , m_rhs(rhs)
     { }
 
+    virtual bool isNew(size_t callerID) final{
+        if (m_lhs.isNew() || m_rhs.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const product_type& evaluate() final {
 
         this->m_evaluationBuffer = m_lhs.evaluate() * m_rhs.evaluate();
@@ -492,6 +520,13 @@ public:
         , m_exponent(exponent)
     {
         assert(m_expression.rows() == 1 && m_expression.cols() == 1);
+    }
+
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
     }
 
     virtual const typename EvaluableT::value_type& evaluate() final {
@@ -551,6 +586,13 @@ public:
         assert(rhs.rows() == 1 && rhs.cols() == 1);
     }
 
+    virtual bool isNew(size_t callerID) final{
+        if (m_lhs.isNew() || m_rhs.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const product_type& evaluate() final {
 
         this->m_evaluationBuffer = m_lhs.evaluate() / get_rhs_value(levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>());
@@ -591,6 +633,13 @@ public:
         , m_expression(expression)
     {
         assert((expression.rows() == 3) && (expression.cols() == 1));
+    }
+
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
     }
 
     virtual const Eigen::Matrix<typename EvaluableT::value_type, 3, 3>& evaluate() final {
@@ -682,14 +731,21 @@ public:
         , m_expression(expression)
     { }
 
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::matrix_type & evaluate() final {
         this->m_evaluationBuffer = m_expression.evaluate().transpose();
 
         return this->m_evaluationBuffer;
     }
 
-    levi::ExpressionComponent<typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                                                   std::shared_ptr<levi::VariableBase> variable) final {
+    levi::ExpressionComponent<typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::derivative_evaluable>
+    getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) final {
         m_derivatives.resize(this->rows());
 
         for (Eigen::Index j = 0; j < this->rows(); ++j) {

@@ -45,6 +45,7 @@ public:
 
     void operator=(const Matrix& rhs) {
         this->m_evaluationBuffer = rhs;
+        this->resetEvaluationRegister();
     }
 };
 
@@ -79,6 +80,7 @@ public:
 
     void operator=(const Scalar& rhs) {
         this->m_evaluationBuffer = rhs;
+        this->resetEvaluationRegister();
     }
 };
 
@@ -107,6 +109,7 @@ public:
     virtual void resize(Eigen::Index newRows, Eigen::Index newCols) final {
         this->m_evaluationBuffer.resize(newRows, newCols);
         this->m_evaluationBuffer.setZero();
+        this->resetEvaluationRegister();
     }
 
     virtual const Matrix& evaluate() final {
@@ -183,6 +186,7 @@ public:
     virtual void resize(Eigen::Index newRows, Eigen::Index newCols) final {
         this->m_evaluationBuffer.resize(newRows, newCols);
         this->m_evaluationBuffer.setIdentity();
+        this->resetEvaluationRegister();
     }
 
     virtual const Matrix& evaluate() final {

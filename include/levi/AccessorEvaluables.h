@@ -64,6 +64,13 @@ public:
         , m_row(row)
     { }
 
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const typename EvaluableT::row_type& evaluate() final {
         this->m_evaluationBuffer = m_expression.evaluate().row(m_row);
 
@@ -104,6 +111,13 @@ public:
         assert(row == 0);
     }
 
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const typename EvaluableT::row_type& evaluate() final {
         this->m_evaluationBuffer = m_expression.evaluate();
 
@@ -140,6 +154,13 @@ public:
         , m_expression(evaluable)
         , m_col(col)
     { }
+
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
 
     virtual const typename EvaluableT::col_type& evaluate() final {
         this->m_evaluationBuffer = m_expression.evaluate().col(m_col);
@@ -183,6 +204,13 @@ public:
         assert(col == 0);
     }
 
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const typename EvaluableT::col_type& evaluate() final {
         this->m_evaluationBuffer = m_expression.evaluate();
 
@@ -220,6 +248,13 @@ public:
         , m_row(row)
         , m_col(col)
     { }
+
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
 
     virtual const typename EvaluableT::value_type& evaluate() final {
         this->m_evaluationBuffer = m_expression.evaluate()(m_row, m_col);
@@ -260,6 +295,13 @@ public:
     {
         levi::unused(row, col);
         assert(row == 0 && col == 0);
+    }
+
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
     }
 
     virtual const typename EvaluableT::value_type& evaluate() final {
@@ -303,6 +345,13 @@ public:
         assert(((startRow + numberOfRows) <= expression.rows()) && ((startCol + numberOfCols) <= expression.cols()));
     }
 
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const block_type& evaluate() final {
         this->m_evaluationBuffer = m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols());
 
@@ -343,6 +392,13 @@ public:
         assert(startRow == 0 && startCol == 0 && numberOfRows == 1 && numberOfCols == 1);
     }
 
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const block_type& evaluate() final {
         this->m_evaluationBuffer = m_expression.evaluate();
         return this->m_evaluationBuffer;
@@ -378,6 +434,13 @@ public:
         : levi::Evaluable<typename LeftEvaluable::matrix_type>(rhs.rows(), rhs.cols(), rhs.name())
         , m_rhs(rhs)
     { }
+
+    virtual bool isNew(size_t callerID) final{
+        if (m_rhs.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
 
     virtual const typename LeftEvaluable::matrix_type& evaluate() final {
         this->m_evaluationBuffer = m_rhs.evaluate();

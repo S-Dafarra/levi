@@ -19,12 +19,16 @@ int main() {
 
     Expression normalizedQuaternion = quaternion/(quaternion.transpose() * quaternion).pow(0.5);
 
+    Expression skewQuaternion = normalizedQuaternion.block(1,0,3,1).skew();
+
+    Expression twoSkewQuaternion = 2.0 * skewQuaternion;
+
     Variable x(3, "x");
 
     Expression rotation;
 
     //Rodriguez formula
-    rotation = Identity(3,3) + 2.0 * normalizedQuaternion(0,0) * normalizedQuaternion.block(1,0,3,1).skew() + 2.0 * normalizedQuaternion.block(1,0,3,1).skew() * normalizedQuaternion.block(1,0,3,1).skew();
+    rotation = Identity(3,3) + normalizedQuaternion(0,0) * twoSkewQuaternion + twoSkewQuaternion * skewQuaternion;
 
     std::cerr << rotation.name() << std::endl;
 
@@ -43,6 +47,7 @@ int main() {
     quaternionValue = Eigen::Vector4d::Random();
 
     quaternion = quaternionValue;
+    assert(rotation.isNew());
 
     Eigen::Vector4d quaternionValueNormalized = quaternionValue.normalized();
 
@@ -53,6 +58,7 @@ int main() {
 
     testRotation = Eigen::MatrixXd::Identity(3,3) + 2.0 * quaternionValueNormalized(0) * skew + 2.0 * skew * skew;
 
+    rotation.evaluate();
     assert(rotation.evaluate() == testRotation);
 
     Eigen::Quaterniond quaternionEigen;
@@ -141,6 +147,8 @@ int main() {
         Expression rotatedVectorDoubleDerivative = rotatedVectorDerivative.getColumnDerivative(j, quaternion);
 
         Eigen::MatrixXd doubleDerivativeValue(rotatedVectorDoubleDerivative.rows(), rotatedVectorDoubleDerivative.cols());
+
+//        std::cerr << rotatedVectorDoubleDerivative.name() << std::endl;
 
         begin = std::chrono::steady_clock::now();
         doubleDerivativeValue = rotatedVectorDoubleDerivative.evaluate();

@@ -36,6 +36,7 @@ void levi::ExpressionComponent<EvaluableT>::default_constructor(levi::bool_value
 template <class EvaluableT>
 void levi::ExpressionComponent<EvaluableT>::default_constructor(levi::bool_value<true>) {
     m_evaluable = std::make_shared<EvaluableT>();
+    m_callerID = m_evaluable->getNewCallerID();
 }
 
 template <class EvaluableT>
@@ -51,12 +52,14 @@ template <class EvaluableT>
 template<typename OtherEvaluable>
 void levi::ExpressionComponent<EvaluableT>::casted_assignement(levi::bool_value<true>, const levi::ExpressionComponent<OtherEvaluable>& other) {
     m_evaluable = other.m_evaluable;
+    m_callerID = m_evaluable->getNewCallerID();
 }
 
 template <class EvaluableT>
 template<typename OtherEvaluable>
 void levi::ExpressionComponent<EvaluableT>::casted_assignement(levi::bool_value<false>, const levi::ExpressionComponent<OtherEvaluable>& other) {
     m_evaluable = std::make_shared<levi::CastEvaluable<EvaluableT, OtherEvaluable>>(other);
+    m_callerID = m_evaluable->getNewCallerID();
 }
 
 template <class EvaluableT>
@@ -68,20 +71,37 @@ levi::ExpressionComponent<EvaluableT>::ExpressionComponent()
 template <class EvaluableT>
 template<class EvaluableOther>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent(const ExpressionComponent<EvaluableOther>& other) {
-    this = other;
+
+    casted_assignement(levi::bool_value<std::is_base_of<EvaluableT, EvaluableOther>::value>(), other);
+}
+
+template <class EvaluableT>
+levi::ExpressionComponent<EvaluableT>::ExpressionComponent(const ExpressionComponent<EvaluableT>& other) {
+    m_evaluable = other.m_evaluable;
+    m_callerID = m_evaluable->getNewCallerID();
 }
 
 template <class EvaluableT>
 template<class EvaluableOther>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent(ExpressionComponent<EvaluableOther>&& other) {
-    *this = other;
+
+    casted_assignement(levi::bool_value<std::is_base_of<EvaluableT, EvaluableOther>::value>(), other);
+
 }
 
 template <class EvaluableT>
-template<class... Args >
+levi::ExpressionComponent<EvaluableT>::ExpressionComponent(ExpressionComponent<EvaluableT>&& other) {
+    m_evaluable = other.m_evaluable;
+    m_callerID = m_evaluable->getNewCallerID();
+}
+
+template <class EvaluableT>
+template<class... Args, typename>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent(Args&&... args)
-    : m_evaluable(std::make_shared<EvaluableT>(args...))
-{ }
+    : m_evaluable(std::make_shared<EvaluableT>(std::forward<Args>(args)...))
+{
+    m_callerID = m_evaluable->getNewCallerID();
+}
 
 template <class EvaluableT>
 std::weak_ptr<EvaluableT> levi::ExpressionComponent<EvaluableT>::evaluable() {
@@ -107,9 +127,14 @@ Eigen::Index levi::ExpressionComponent<EvaluableT>::cols() const {
 }
 
 template <class EvaluableT>
+bool levi::ExpressionComponent<EvaluableT>::isNew() {
+    return m_evaluable->isNew(m_callerID);
+}
+
+template <class EvaluableT>
 const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::evaluate() {
     assert(m_evaluable);
-    return m_evaluable->evaluate();
+    return std::dynamic_pointer_cast<levi::Evaluable<typename EvaluableT::matrix_type>>(m_evaluable)->evaluate(m_callerID);
 }
 
 template <class EvaluableT>
@@ -234,18 +259,29 @@ levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type> > lev
 
 template <class EvaluableT>
 template<class EvaluableRhs>
-levi::ExpressionComponent<EvaluableT>& levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableRhs>& rhs) {
-    static_assert (!std::is_base_of<levi::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
+void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableRhs>& rhs) {
+    static_assert (!std::is_base_of<levi::VariableBase, EvaluableT>::value, "Cannot assign an expression to a variable." );
     casted_assignement(levi::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs);
-    return *this;
+}
+
+template <class EvaluableT>
+void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableT>& rhs) {
+    m_evaluable = rhs.m_evaluable;
+    m_callerID = m_evaluable->getNewCallerID();
 }
 
 template <class EvaluableT>
 template<class EvaluableRhs>
-levi::ExpressionComponent<EvaluableT>& levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableRhs>&& rhs) {
-    static_assert (!std::is_base_of<levi::EvaluableVariable<typename EvaluableT::matrix_type>, EvaluableT>::value, "Cannot assign an expression to a variable." );
+void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableRhs>&& rhs) {
+    static_assert (!std::is_base_of<levi::VariableBase, EvaluableT>::value, "Cannot assign an expression to a variable." );
     casted_assignement(levi::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs);
-    return *this;
+//    return *this;
+}
+
+template <class EvaluableT>
+void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableT>&& rhs) {
+    m_evaluable = rhs.m_evaluable;
+    m_callerID = m_evaluable->getNewCallerID();
 }
 
 //assign from a constant

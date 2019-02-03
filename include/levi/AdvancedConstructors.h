@@ -45,6 +45,20 @@ public:
         m_derivatives.resize(m_rows.size());
     }
 
+    virtual bool isNew(size_t callerID) final{
+        bool newVal = false;
+
+        for (size_t i = 0; i < m_rows.size(); ++i) {
+            newVal = newVal || m_rows[i].isNew();
+        }
+
+        if (newVal) {
+            this->resetEvaluationRegister();
+        }
+
+        return !this->m_evaluationRegister[callerID];
+    }
+
     virtual const typename EvaluableT::matrix_type& evaluate() final {
         for (size_t i = 0; i < m_rows.size(); ++i) {
             this->m_evaluationBuffer.row(i) = m_rows[i].evaluate();
@@ -105,6 +119,20 @@ public:
         }
 
         this->resize(nRows, m_cols.size());
+    }
+
+    virtual bool isNew(size_t callerID) final{
+        bool newVal = false;
+
+        for (size_t i = 0; i < m_cols.size(); ++i) {
+            newVal = newVal || m_cols[i].isNew();
+        }
+
+        if (newVal) {
+            this->resetEvaluationRegister();
+        }
+
+        return !this->m_evaluationRegister[callerID];
     }
 
     virtual const typename EvaluableT::matrix_type& evaluate() final {
