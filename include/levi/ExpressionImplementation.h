@@ -69,7 +69,7 @@ levi::ExpressionComponent<EvaluableT>::ExpressionComponent()
 }
 
 template <class EvaluableT>
-template<class EvaluableOther>
+template<class EvaluableOther, typename>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent(const ExpressionComponent<EvaluableOther>& other) {
 
     casted_assignement(levi::bool_value<std::is_base_of<EvaluableT, EvaluableOther>::value>(), other);
@@ -82,7 +82,7 @@ levi::ExpressionComponent<EvaluableT>::ExpressionComponent(const ExpressionCompo
 }
 
 template <class EvaluableT>
-template<class EvaluableOther>
+template<class EvaluableOther, typename>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent(ExpressionComponent<EvaluableOther>&& other) {
 
     casted_assignement(levi::bool_value<std::is_base_of<EvaluableT, EvaluableOther>::value>(), other);
@@ -258,7 +258,7 @@ levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type> > lev
 }
 
 template <class EvaluableT>
-template<class EvaluableRhs>
+template<class EvaluableRhs, typename>
 void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableRhs>& rhs) {
     static_assert (!std::is_base_of<levi::VariableBase, EvaluableT>::value, "Cannot assign an expression to a variable." );
     casted_assignement(levi::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs);
@@ -271,7 +271,7 @@ void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComp
 }
 
 template <class EvaluableT>
-template<class EvaluableRhs>
+template<class EvaluableRhs, typename>
 void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableRhs>&& rhs) {
     static_assert (!std::is_base_of<levi::VariableBase, EvaluableT>::value, "Cannot assign an expression to a variable." );
     casted_assignement(levi::bool_value<std::is_base_of<EvaluableT, EvaluableRhs>::value>(), rhs);

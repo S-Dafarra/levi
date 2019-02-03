@@ -109,19 +109,25 @@ public:
     ExpressionComponent();
 
     /**
-     * @brief Copy constructor
+     * @brief Copy constructor from other expressions
      */
-    template<class EvaluableOther>
+    template<class EvaluableOther, typename = typename std::enable_if<!std::is_same<EvaluableT, EvaluableOther>::value>::type>
     ExpressionComponent(const ExpressionComponent<EvaluableOther>& other);
 
+    /**
+     * @brief Copy constructor
+     */
     ExpressionComponent(const ExpressionComponent<EvaluableT>& other);
+
+    /**
+     * @brief Move constructor from other expressions
+     */
+    template<class EvaluableOther, typename = typename std::enable_if<!std::is_same<EvaluableT, EvaluableOther>::value>::type>
+    ExpressionComponent(ExpressionComponent<EvaluableOther>&& other);
 
     /**
      * @brief Move constructor
      */
-    template<class EvaluableOther>
-    ExpressionComponent(ExpressionComponent<EvaluableOther>&& other);
-
     ExpressionComponent(ExpressionComponent<EvaluableT>&& other);
 
     /**
@@ -272,7 +278,7 @@ public:
     ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> pow(typename EvaluableT::value_type exponent);
 
     /**
-     * @brief Assignement operator
+     * @brief Assignement operator from other expressions
      *
      * Assigns the current expression to the rhs. If the EvaluableT is not a base class for EvaluableRhs,
      * a new evaluable will be created which will cast the evaluation buffers.
@@ -280,20 +286,29 @@ public:
      * @note This changes the pointer and does not affect the pointed evaluable. If no other expression points to the previous evaluable,
      * it will be deleted.
      */
-    template<class EvaluableRhs>
+    template<class EvaluableRhs, typename = typename std::enable_if<!std::is_same<EvaluableT, EvaluableRhs>::value>::type>
     void operator=(const ExpressionComponent<EvaluableRhs>& rhs);
 
+    /**
+     * @brief Assignement operator
+     *
+     * @note This changes the pointer and does not affect the pointed evaluable. If no other expression points to the previous evaluable,
+     * it will be deleted.
+     */
     void operator=(const ExpressionComponent<EvaluableT>& rhs);
 
     /**
-     * @brief Move assignement operator
+     * @brief Move assignement operator from other expressions
      *
      * Assigns the current expression to the rhs. If the EvaluableT is not a base class for EvaluableRhs,
      * a new evaluable will be created which will cast the evaluation buffers.
      */
-    template<class EvaluableRhs>
+    template<class EvaluableRhs, typename = typename std::enable_if<!std::is_same<EvaluableT, EvaluableRhs>::value>::type>
     void operator=(const ExpressionComponent<EvaluableRhs>&& rhs);
 
+    /**
+     * @brief Move assignement operator
+     */
     void operator=(const ExpressionComponent<EvaluableT>&& rhs);
 
     /**
