@@ -85,6 +85,22 @@ protected:
         }
     }
 
+    /**
+     * @brief Check if the buffer has been filled at least once since the evaluation register has been resetted
+     */
+    bool alreadyComputed() {
+        bool computed = false;
+
+        size_t i = 0;
+
+        while (computed == false && i < m_evaluationRegister.size()) {
+            computed = computed || m_evaluationRegister[i];
+            ++i;
+        }
+
+        return computed;
+    }
+
 public:
 
     Evaluable() = delete;
@@ -162,9 +178,14 @@ public:
     const Matrix& evaluate(size_t callerID) {
         if (callerID < m_evaluationRegister.size()) {
             if (this->isNew(callerID)) {
-                const Matrix& output = evaluate();
-                m_evaluationRegister[callerID] = true;
-                return output;
+                if (this->alreadyComputed()) {
+                    m_evaluationRegister[callerID] = true;
+                    return m_evaluationBuffer;
+                } else {
+                    const Matrix& output = evaluate();
+                    m_evaluationRegister[callerID] = true;
+                    return output;
+                }
             } else {
                 return m_evaluationBuffer;
             }
@@ -310,6 +331,22 @@ protected:
         }
     }
 
+    /**
+     * @brief Check if the buffer has been filled at least once since the evaluation register has been resetted
+     */
+    bool alreadyComputed() {
+        bool computed = false;
+
+        size_t i = 0;
+
+        while (computed == false && i < m_evaluationRegister.size()) {
+            computed = computed || m_evaluationRegister[i];
+            ++i;
+        }
+
+        return computed;
+    }
+
 public:
 
     Evaluable() = delete;
@@ -397,7 +434,14 @@ public:
     const Scalar& evaluate(size_t callerID) {
         if (callerID < m_evaluationRegister.size()) {
             if (this->isNew(callerID)) {
-                m_evaluationRegister[callerID] = true;
+                if (this->alreadyComputed()) {
+                    m_evaluationRegister[callerID] = true;
+                    return m_evaluationBuffer;
+                } else {
+                    const Scalar& output = evaluate();
+                    m_evaluationRegister[callerID] = true;
+                    return output;
+                }
             } else {
                 return m_evaluationBuffer;
             }
