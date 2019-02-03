@@ -175,7 +175,7 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    const Matrix& evaluate(size_t callerID) {
+    const Matrix& evaluateID(size_t callerID) {
         if (callerID < m_evaluationRegister.size()) {
             if (this->isNew(callerID)) {
                 if (this->alreadyComputed()) {
@@ -431,7 +431,7 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    const Scalar& evaluate(size_t callerID) {
+    const Scalar& evaluateID(size_t callerID) {
         if (callerID < m_evaluationRegister.size()) {
             if (this->isNew(callerID)) {
                 if (this->alreadyComputed()) {

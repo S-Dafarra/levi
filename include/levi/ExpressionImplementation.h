@@ -134,7 +134,7 @@ bool levi::ExpressionComponent<EvaluableT>::isNew() {
 template <class EvaluableT>
 const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::evaluate() {
     assert(m_evaluable);
-    return std::dynamic_pointer_cast<levi::Evaluable<typename EvaluableT::matrix_type>>(m_evaluable)->evaluate(m_callerID);
+    return m_evaluable->evaluateID(m_callerID);
 }
 
 template <class EvaluableT>
