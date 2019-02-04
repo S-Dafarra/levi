@@ -410,6 +410,12 @@ public:
     bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable);
 
     /**
+     * @brief Check if the expression is valid
+     * @return True if the expression is valid
+     */
+    bool isValidExpression() const;
+
+    /**
      * @brief Create an epression from a vector of rows
      * @param rows The vector containing the expressionion composing the rows of the new expression
      * @param name The name of the new expression

@@ -69,8 +69,8 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::row_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                                         std::shared_ptr<levi::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::row_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
+                                                                                                                                            std::shared_ptr<levi::VariableBase> variable) final {
         levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::row_type>::derivative_evaluable> newDerivative;
 
         newDerivative = levi::ExpressionComponent<levi::RowEvaluable<typename EvaluableT::derivative_evaluable>>(this->m_expression.getColumnDerivative(column, variable), m_row);
@@ -103,8 +103,8 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                     std::shared_ptr<levi::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
+                                                                                                        std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(column);
         assert(column == 0);
 
@@ -135,8 +135,8 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                                         std::shared_ptr<levi::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
+                                                                                                                                            std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(column);
         assert(column == 0);
         levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> newDerivative;
@@ -171,8 +171,8 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                     std::shared_ptr<levi::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
+                                                                                                        std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(column);
         assert(column == 0);
 
@@ -204,8 +204,8 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                                           std::shared_ptr<levi::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
+                                                                                                                                              std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(column);
         assert(column == 0);
         levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> newDerivative;
@@ -238,8 +238,8 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                     std::shared_ptr<levi::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
+                                                                                                        std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(column);
         assert(column == 0);
 
@@ -275,7 +275,7 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual levi::ExpressionComponent<typename levi::Evaluable<block_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename levi::Evaluable<block_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) final {
         levi::ExpressionComponent<typename levi::Evaluable<block_type>::derivative_evaluable> newDerivative;
 
         newDerivative = this->m_expression.getColumnDerivative(m_startCol + column, variable).block(m_startRow, 0, this->rows(), variable->dimension());
@@ -308,8 +308,8 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual levi::ExpressionComponent<typename levi::Evaluable<block_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                      std::shared_ptr<levi::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename levi::Evaluable<block_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
+                                                                                                                         std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(column);
         assert(column == 0);
 
@@ -339,8 +339,8 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    virtual levi::ExpressionComponent<typename levi::Evaluable<typename LeftEvaluable::matrix_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                                               std::shared_ptr<levi::VariableBase> variable) final {
+    virtual levi::ExpressionComponent<typename levi::Evaluable<typename LeftEvaluable::matrix_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
+                                                                                                                                                  std::shared_ptr<levi::VariableBase> variable) final {
         levi::ExpressionComponent<typename RightEvaluable::derivative_evaluable> rightDerivative = this->m_expression.getColumnDerivative(column, variable);
 
         levi::ExpressionComponent<CastEvaluable<typename levi::Evaluable<typename LeftEvaluable::matrix_type>::derivative_evaluable, typename RightEvaluable::derivative_evaluable>> newCast(rightDerivative);

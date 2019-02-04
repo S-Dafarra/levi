@@ -15,6 +15,7 @@
 #include <string>
 #include <cassert>
 #include <cmath>
+#include <unordered_map>
 
 namespace levi {
 
