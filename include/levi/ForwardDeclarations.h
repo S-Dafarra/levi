@@ -64,6 +64,9 @@ namespace levi {
     template <typename MatrixType, typename EvaluableT>
     class UnaryOperator;
 
+    template <typename MatrixType, class LeftEvaluable, class RightEvaluable>
+    class BinaryOperator;
+
     template <class LeftEvaluable, class RightEvaluable>
     class SumEvaluable;
 

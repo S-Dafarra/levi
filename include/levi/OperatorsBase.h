@@ -45,4 +45,43 @@ public:
     }
 };
 
+template <typename MatrixType, class LeftEvaluable, class RightEvaluable>
+class levi::BinaryOperator : public levi::Evaluable<MatrixType> {
+protected:
+
+    levi::ExpressionComponent<LeftEvaluable> m_lhs;
+    levi::ExpressionComponent<RightEvaluable> m_rhs;
+
+public:
+
+    BinaryOperator(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs, const std::string& name)
+        : levi::Evaluable<MatrixType>(name)
+        , m_lhs(lhs)
+        , m_rhs(rhs)
+    { }
+
+    BinaryOperator(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs, Eigen::Index rows, Eigen::Index cols, const std::string& name)
+        : levi::Evaluable<MatrixType>(rows, cols, name)
+        , m_lhs(lhs)
+        , m_rhs(rhs)
+    { }
+
+    BinaryOperator(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs, const MatrixType& initialValue, const std::string& name)
+        : levi::Evaluable<MatrixType>(initialValue, name)
+        , m_lhs(lhs)
+        , m_rhs(rhs)
+    { }
+
+    virtual bool isNew(size_t callerID) final{
+        if (m_lhs.isNew() || m_rhs.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+        return m_lhs.isDependentFrom(variable) || m_rhs.isDependentFrom(variable);
+    }
+};
+
 #endif // LEVI_OPERATORSBASE_H

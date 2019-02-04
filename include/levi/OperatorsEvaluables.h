@@ -10,6 +10,7 @@
 #include <levi/BasicEvaluables.h>
 #include <levi/ForwardDeclarations.h>
 #include <levi/Expression.h>
+#include <levi/OperatorsBase.h>
 
 /**
  * Helper struct for determining the type resulting from an addition
@@ -131,30 +132,18 @@ struct levi::matrix_product_return<Scalar_lhs, Scalar_rhs,
  * @brief The SumEvaluable. Implements the sum of two evaluables.
  */
 template <class LeftEvaluable, class RightEvaluable>
-class levi::SumEvaluable : public levi::Evaluable<typename levi::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
-
-    levi::ExpressionComponent<LeftEvaluable> m_lhs;
-    levi::ExpressionComponent<RightEvaluable> m_rhs;
+class levi::SumEvaluable : public levi::BinaryOperator<typename levi::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type, LeftEvaluable, RightEvaluable>{
 
 public:
 
     typedef typename levi::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type sum_type;
 
     SumEvaluable(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs)
-        : levi::Evaluable<sum_type>(lhs.rows(), lhs.cols(), "(" + lhs.name() + " + " + rhs.name() + ")")
-        , m_lhs(lhs)
-        , m_rhs(rhs)
+        : levi::BinaryOperator<sum_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), lhs.cols(), "(" + lhs.name() + " + " + rhs.name() + ")")
     { }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_lhs.isNew() || m_rhs.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const sum_type& evaluate() final {
-        this->m_evaluationBuffer = m_lhs.evaluate() + m_rhs.evaluate();
+        this->m_evaluationBuffer = this->m_lhs.evaluate() + this->m_rhs.evaluate();
 
         return this->m_evaluationBuffer;
     }
@@ -163,11 +152,11 @@ public:
                                                                                                                     std::shared_ptr<levi::VariableBase> variable) final {
         levi::ExpressionComponent<typename levi::Evaluable<sum_type>::derivative_evaluable> sumDerivative;
 
-        bool isLeftDependent = m_lhs.isDependentFrom(variable);
-        bool isRightDependent = m_rhs.isDependentFrom(variable);
+        bool isLeftDependent = this->m_lhs.isDependentFrom(variable);
+        bool isRightDependent = this->m_rhs.isDependentFrom(variable);
 
         if (isLeftDependent && isRightDependent) {
-            sumDerivative = m_lhs.getColumnDerivative(column, variable) + m_rhs.getColumnDerivative(column, variable);
+            sumDerivative = this->m_lhs.getColumnDerivative(column, variable) + this->m_rhs.getColumnDerivative(column, variable);
 
             return sumDerivative;
         }
@@ -179,16 +168,12 @@ public:
         }
 
         if (isLeftDependent) {
-            sumDerivative = m_lhs.getColumnDerivative(column, variable);
+            sumDerivative = this->m_lhs.getColumnDerivative(column, variable);
             return sumDerivative;
         } else {
-            sumDerivative = m_rhs.getColumnDerivative(column, variable);
+            sumDerivative = this->m_rhs.getColumnDerivative(column, variable);
             return sumDerivative;
         }
-    }
-
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_lhs.isDependentFrom(variable) || m_rhs.isDependentFrom(variable);
     }
 
 };
@@ -197,30 +182,18 @@ public:
  * @brief The SubtractionEvaluable. Implements the subtraction of two evaluables.
  */
 template <class LeftEvaluable, class RightEvaluable>
-class levi::SubtractionEvaluable : public levi::Evaluable<typename levi::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
-
-    levi::ExpressionComponent<LeftEvaluable> m_lhs;
-    levi::ExpressionComponent<RightEvaluable> m_rhs;
+class levi::SubtractionEvaluable : public levi::BinaryOperator<typename levi::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type, LeftEvaluable, RightEvaluable>{
 
 public:
 
     typedef typename levi::matrix_sum_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type sum_type;
 
     SubtractionEvaluable(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs)
-        : levi::Evaluable<sum_type>(lhs.rows(), lhs.cols(), "(" + lhs.name() + " - " + rhs.name() + ")")
-        , m_lhs(lhs)
-        , m_rhs(rhs)
+        : levi::BinaryOperator<sum_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), lhs.cols(), "(" + lhs.name() + " - " + rhs.name() + ")")
     { }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_lhs.isNew() || m_rhs.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const sum_type& evaluate() final {
-        this->m_evaluationBuffer = m_lhs.evaluate() - m_rhs.evaluate();
+        this->m_evaluationBuffer = this->m_lhs.evaluate() - this->m_rhs.evaluate();
 
         return this->m_evaluationBuffer;
     }
@@ -229,11 +202,11 @@ public:
                                                                                                                     std::shared_ptr<levi::VariableBase> variable) final {
         levi::ExpressionComponent<typename levi::Evaluable<sum_type>::derivative_evaluable> sumDerivative;
 
-        bool isLeftDependent = m_lhs.isDependentFrom(variable);
-        bool isRightDependent = m_rhs.isDependentFrom(variable);
+        bool isLeftDependent = this->m_lhs.isDependentFrom(variable);
+        bool isRightDependent = this->m_rhs.isDependentFrom(variable);
 
         if (isLeftDependent && isRightDependent) {
-            sumDerivative = m_lhs.getColumnDerivative(column, variable) - m_rhs.getColumnDerivative(column, variable);
+            sumDerivative = this->m_lhs.getColumnDerivative(column, variable) - this->m_rhs.getColumnDerivative(column, variable);
 
             return sumDerivative;
         }
@@ -245,41 +218,27 @@ public:
         }
 
         if (isLeftDependent) {
-            sumDerivative = m_lhs.getColumnDerivative(column, variable);
+            sumDerivative = this->m_lhs.getColumnDerivative(column, variable);
             return sumDerivative;
         } else {
-            sumDerivative = - m_rhs.getColumnDerivative(column, variable);
+            sumDerivative = - this->m_rhs.getColumnDerivative(column, variable);
             return sumDerivative;
         }
-    }
-
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_lhs.isDependentFrom(variable) || m_rhs.isDependentFrom(variable);
     }
 
 };
 
 template <class EvaluableT>
-class levi::SignInvertedEvaluable : public levi::Evaluable<typename EvaluableT::matrix_type>{
-
-    levi::ExpressionComponent<EvaluableT> m_expression;
+class levi::SignInvertedEvaluable : public levi::UnaryOperator<typename EvaluableT::matrix_type, EvaluableT>{
 
 public:
 
     SignInvertedEvaluable(const levi::ExpressionComponent<EvaluableT>& expression)
-        : levi::Evaluable<typename EvaluableT::matrix_type>(expression.rows(), expression.cols(), "-" + expression.name())
-        , m_expression(expression)
+        : levi::UnaryOperator<typename EvaluableT::matrix_type, EvaluableT>(expression, expression.rows(), expression.cols(), "-" + expression.name())
     { }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const typename EvaluableT::matrix_type& evaluate() final {
-        this->m_evaluationBuffer = -m_expression.evaluate();
+        this->m_evaluationBuffer = -(this->m_expression.evaluate());
 
         return this->m_evaluationBuffer;
     }
@@ -288,31 +247,25 @@ public:
                                                                                                                                     std::shared_ptr<levi::VariableBase> variable) final {
         levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::matrix_type>::derivative_evaluable> derivative;
 
-        derivative = -m_expression.getColumnDerivative(column, variable);
+        derivative = -(this->m_expression.getColumnDerivative(column, variable));
 
         return derivative;
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
-    }
 };
 
 /**
  * @brief The ProductEvaluable. Implements the product of two evaluables.
  */
 template <class LeftEvaluable, class RightEvaluable>
-class levi::ProductEvaluable : public levi::Evaluable<typename levi::matrix_product_return<
-        typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type>{
+class levi::ProductEvaluable : public levi::BinaryOperator<typename levi::matrix_product_return<
+        typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type, LeftEvaluable, RightEvaluable>{
 
 public:
 
     typedef typename levi::matrix_product_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::matrix_type>::type product_type;
 
 private:
-
-    levi::ExpressionComponent<LeftEvaluable> m_lhs;
-    levi::ExpressionComponent<RightEvaluable> m_rhs;
 
     typedef levi::ExpressionComponent<typename levi::Evaluable<product_type>::derivative_evaluable> derivative_expression;
 
@@ -325,11 +278,11 @@ private:
     derivative_expression get_derivative(levi::bool_value<true>, levi::bool_value<true>, Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
         derivative_expression derivative;
 
-        bool isLeftDependent = m_lhs.isDependentFrom(variable);
-        bool isRightDependent = m_rhs.isDependentFrom(variable);
+        bool isLeftDependent = this->m_lhs.isDependentFrom(variable);
+        bool isRightDependent = this->m_rhs.isDependentFrom(variable);
 
         if (isLeftDependent && isRightDependent) {
-            derivative = m_rhs * m_lhs.getColumnDerivative(column, variable) + m_lhs * m_rhs.getColumnDerivative(column, variable);
+            derivative = this->m_rhs * this->m_lhs.getColumnDerivative(column, variable) + this->m_lhs * this->m_rhs.getColumnDerivative(column, variable);
             return derivative;
         }
 
@@ -340,10 +293,10 @@ private:
         }
 
         if (isLeftDependent) {
-            derivative = m_rhs * m_lhs.getColumnDerivative(column, variable);
+            derivative = this->m_rhs * this->m_lhs.getColumnDerivative(column, variable);
             return derivative;
         } else {
-            derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
+            derivative = this->m_lhs * this->m_rhs.getColumnDerivative(column, variable);
             return derivative;
         }
     }
@@ -356,11 +309,11 @@ private:
         //k*A
         derivative_expression derivative;
 
-        bool isLeftDependent = m_lhs.isDependentFrom(variable);
-        bool isRightDependent = m_rhs.isDependentFrom(variable);
+        bool isLeftDependent = this->m_lhs.isDependentFrom(variable);
+        bool isRightDependent = this->m_rhs.isDependentFrom(variable);
 
         if (isLeftDependent && isRightDependent) {
-            derivative = m_lhs * m_rhs.getColumnDerivative(column, variable) + m_rhs.col(column) * m_lhs.getColumnDerivative(0, variable);
+            derivative = this->m_lhs * this->m_rhs.getColumnDerivative(column, variable) + this->m_rhs.col(column) * this->m_lhs.getColumnDerivative(0, variable);
             return derivative;
         }
 
@@ -371,10 +324,10 @@ private:
         }
 
         if (isLeftDependent) {
-            derivative = m_rhs.col(column) * m_lhs.getColumnDerivative(0, variable);
+            derivative = this->m_rhs.col(column) * this->m_lhs.getColumnDerivative(0, variable);
             return derivative;
         } else {
-            derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
+            derivative = this->m_lhs * this->m_rhs.getColumnDerivative(column, variable);
             return derivative;
         }
     }
@@ -387,11 +340,11 @@ private:
         //A*k
         derivative_expression derivative;
 
-        bool isLeftDependent = m_lhs.isDependentFrom(variable);
-        bool isRightDependent = m_rhs.isDependentFrom(variable);
+        bool isLeftDependent = this->m_lhs.isDependentFrom(variable);
+        bool isRightDependent = this->m_rhs.isDependentFrom(variable);
 
         if (isLeftDependent && isRightDependent) {
-            derivative = m_rhs * m_lhs.getColumnDerivative(column, variable) + m_lhs.col(column) * m_rhs.getColumnDerivative(0, variable);
+            derivative = this->m_rhs * this->m_lhs.getColumnDerivative(column, variable) + this->m_lhs.col(column) * this->m_rhs.getColumnDerivative(0, variable);
             return derivative;
         }
 
@@ -402,10 +355,10 @@ private:
         }
 
         if (isLeftDependent) {
-            derivative = m_rhs * m_lhs.getColumnDerivative(column, variable);
+            derivative = this->m_rhs * this->m_lhs.getColumnDerivative(column, variable);
             return derivative;
         } else {
-            derivative = m_lhs.col(column) * m_rhs.getColumnDerivative(0, variable);
+            derivative = this->m_lhs.col(column) * this->m_rhs.getColumnDerivative(0, variable);
             return derivative;
         }
     }
@@ -416,15 +369,15 @@ private:
     derivative_expression get_derivative(levi::bool_value<false>, levi::bool_value<false>, Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
         derivative_expression derivative;
 
-        bool isLeftDependent = m_lhs.isDependentFrom(variable);
-        bool isRightDependent = m_rhs.isDependentFrom(variable);
+        bool isLeftDependent = this->m_lhs.isDependentFrom(variable);
+        bool isRightDependent = this->m_rhs.isDependentFrom(variable);
 
         if (isLeftDependent && isRightDependent) {
 
-            derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
+            derivative = this->m_lhs * this->m_rhs.getColumnDerivative(column, variable);
 
-            for (Eigen::Index i = 0; i < m_rhs.rows(); ++i) {
-                derivative = derivative + m_lhs.getColumnDerivative(i, variable) * m_rhs(i, column);
+            for (Eigen::Index i = 0; i < this->m_rhs.rows(); ++i) {
+                derivative = derivative + this->m_lhs.getColumnDerivative(i, variable) * this->m_rhs(i, column);
             }
 
             return derivative;
@@ -438,17 +391,17 @@ private:
 
         if (isLeftDependent) {
 
-            derivative = m_lhs.getColumnDerivative(0, variable) * m_rhs(0, column);
+            derivative = this->m_lhs.getColumnDerivative(0, variable) * this->m_rhs(0, column);
 
-            for (Eigen::Index i = 1; i < m_rhs.rows(); ++i) {
-                derivative = derivative + m_lhs.getColumnDerivative(i, variable) * m_rhs(i, column);
+            for (Eigen::Index i = 1; i < this->m_rhs.rows(); ++i) {
+                derivative = derivative + this->m_lhs.getColumnDerivative(i, variable) * this->m_rhs(i, column);
             }
 
             return derivative;
 
         } else {
 
-            derivative = m_lhs * m_rhs.getColumnDerivative(column, variable);
+            derivative = this->m_lhs * this->m_rhs.getColumnDerivative(column, variable);
 
             return derivative;
         }
@@ -459,23 +412,14 @@ public:
 
 
     ProductEvaluable(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs)
-        : levi::Evaluable<product_type>((lhs.rows() == 1 && lhs.cols() == 1 && rhs.rows() != 1)? rhs.rows() : lhs.rows(),
+        : levi::BinaryOperator<product_type, LeftEvaluable, RightEvaluable>(lhs, rhs, (lhs.rows() == 1 && lhs.cols() == 1 && rhs.rows() != 1)? rhs.rows() : lhs.rows(),
                                         (rhs.rows() == 1 && rhs.cols() == 1 && lhs.cols() != 1)? lhs.cols() : rhs.cols(),
                                         lhs.name() + " * " + rhs.name())
-        , m_lhs(lhs)
-        , m_rhs(rhs)
     { }
-
-    virtual bool isNew(size_t callerID) final{
-        if (m_lhs.isNew() || m_rhs.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
 
     virtual const product_type& evaluate() final {
 
-        this->m_evaluationBuffer = m_lhs.evaluate() * m_rhs.evaluate();
+        this->m_evaluationBuffer = this->m_lhs.evaluate() * this->m_rhs.evaluate();
 
         return this->m_evaluationBuffer;
     }
@@ -489,44 +433,31 @@ public:
                               column, variable);
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_lhs.isDependentFrom(variable) || m_rhs.isDependentFrom(variable);
-    }
-
 };
 
 template <class EvaluableT>
-class levi::PowEvaluable : public levi::Evaluable<typename EvaluableT::value_type> {
+class levi::PowEvaluable : public levi::UnaryOperator<typename EvaluableT::value_type, EvaluableT> {
 
-    levi::ExpressionComponent<EvaluableT> m_expression;
     typename EvaluableT::value_type m_exponent;
 
     template<bool rhsIsScalar>
     double get_value(levi::bool_value<rhsIsScalar>);
 
     double get_value(levi::bool_value<true>) {
-        return m_expression.evaluate();
+        return this->m_expression.evaluate();
     }
 
     double get_value(levi::bool_value<false>) {
-        return m_expression.evaluate()(0,0);
+        return this->m_expression.evaluate()(0,0);
     }
 
 public:
 
     PowEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, typename EvaluableT::value_type exponent)
-        : levi::Evaluable<typename EvaluableT::value_type>("(" +expression.name() + ")^(" + std::to_string(exponent) + ")")
-        , m_expression(expression)
+        : levi::UnaryOperator<typename EvaluableT::value_type, EvaluableT>(expression, "(" +expression.name() + ")^(" + std::to_string(exponent) + ")")
         , m_exponent(exponent)
     {
-        assert(m_expression.rows() == 1 && m_expression.cols() == 1);
-    }
-
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
+        assert(this->m_expression.rows() == 1 && this->m_expression.cols() == 1);
     }
 
     virtual const typename EvaluableT::value_type& evaluate() final {
@@ -542,19 +473,15 @@ public:
 
         levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> derivative;
 
-        derivative = m_expression.pow(m_exponent - 1) * m_exponent * m_expression.getColumnDerivative(column, variable);
+        derivative = this->m_expression.pow(m_exponent - 1) * m_exponent * this->m_expression.getColumnDerivative(column, variable);
 
         return derivative;
-    }
-
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
     }
 
 };
 
 template <class LeftEvaluable, class RightEvaluable>
-class levi::DivisionEvaluable : public levi::Evaluable<typename levi::matrix_product_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::value_type>::type>
+class levi::DivisionEvaluable : public levi::BinaryOperator<typename levi::matrix_product_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::value_type>::type, LeftEvaluable, RightEvaluable>
 {
 public:
 
@@ -562,40 +489,28 @@ public:
 
 private:
 
-    levi::ExpressionComponent<LeftEvaluable> m_lhs;
-    levi::ExpressionComponent<RightEvaluable> m_rhs;
-
     template<bool rhsIsScalar>
     double get_rhs_value(levi::bool_value<rhsIsScalar>);
 
     double get_rhs_value(levi::bool_value<true>) {
-        return m_rhs.evaluate();
+        return this->m_rhs.evaluate();
     }
 
     double get_rhs_value(levi::bool_value<false>) {
-        return m_rhs.evaluate()(0,0);
+        return this->m_rhs.evaluate()(0,0);
     }
 
 public:
 
     DivisionEvaluable(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs)
-        : levi::Evaluable<product_type>(lhs.rows(), rhs.cols(), lhs.name() + "/(" + rhs.name() + ")")
-        , m_lhs(lhs)
-        , m_rhs(rhs)
+        : levi::BinaryOperator<product_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), rhs.cols(), lhs.name() + "/(" + rhs.name() + ")")
     {
         assert(rhs.rows() == 1 && rhs.cols() == 1);
     }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_lhs.isNew() || m_rhs.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const product_type& evaluate() final {
 
-        this->m_evaluationBuffer = m_lhs.evaluate() / get_rhs_value(levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>());
+        this->m_evaluationBuffer = this->m_lhs.evaluate() / get_rhs_value(levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>());
 
         return this->m_evaluationBuffer;
     }
@@ -604,14 +519,11 @@ public:
 
         levi::ExpressionComponent<typename levi::Evaluable<product_type>::derivative_evaluable> derivative;
 
-        derivative = (m_lhs * m_rhs.pow(-1)).getColumnDerivative(column, variable);
+        derivative = (this->m_lhs * this->m_rhs.pow(-1)).getColumnDerivative(column, variable);
 
         return derivative;
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_lhs.isDependentFrom(variable) || m_rhs.isDependentFrom(variable);
-    }
 };
 
 /**
@@ -620,30 +532,21 @@ public:
  * It allows to compute the skew symmetric matrix out of a three dimensional vector.
  */
 template <typename EvaluableT>
-class levi::SkewEvaluable : public levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>> {
+class levi::SkewEvaluable : public levi::UnaryOperator<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>, EvaluableT> {
 
-    levi::ExpressionComponent<EvaluableT> m_expression;
     Eigen::Matrix<typename EvaluableT::value_type, 3, 1> m_vector;
     Eigen::Matrix<typename EvaluableT::value_type, 3, 3> m_derivativeBuffer;
 
 public:
 
     SkewEvaluable(const levi::ExpressionComponent<EvaluableT>& expression)
-        : levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>("skew(" + expression.name() + ")")
-        , m_expression(expression)
+        : levi::UnaryOperator<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>, EvaluableT>(expression, "skew(" + expression.name() + ")")
     {
         assert((expression.rows() == 3) && (expression.cols() == 1));
     }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const Eigen::Matrix<typename EvaluableT::value_type, 3, 3>& evaluate() final {
-        m_vector = m_expression.evaluate();
+        m_vector = this->m_expression.evaluate();
 
         this->m_evaluationBuffer(0,0) = 0.0;
         this->m_evaluationBuffer(0,1) = -m_vector[2];
@@ -664,7 +567,7 @@ public:
         assert( column < 3);
         levi::ExpressionComponent<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::derivative_evaluable> derivative;
 
-        if (!m_expression.isDependentFrom(variable)) {
+        if (!this->m_expression.isDependentFrom(variable)) {
             levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::derivative_evaluable::matrix_type>> nullDerivative(this->rows(), this->cols(), "d" + this->name() + "/d" + variable->variableName());
             derivative = nullDerivative;
             return derivative;
@@ -678,7 +581,7 @@ public:
 
             levi::ExpressionComponent<levi::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col1(m_derivativeBuffer, "LeviCivita_ij0");
 
-            derivative = col1 * m_expression.getColumnDerivative(0, variable);
+            derivative = col1 * this->m_expression.getColumnDerivative(0, variable);
             return derivative;
 
         }
@@ -691,7 +594,7 @@ public:
 
             levi::ExpressionComponent<levi::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col2(m_derivativeBuffer, "LeviCivita_ij1");
 
-            derivative = col2 * m_expression.getColumnDerivative(0, variable);
+            derivative = col2 * this->m_expression.getColumnDerivative(0, variable);
             return derivative;
 
         }
@@ -704,7 +607,7 @@ public:
 
             levi::ExpressionComponent<levi::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col3(m_derivativeBuffer, "LeviCivita_ij2");
 
-            derivative = col3 * m_expression.getColumnDerivative(0, variable);
+            derivative = col3 * this->m_expression.getColumnDerivative(0, variable);
             return derivative;
 
         }
@@ -712,34 +615,21 @@ public:
         return derivative;
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
-    }
-
 };
 
 template <typename EvaluableT>
-class levi::TransposeEvaluable : public levi::Evaluable<typename levi::transpose_type<EvaluableT>::type> {
+class levi::TransposeEvaluable : public levi::UnaryOperator<typename levi::transpose_type<EvaluableT>::type, EvaluableT> {
 
-    levi::ExpressionComponent<EvaluableT> m_expression;
     std::vector<levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::value_type>::derivative_evaluable>> m_derivatives;
 
 public:
 
     TransposeEvaluable(const levi::ExpressionComponent<EvaluableT>& expression)
-        : levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>(expression.cols(), expression.rows(), expression.name() + "^T")
-        , m_expression(expression)
+        : levi::UnaryOperator<typename levi::transpose_type<EvaluableT>::type, EvaluableT>(expression, expression.cols(), expression.rows(), expression.name() + "^T")
     { }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::matrix_type & evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate().transpose();
+        this->m_evaluationBuffer = this->m_expression.evaluate().transpose();
 
         return this->m_evaluationBuffer;
     }
@@ -749,14 +639,10 @@ public:
         m_derivatives.resize(this->rows());
 
         for (Eigen::Index j = 0; j < this->rows(); ++j) {
-            m_derivatives[j] = m_expression(column, j).getColumnDerivative(0, variable);
+            m_derivatives[j] = this->m_expression(column, j).getColumnDerivative(0, variable);
         }
 
         return levi::ExpressionComponent<typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::derivative_evaluable>::ComposeByRows(m_derivatives, "d(" + this->name() + ")/d" + variable->variableName());
-    }
-
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
     }
 
 };
