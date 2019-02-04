@@ -83,23 +83,13 @@ protected:
         for (size_t i = 0; i < m_evaluationRegister.size(); ++i) {
             m_evaluationRegister[i] = false;
         }
+        m_alreadyComputed = false;
     }
 
     /**
      * @brief Check if the buffer has been filled at least once since the evaluation register has been resetted
      */
-    bool alreadyComputed() {
-        bool computed = false;
-
-        size_t i = 0;
-
-        while (computed == false && i < m_evaluationRegister.size()) {
-            computed = computed || m_evaluationRegister[i];
-            ++i;
-        }
-
-        return computed;
-    }
+    bool m_alreadyComputed;
 
 public:
 
@@ -113,6 +103,7 @@ public:
      */
     Evaluable(const std::string& name)
         : m_name(name)
+        , m_alreadyComputed(false)
     { }
 
     /**
@@ -124,6 +115,7 @@ public:
     Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(rows, cols)
+        , m_alreadyComputed(false)
     {
         m_evaluationBuffer.setZero();
     }
@@ -136,6 +128,7 @@ public:
     Evaluable(const Matrix& initialValue, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(initialValue)
+        , m_alreadyComputed(false)
     { }
 
     template <typename OtherMatrix>
@@ -178,12 +171,13 @@ public:
     const Matrix& evaluateID(size_t callerID) {
         if (callerID < m_evaluationRegister.size()) {
             if (this->isNew(callerID)) {
-                if (this->alreadyComputed()) {
+                if (m_alreadyComputed) {
                     m_evaluationRegister[callerID] = true;
                     return m_evaluationBuffer;
                 } else {
                     const Matrix& output = evaluate();
                     m_evaluationRegister[callerID] = true;
+                    m_alreadyComputed = true;
                     return output;
                 }
             } else {
@@ -329,23 +323,13 @@ protected:
         for (size_t i = 0; i < m_evaluationRegister.size(); ++i) {
             m_evaluationRegister[i] = false;
         }
+        m_alreadyComputed = false;
     }
 
     /**
      * @brief Check if the buffer has been filled at least once since the evaluation register has been resetted
      */
-    bool alreadyComputed() {
-        bool computed = false;
-
-        size_t i = 0;
-
-        while (computed == false && i < m_evaluationRegister.size()) {
-            computed = computed || m_evaluationRegister[i];
-            ++i;
-        }
-
-        return computed;
-    }
+    bool m_alreadyComputed;
 
 public:
 
@@ -359,6 +343,7 @@ public:
      */
     Evaluable(const std::string& name)
         : m_name(name)
+        , m_alreadyComputed(false)
     { }
 
     /**
@@ -369,6 +354,7 @@ public:
      */
     Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : m_name(name)
+        , m_alreadyComputed(false)
     {
         levi::unused(rows, cols);
         assert(rows == 1 && cols == 1);
@@ -383,6 +369,7 @@ public:
     Evaluable(const Scalar& initialValue, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(initialValue)
+        , m_alreadyComputed(false)
     { }
 
     /**
@@ -392,6 +379,7 @@ public:
     Evaluable(const Scalar& initialValue)
         : m_name(std::to_string(initialValue))
         , m_evaluationBuffer(initialValue)
+        , m_alreadyComputed(false)
     { }
 
     template <typename OtherMatrix, typename OtherDerivativeEvaluable>
@@ -434,12 +422,13 @@ public:
     const Scalar& evaluateID(size_t callerID) {
         if (callerID < m_evaluationRegister.size()) {
             if (this->isNew(callerID)) {
-                if (this->alreadyComputed()) {
+                if (m_alreadyComputed) {
                     m_evaluationRegister[callerID] = true;
                     return m_evaluationBuffer;
                 } else {
                     const Scalar& output = evaluate();
                     m_evaluationRegister[callerID] = true;
+                    m_alreadyComputed = true;
                     return output;
                 }
             } else {

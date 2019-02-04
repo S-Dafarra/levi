@@ -20,6 +20,8 @@
 template <typename Vector>
 class levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type> : public levi::VariableBase, public levi::Evaluable<Vector> {
 
+    levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Vector>::derivative_evaluable::matrix_type>> m_identityDerivative;
+
     template<typename OtherVector, bool isScalar>
     void copy_constant(bool_value<isScalar>, const OtherVector& rhs);
 
@@ -44,6 +46,7 @@ public:
     EvaluableVariable(Eigen::Index dimension, const std::string& name)
         : levi::VariableBase(dimension, name)
         , levi::Evaluable<Vector>(dimension, 1, name)
+        , m_identityDerivative(dimension, dimension, "d " + name + "/(d " + name + ")")
     {
         static_assert (Vector::ColsAtCompileTime == 1, "The chosen VectorType for the Variable should have exactly one column at compile time.");
 
@@ -88,8 +91,7 @@ public:
         levi::unused(column);
         assert(column == 0);
         if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
-            return levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension(),
-                                                                                                                                           "d " + variableName() + "/(d " + variable->variableName() + ")");
+            return m_identityDerivative;
         } else {
             return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Vector>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension(),
                                                                                                                                        "d " + variableName() + "/(d " + variable->variableName() + ")");
@@ -111,11 +113,14 @@ public:
 template <typename Scalar>
 class levi::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public levi::VariableBase, public levi::Evaluable<Scalar> {
 
+    levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>> m_identityDerivative;
+
 public:
 
     EvaluableVariable(const std::string& name)
         : levi::VariableBase(1, name)
         , levi::Evaluable<Scalar>(0, name)
+        , m_identityDerivative(1,1)
     { }
 
     template <typename otherVector>
@@ -151,7 +156,7 @@ public:
         levi::unused(column);
         assert(column == 0);
         if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
-            return levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), this->dimension());
+            return m_identityDerivative;
         } else {
             return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension());
         }
