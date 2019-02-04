@@ -100,7 +100,10 @@ int main() {
 
     output = rotatedVector.evaluate();
 
+    begin = std::chrono::steady_clock::now();
     Expression rotatedVectorDerivative = rotatedVector.getColumnDerivative(0, quaternion);
+    end= std::chrono::steady_clock::now();
+    std::cout << "Elapsed time ms (compute first derivative): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 
     Eigen::MatrixXd derivativeValue(rotatedVectorDerivative.rows(), rotatedVectorDerivative.cols());
     begin = std::chrono::steady_clock::now();
@@ -144,7 +147,11 @@ int main() {
 
         output = rotatedVectorDerivative.col(j).evaluate();
 
+        begin = std::chrono::steady_clock::now();
         Expression rotatedVectorDoubleDerivative = rotatedVectorDerivative.getColumnDerivative(j, quaternion);
+        end= std::chrono::steady_clock::now();
+        std::cout << "Elapsed time ms (compute second derivative, column " << j<<"): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+
 
         Eigen::MatrixXd doubleDerivativeValue(rotatedVectorDoubleDerivative.rows(), rotatedVectorDoubleDerivative.cols());
 

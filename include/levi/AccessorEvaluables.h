@@ -10,6 +10,7 @@
 #include <levi/BasicEvaluables.h>
 #include <levi/ForwardDeclarations.h>
 #include <levi/Expression.h>
+#include <levi/OperatorsBase.h>
 
 
 /**
@@ -51,28 +52,19 @@ struct levi::transpose_type<EvaluableT, typename std::enable_if<std::is_arithmet
  */
 template <typename EvaluableT>
 class levi::RowEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
-        : public levi::Evaluable<typename EvaluableT::row_type>
+        : public levi::UnaryOperator<typename EvaluableT::row_type, EvaluableT>
 {
-    levi::ExpressionComponent<EvaluableT> m_expression;
     Eigen::Index m_row;
 
 public:
 
-    RowEvaluable(const levi::ExpressionComponent<EvaluableT>& evaluable, Eigen::Index row)
-        : levi::Evaluable<typename EvaluableT::row_type>(1, evaluable.cols(), "(" + evaluable.name() + ")(" + std::to_string(row) + ",:)")
-        , m_expression(evaluable)
+    RowEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index row)
+        : levi::UnaryOperator<typename EvaluableT::row_type, EvaluableT>(expression, 1, expression.cols(), "(" + expression.name() + ")(" + std::to_string(row) + ",:)")
         , m_row(row)
     { }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const typename EvaluableT::row_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate().row(m_row);
+        this->m_evaluationBuffer = this->m_expression.evaluate().row(m_row);
 
         return this->m_evaluationBuffer;
     }
@@ -81,13 +73,9 @@ public:
                                                                                                                                          std::shared_ptr<levi::VariableBase> variable) final {
         levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::row_type>::derivative_evaluable> newDerivative;
 
-        newDerivative = levi::ExpressionComponent<levi::RowEvaluable<typename EvaluableT::derivative_evaluable>>(m_expression.getColumnDerivative(column, variable), m_row);
+        newDerivative = levi::ExpressionComponent<levi::RowEvaluable<typename EvaluableT::derivative_evaluable>>(this->m_expression.getColumnDerivative(column, variable), m_row);
 
         return newDerivative;
-    }
-
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
     }
 
 };
@@ -97,29 +85,20 @@ public:
  */
 template <typename EvaluableT>
 class levi::RowEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
-        : public levi::Evaluable<typename EvaluableT::row_type>
+        : public levi::UnaryOperator<typename EvaluableT::row_type, EvaluableT>
 {
-    levi::ExpressionComponent<EvaluableT> m_expression;
 
 public:
 
     RowEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index row)
-        : levi::Evaluable<typename EvaluableT::row_type>(expression.name())
-        , m_expression(expression)
+        : levi::UnaryOperator<typename EvaluableT::row_type, EvaluableT>(expression, expression.name())
     {
         levi::unused(row);
         assert(row == 0);
     }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const typename EvaluableT::row_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate();
+        this->m_evaluationBuffer = this->m_expression.evaluate();
 
         return this->m_evaluationBuffer;
     }
@@ -129,12 +108,9 @@ public:
         levi::unused(column);
         assert(column == 0);
 
-        return m_expression.getColumnDerivative(0, variable);
+        return this->m_expression.getColumnDerivative(0, variable);
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
-    }
 };
 
 /**
@@ -142,28 +118,19 @@ public:
  */
 template <typename EvaluableT>
 class levi::ColEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
-        : public levi::Evaluable<typename EvaluableT::col_type>
+        : public levi::UnaryOperator<typename EvaluableT::col_type, EvaluableT>
 {
-    levi::ExpressionComponent<EvaluableT> m_expression;
     Eigen::Index m_col;
 
 public:
 
-    ColEvaluable(const levi::ExpressionComponent<EvaluableT>& evaluable, Eigen::Index col)
-        : levi::Evaluable<typename EvaluableT::col_type>(evaluable.rows(), 1, "(" + evaluable.name() + ")(:," + std::to_string(col) + ")")
-        , m_expression(evaluable)
+    ColEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index col)
+        : levi::UnaryOperator<typename EvaluableT::col_type, EvaluableT>(expression, expression.rows(), 1, "(" + expression.name() + ")(:," + std::to_string(col) + ")")
         , m_col(col)
     { }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const typename EvaluableT::col_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate().col(m_col);
+        this->m_evaluationBuffer = this->m_expression.evaluate().col(m_col);
 
         return this->m_evaluationBuffer;
     }
@@ -174,13 +141,9 @@ public:
         assert(column == 0);
         levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> newDerivative;
 
-        newDerivative = m_expression.getColumnDerivative(m_col, variable);
+        newDerivative = this->m_expression.getColumnDerivative(m_col, variable);
 
         return newDerivative;
-    }
-
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
     }
 
 };
@@ -190,29 +153,20 @@ public:
  */
 template <typename EvaluableT>
 class levi::ColEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
-        : public levi::Evaluable<typename EvaluableT::col_type>
+        : public levi::UnaryOperator<typename EvaluableT::col_type, EvaluableT>
 {
-    levi::ExpressionComponent<EvaluableT> m_expression;
 
 public:
 
     ColEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index col)
-        : levi::Evaluable<typename EvaluableT::col_type>(expression.name())
-        , m_expression(expression)
+        : levi::UnaryOperator<typename EvaluableT::col_type, EvaluableT>(expression, expression.name())
     {
         levi::unused(col);
         assert(col == 0);
     }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const typename EvaluableT::col_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate();
+        this->m_evaluationBuffer = this->m_expression.evaluate();
 
         return this->m_evaluationBuffer;
     }
@@ -222,12 +176,9 @@ public:
         levi::unused(column);
         assert(column == 0);
 
-        return m_expression.getColumnDerivative(0, variable);
+        return this->m_expression.getColumnDerivative(0, variable);
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
-    }
 };
 
 /**
@@ -235,29 +186,20 @@ public:
  */
 template <typename EvaluableT>
 class levi::ElementEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
-        : public levi::Evaluable<typename EvaluableT::value_type>
+        : public levi::UnaryOperator<typename EvaluableT::value_type, EvaluableT>
 {
-    levi::ExpressionComponent<EvaluableT> m_expression;
     Eigen::Index m_row, m_col;
 
 public:
 
     ElementEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index row, Eigen::Index col)
-        : levi::Evaluable<typename EvaluableT::value_type>("[" + expression.name() + "](" + std::to_string(row) + ", " + std::to_string(col) + ")")
-        , m_expression(expression)
+        : levi::UnaryOperator<typename EvaluableT::value_type, EvaluableT>(expression, "[" + expression.name() + "](" + std::to_string(row) + ", " + std::to_string(col) + ")")
         , m_row(row)
         , m_col(col)
     { }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const typename EvaluableT::value_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate()(m_row, m_col);
+        this->m_evaluationBuffer = this->m_expression.evaluate()(m_row, m_col);
 
         return this->m_evaluationBuffer;
     }
@@ -268,14 +210,11 @@ public:
         assert(column == 0);
         levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> newDerivative;
 
-        newDerivative = levi::ExpressionComponent<levi::RowEvaluable<typename EvaluableT::derivative_evaluable>>(m_expression.getColumnDerivative(m_col, variable), m_row);
+        newDerivative = levi::ExpressionComponent<levi::RowEvaluable<typename EvaluableT::derivative_evaluable>>(this->m_expression.getColumnDerivative(m_col, variable), m_row);
 
         return newDerivative;
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
-    }
 };
 
 /**
@@ -283,29 +222,19 @@ public:
  */
 template <typename EvaluableT>
 class levi::ElementEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
-        : public levi::Evaluable<typename EvaluableT::value_type> {
-
-    levi::ExpressionComponent<EvaluableT> m_expression;
+        : public levi::UnaryOperator<typename EvaluableT::value_type, EvaluableT> {
 
 public:
 
     ElementEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index row, Eigen::Index col)
-        : levi::Evaluable<typename EvaluableT::value_type>(expression.name())
-        , m_expression(expression)
+        : levi::UnaryOperator<typename EvaluableT::value_type, EvaluableT>(expression, expression.name())
     {
         levi::unused(row, col);
         assert(row == 0 && col == 0);
     }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const typename EvaluableT::value_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate();
+        this->m_evaluationBuffer = this->m_expression.evaluate();
         return this->m_evaluationBuffer;
     }
 
@@ -314,11 +243,7 @@ public:
         levi::unused(column);
         assert(column == 0);
 
-        return m_expression.getColumnDerivative(0, variable);
-    }
-
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
+        return this->m_expression.getColumnDerivative(0, variable);
     }
 };
 
@@ -327,9 +252,8 @@ public:
  */
 template <typename EvaluableT>
 class levi::BlockEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
-        : public levi::Evaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>
+        : public levi::UnaryOperator<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type, EvaluableT>
 {
-    levi::ExpressionComponent<EvaluableT> m_expression;
     Eigen::Index m_startRow, m_startCol;
 
 public:
@@ -337,23 +261,16 @@ public:
     typedef typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type block_type;
 
     BlockEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
-        : levi::Evaluable<block_type>(numberOfRows, numberOfCols, "[" + expression.name() + "](" + std::to_string(startRow) + ":" + std::to_string(startRow + numberOfRows) + ", " + std::to_string(startCol) + ":" + std::to_string(startCol + numberOfCols) + ")")
-        , m_expression(expression)
+        : levi::UnaryOperator<block_type, EvaluableT>(expression, numberOfRows, numberOfCols,
+                                                      "[" + expression.name() + "](" + std::to_string(startRow) + ":" + std::to_string(startRow + numberOfRows) + ", " + std::to_string(startCol) + ":" + std::to_string(startCol + numberOfCols) + ")")
         , m_startRow(startRow)
         , m_startCol(startCol)
     {
         assert(((startRow + numberOfRows) <= expression.rows()) && ((startCol + numberOfCols) <= expression.cols()));
     }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const block_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols());
+        this->m_evaluationBuffer = this->m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols());
 
         return this->m_evaluationBuffer;
     }
@@ -361,14 +278,11 @@ public:
     virtual levi::ExpressionComponent<typename levi::Evaluable<block_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) final {
         levi::ExpressionComponent<typename levi::Evaluable<block_type>::derivative_evaluable> newDerivative;
 
-        newDerivative = m_expression.getColumnDerivative(m_startCol + column, variable).block(m_startRow, 0, this->rows(), variable->dimension());
+        newDerivative = this->m_expression.getColumnDerivative(m_startCol + column, variable).block(m_startRow, 0, this->rows(), variable->dimension());
 
         return newDerivative;
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
-    }
 };
 
 /**
@@ -376,31 +290,21 @@ public:
  */
 template <typename EvaluableT>
 class levi::BlockEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
-        : public levi::Evaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type> {
-
-    levi::ExpressionComponent<EvaluableT> m_expression;
+        : public levi::UnaryOperator<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type, EvaluableT> {
 
 public:
 
     typedef typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type block_type;
 
     BlockEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
-        : levi::Evaluable<block_type>(expression.name())
-        , m_expression(expression)
+        : levi::UnaryOperator<block_type, EvaluableT>(expression, expression.name())
     {
         levi::unused(startRow, startCol, numberOfRows, numberOfCols);
         assert(startRow == 0 && startCol == 0 && numberOfRows == 1 && numberOfCols == 1);
     }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const block_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate();
+        this->m_evaluationBuffer = this->m_expression.evaluate();
         return this->m_evaluationBuffer;
     }
 
@@ -409,12 +313,9 @@ public:
         levi::unused(column);
         assert(column == 0);
 
-        return m_expression.getColumnDerivative(0, variable);
+        return this->m_expression.getColumnDerivative(0, variable);
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
-    }
 };
 
 
@@ -424,41 +325,27 @@ public:
  * It allows to assign an evaluable to an expression whose pointer cannot be directly casted. It assumes that the two evaluation buffers can be casted.
  */
 template <class LeftEvaluable, class RightEvaluable>
-class levi::CastEvaluable : public levi::Evaluable<typename LeftEvaluable::matrix_type> {
-
-    levi::ExpressionComponent<RightEvaluable> m_rhs;
+class levi::CastEvaluable : public levi::UnaryOperator<typename LeftEvaluable::matrix_type, RightEvaluable> {
 
 public:
 
     CastEvaluable(const levi::ExpressionComponent<RightEvaluable>& rhs)
-        : levi::Evaluable<typename LeftEvaluable::matrix_type>(rhs.rows(), rhs.cols(), rhs.name())
-        , m_rhs(rhs)
+        : levi::UnaryOperator<typename LeftEvaluable::matrix_type, RightEvaluable>(rhs, rhs.rows(), rhs.cols(), rhs.name())
     { }
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_rhs.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
-    }
-
     virtual const typename LeftEvaluable::matrix_type& evaluate() final {
-        this->m_evaluationBuffer = m_rhs.evaluate();
+        this->m_evaluationBuffer = this->m_expression.evaluate();
 
         return this->m_evaluationBuffer;
     }
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<typename LeftEvaluable::matrix_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
                                                                                                                                                std::shared_ptr<levi::VariableBase> variable) final {
-        levi::ExpressionComponent<typename RightEvaluable::derivative_evaluable> rightDerivative = m_rhs.getColumnDerivative(column, variable);
+        levi::ExpressionComponent<typename RightEvaluable::derivative_evaluable> rightDerivative = this->m_expression.getColumnDerivative(column, variable);
 
         levi::ExpressionComponent<CastEvaluable<typename levi::Evaluable<typename LeftEvaluable::matrix_type>::derivative_evaluable, typename RightEvaluable::derivative_evaluable>> newCast(rightDerivative);
 
         return newCast;
-    }
-
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_rhs.isDependentFrom(variable);
     }
 };
 
