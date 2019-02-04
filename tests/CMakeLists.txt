@@ -8,6 +8,28 @@
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
+# Turn on testing.
+option(RUN_VALGRIND_TESTS "Run tests with Valgrind" FALSE)
+mark_as_advanced(RUN_VALGRIND_TESTS)
+
+# adding support for checking the tests with valgrind
+if(RUN_VALGRIND_TESTS)
+    find_package(Valgrind REQUIRED)
+    if(VALGRIND_FOUND)
+        set(CTEST_MEMORYCHECK_COMMAND ${VALGRIND_PROGRAM})
+        set(MEMORYCHECK_COMMAND ${VALGRIND_PROGRAM})
+        if (APPLE)
+            set(MEMORYCHECK_SUPPRESSIONS "--suppressions=${PROJECT_SOURCE_DIR}/cmake/valgrind-macos.supp")
+        else ()
+            set(MEMORYCHECK_SUPPRESSIONS "")
+        endif ()
+        set(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --error-exitcode=1 ${MEMORYCHECK_SUPPRESSIONS}"  CACHE STRING "Options to pass to the memory checker")
+        mark_as_advanced(MEMORYCHECK_COMMAND_OPTIONS)
+        set(MEMCHECK_COMMAND_COMPLETE "${MEMORYCHECK_COMMAND} ${MEMORYCHECK_COMMAND_OPTIONS}")
+        separate_arguments(MEMCHECK_COMMAND_COMPLETE)
+    endif()
+endif()
+
 macro(add_levi_test classname)
     set(testsrc ${classname}Test.cpp)
     set(testbinary ${classname}UnitTest)
@@ -17,9 +39,9 @@ macro(add_levi_test classname)
     target_link_libraries(${testbinary} PRIVATE levi::levi)
     add_test(NAME ${testname} COMMAND ${testbinary})
 
-#    if(RUN_VALGRIND_TESTS)
-#        add_test(NAME memcheck_${testname} COMMAND ${MEMCHECK_COMMAND_COMPLETE} $<TARGET_FILE:${testbinary}>)
-#    endif()
+    if(RUN_VALGRIND_TESTS)
+        add_test(NAME memcheck_${testname} COMMAND ${MEMCHECK_COMMAND_COMPLETE} $<TARGET_FILE:${testbinary}>)
+    endif()
 endmacro()
 
 add_levi_test(Composition)
