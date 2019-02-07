@@ -7,8 +7,9 @@
 #ifndef LEVI_ACCESSOREVALUABLES_H
 #define LEVI_ACCESSOREVALUABLES_H
 
-#include <levi/BasicEvaluables.h>
+#include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
+#include <levi/BasicEvaluables.h>
 #include <levi/Expression.h>
 #include <levi/OperatorsBase.h>
 

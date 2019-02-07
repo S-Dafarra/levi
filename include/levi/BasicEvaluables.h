@@ -7,6 +7,7 @@
 #ifndef LEVI_BASICEVALUABLES_H
 #define LEVI_BASICEVALUABLES_H
 
+#include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
 #include <levi/Evaluable.h>
 #include <levi/VariableBase.h>

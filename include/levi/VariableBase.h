@@ -7,6 +7,7 @@
 #ifndef LEVI_VARIABLEBASE_H
 #define LEVI_VARIABLEBASE_H
 
+#include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
 
 /**

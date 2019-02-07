@@ -7,6 +7,7 @@
 #ifndef LEVI_EXPRESSION_COMPONENT_H
 #define LEVI_EXPRESSION_COMPONENT_H
 
+#include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
 
 namespace levi {

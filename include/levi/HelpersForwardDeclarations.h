@@ -8,14 +8,20 @@
 #define LEVI_HELPERSFORWARDDECLARATIONS_H
 
 #include <Eigen/Core>
-
 #include <vector>
-#include <type_traits>
 #include <memory>
 #include <string>
 #include <cassert>
 #include <cmath>
 #include <unordered_map>
+
+#ifndef LEVI_DEFAULT_MATRIX_TYPE
+#define LEVI_DEFAULT_MATRIX_TYPE Eigen::MatrixXd
+#endif
+
+#ifndef LEVI_DEFAULT_VECTOR_TYPE
+#define LEVI_DEFAULT_VECTOR_TYPE Eigen::VectorXd
+#endif
 
 namespace levi {
 

@@ -7,6 +7,7 @@
 #ifndef LEVI_ADVANCEDCONSTRUCTORS_H
 #define LEVI_ADVANCEDCONSTRUCTORS_H
 
+#include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
 #include <levi/Evaluable.h>
 #include <levi/VariableBase.h>

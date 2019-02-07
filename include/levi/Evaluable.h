@@ -7,6 +7,7 @@
 #ifndef LEVI_EVALUABLE_H
 #define LEVI_EVALUABLE_H
 
+#include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
 
 /**

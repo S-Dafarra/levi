@@ -117,19 +117,19 @@ std::weak_ptr<EvaluableT> levi::ExpressionComponent<EvaluableT>::evaluable() {
 
 template <class EvaluableT>
 std::string levi::ExpressionComponent<EvaluableT>::name() const {
-    assert(m_evaluable);
+    assert(m_evaluable && "This expression is empty.");
     return m_evaluable->name();
 }
 
 template <class EvaluableT>
 Eigen::Index levi::ExpressionComponent<EvaluableT>::rows() const {
-    assert(m_evaluable);
+    assert(m_evaluable && "This expression is empty.");
     return m_evaluable->rows();
 }
 
 template <class EvaluableT>
 Eigen::Index levi::ExpressionComponent<EvaluableT>::cols() const {
-    assert(m_evaluable);
+    assert(m_evaluable && "This expression is empty.");
     return m_evaluable->cols();
 }
 
@@ -140,7 +140,7 @@ bool levi::ExpressionComponent<EvaluableT>::isNew() {
 
 template <class EvaluableT>
 const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::evaluate() {
-    assert(m_evaluable);
+    assert(m_evaluable && "This expression is empty.");
     return m_evaluable->evaluateID(m_callerID);
 }
 
@@ -149,7 +149,7 @@ template<class EvaluableRhs>
 levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::operator+(const levi::ExpressionComponent<EvaluableRhs>& rhs) {
     assert(rows() == rhs.rows());
     assert(cols() == rhs.cols());
-    assert(m_evaluable);
+    assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
 
     levi::ExpressionComponent<levi::Evaluable<
@@ -173,7 +173,7 @@ template<class EvaluableRhs>
 levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::operator-(const levi::ExpressionComponent<EvaluableRhs>& rhs) {
     assert(rows() == rhs.rows());
     assert(cols() == rhs.cols());
-    assert(m_evaluable);
+    assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
 
     levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> newExpression;
@@ -194,7 +194,7 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
 template<class EvaluableT>
 levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> levi::ExpressionComponent<EvaluableT>::operator-()
 {
-    assert(m_evaluable);
+    assert(m_evaluable && "This expression is empty.");
     levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> newExpression;
 
     newExpression = levi::ExpressionComponent<levi::SignInvertedEvaluable<EvaluableT>>(*this);
@@ -206,7 +206,7 @@ template <class EvaluableT>
 template<class EvaluableRhs>
 levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::operator*(const levi::ExpressionComponent<EvaluableRhs>& rhs) {
     assert((cols() == 1 && rows() == 1) || (rhs.cols() == 1 && rhs.rows() == 1) || (cols() == rhs.rows()) && "Dimension mismatch for product.");
-    assert(m_evaluable);
+    assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
 
     levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> newExpression;
@@ -233,7 +233,7 @@ levi::ExpressionComponent<EvaluableT>::operator/(const levi::ExpressionComponent
                    "The operator/ can be used only when the rhs is a scalar or a 1x1 matrix.");
 
     assert(rhs.rows() == 1 && rhs.cols() == 1 && "The operator/ can be used only when the rhs is a scalar or a 1x1 matrix.");
-    assert(m_evaluable);
+    assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
 
     levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::value_type>::type>> newExpression;
@@ -248,7 +248,7 @@ template<typename Scalar>
 levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Scalar>::type>> levi::ExpressionComponent<EvaluableT>::operator/(const Scalar &rhs)
 {
     static_assert (std::is_arithmetic<Scalar>::value, "The rhs has to be a scalar.");
-    assert(m_evaluable);
+    assert(m_evaluable && "This expression is empty.");
 
     levi::ExpressionComponent<levi::ConstantEvaluable<Scalar>> constant(rhs);
 

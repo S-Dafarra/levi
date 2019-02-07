@@ -7,7 +7,16 @@
 #ifndef LEVI_FORWARDDECLARATIONS_H
 #define LEVI_FORWARDDECLARATIONS_H
 
-#include <levi/HelpersForwardDeclarations.h>
+#ifndef LEVI_DEFAULT_MATRIX_TYPE
+#define LEVI_DEFAULT_MATRIX_TYPE "Missing definition of LEVI_DEFAULT_MATRIX_TYPE"
+#endif
+
+#ifndef LEVI_DEFAULT_VECTOR_TYPE
+#define LEVI_DEFAULT_VECTOR_TYPE "Missing definition of LEVI_DEFAULT_VECTOR_TYPE"
+#endif
+
+#include <type_traits>
+
 
 namespace levi {
 
@@ -136,17 +145,17 @@ namespace levi {
     template <typename EvaluableT>
     class ConstructorByCols;
 
-    typedef ExpressionComponent<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic >>> Expression;
+    typedef ExpressionComponent<Evaluable<LEVI_DEFAULT_MATRIX_TYPE>> Expression;
 
     typedef ExpressionComponent<Evaluable<double>> ScalarExpression;
 
-    typedef ExpressionComponent<Evaluable<Eigen::Matrix< double , Eigen::Dynamic , 1 >>> ColumnExpression;
+    typedef ExpressionComponent<Evaluable<LEVI_DEFAULT_VECTOR_TYPE>> ColumnExpression;
 
-    typedef ExpressionComponent<EvaluableVariable<Eigen::Matrix< double , Eigen::Dynamic , 1>>> Variable;
+    typedef ExpressionComponent<EvaluableVariable<LEVI_DEFAULT_VECTOR_TYPE>> Variable;
 
-    typedef ExpressionComponent<ConstantEvaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic>>> Constant;
+    typedef ExpressionComponent<ConstantEvaluable<LEVI_DEFAULT_MATRIX_TYPE>> Constant;
 
-    typedef ExpressionComponent<IdentityEvaluable<Eigen::Matrix< double , Eigen::Dynamic , Eigen::Dynamic>>> Identity;
+    typedef ExpressionComponent<IdentityEvaluable<LEVI_DEFAULT_MATRIX_TYPE>> Identity;
 
     typedef ExpressionComponent<ConstantEvaluable<double>> Scalar;
 }
