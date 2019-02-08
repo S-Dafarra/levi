@@ -140,6 +140,8 @@ public:
     template<class... Args, typename = typename std::enable_if<std::is_constructible<EvaluableT, Args...>::value>::type>
     ExpressionComponent(Args&&... args);
 
+    ~ExpressionComponent();
+
     /**
      * @brief Weak pointer to the evaluable
      *

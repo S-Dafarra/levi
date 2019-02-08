@@ -110,6 +110,14 @@ levi::ExpressionComponent<EvaluableT>::ExpressionComponent(Args&&... args)
     m_callerID = m_evaluable->getNewCallerID();
 }
 
+template<class EvaluableT>
+levi::ExpressionComponent<EvaluableT>::~ExpressionComponent()
+{
+    if (m_evaluable) {
+        m_evaluable->deleteID(m_callerID);
+    }
+}
+
 template <class EvaluableT>
 std::weak_ptr<EvaluableT> levi::ExpressionComponent<EvaluableT>::evaluable() {
     return m_evaluable;
@@ -135,6 +143,9 @@ Eigen::Index levi::ExpressionComponent<EvaluableT>::cols() const {
 
 template <class EvaluableT>
 bool levi::ExpressionComponent<EvaluableT>::isNew() {
+    if (!m_evaluable)
+        return false;
+
     return m_evaluable->isNew(m_callerID);
 }
 

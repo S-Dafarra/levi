@@ -78,6 +78,11 @@ protected:
     std::vector<bool> m_evaluationRegister;
 
     /**
+     * @brief Register to keep track of which index can be reused
+     */
+    std::vector<size_t> m_IDRecycleBin;
+
+    /**
      * @brief Reset the evaluation register to notify of new values
      */
     void resetEvaluationRegister() {
@@ -193,8 +198,26 @@ public:
      * @return An ID to use to check whether the evaluable has already been called since new data has come in.
      */
     size_t getNewCallerID() {
+        if (m_IDRecycleBin.size()) {
+            size_t newIndex = m_IDRecycleBin.back();
+            m_evaluationRegister[newIndex] = false;
+            m_IDRecycleBin.pop_back();
+            return newIndex;
+        }
         m_evaluationRegister.push_back(false);
         return m_evaluationRegister.size() -1;
+    }
+
+
+    /**
+     * @brief Delete a previousy created ID
+     * @param index The index to remove
+     * The index will be contained in the buffer m_IDRecycleBin to reuse previously deleted IDs. This avoids the
+     * m_evaluationRegister to grow indefinitely
+     */
+    void deleteID(size_t index) {
+        m_evaluationRegister[index] = false;
+        m_IDRecycleBin.push_back(index);
     }
 
     /**
@@ -316,6 +339,11 @@ protected:
      * @brief Register to keep track of which parent read the new values.
      */
     std::vector<bool> m_evaluationRegister;
+
+    /**
+     * @brief Register to keep track of which index can be reused
+     */
+    std::vector<size_t> m_IDRecycleBin;
 
     /**
      * @brief Reset the evaluation register to notify of new values
@@ -445,8 +473,26 @@ public:
      * @return An ID to use to check whether the evaluable has already been called since new data has come in.
      */
     size_t getNewCallerID() {
+        if (m_IDRecycleBin.size()) {
+            size_t newIndex = m_IDRecycleBin.back();
+            m_evaluationRegister[newIndex] = false;
+            m_IDRecycleBin.pop_back();
+            return newIndex;
+        }
         m_evaluationRegister.push_back(false);
         return m_evaluationRegister.size() -1;
+    }
+
+
+    /**
+     * @brief Delete a previousy created ID
+     * @param index The index to remove
+     * The index will be contained in the buffer m_IDRecycleBin to reuse previously deleted IDs. This avoids the
+     * m_evaluationRegister to grow indefinitely
+     */
+    void deleteID(size_t index) {
+        m_evaluationRegister[index] = false;
+        m_IDRecycleBin.push_back(index);
     }
 
     /**

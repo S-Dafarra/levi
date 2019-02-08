@@ -32,6 +32,14 @@ int main() {
         assert(!c1.isNew());
     }
 
+    for (size_t i = 0; i < 1000; ++i) {
+        Expression newExpression; //test that the register does not grow indefinitely (this can be actually checked only with gdb)
+
+        newExpression = c;
+
+        assert(newExpression.isNew());
+    }
+
     return 0;
 }
 
