@@ -8,17 +8,19 @@
 #define LEVI_FORWARDDECLARATIONS_H
 
 #ifndef LEVI_DEFAULT_MATRIX_TYPE
-#define LEVI_DEFAULT_MATRIX_TYPE "Missing definition of LEVI_DEFAULT_MATRIX_TYPE"
+#define LEVI_DEFAULT_MATRIX_TYPE levi::INVALID_TYPE
 #endif
 
 #ifndef LEVI_DEFAULT_VECTOR_TYPE
-#define LEVI_DEFAULT_VECTOR_TYPE "Missing definition of LEVI_DEFAULT_VECTOR_TYPE"
+#define LEVI_DEFAULT_VECTOR_TYPE levi::INVALID_TYPE
 #endif
 
 #include <type_traits>
 
 
 namespace levi {
+
+    class INVALID_TYPE;
 
     template<typename Matrix, class Enabler = void>
     class Evaluable;
@@ -145,17 +147,25 @@ namespace levi {
     template <typename EvaluableT>
     class ConstructorByCols;
 
-    typedef ExpressionComponent<Evaluable<LEVI_DEFAULT_MATRIX_TYPE>> Expression;
+    typedef Evaluable<LEVI_DEFAULT_MATRIX_TYPE> DefaultEvaluable;
+
+    typedef ExpressionComponent<DefaultEvaluable> Expression;
 
     typedef ExpressionComponent<Evaluable<double>> ScalarExpression;
 
     typedef ExpressionComponent<Evaluable<LEVI_DEFAULT_VECTOR_TYPE>> ColumnExpression;
 
-    typedef ExpressionComponent<EvaluableVariable<LEVI_DEFAULT_VECTOR_TYPE>> Variable;
+    typedef EvaluableVariable<LEVI_DEFAULT_VECTOR_TYPE> DefaultVariableEvaluable;
+
+    typedef ExpressionComponent<DefaultVariableEvaluable> Variable;
+
+    typedef ExpressionComponent<EvaluableVariable<double>> ScalarVariable;
 
     typedef ExpressionComponent<ConstantEvaluable<LEVI_DEFAULT_MATRIX_TYPE>> Constant;
 
     typedef ExpressionComponent<IdentityEvaluable<LEVI_DEFAULT_MATRIX_TYPE>> Identity;
+
+    typedef ExpressionComponent<NullEvaluable<LEVI_DEFAULT_MATRIX_TYPE>> Null;
 
     typedef ExpressionComponent<ConstantEvaluable<double>> Scalar;
 }
