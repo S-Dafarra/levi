@@ -383,6 +383,15 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::transpose_type<Evaluabl
     return levi::ExpressionComponent<levi::TransposeEvaluable<EvaluableT>>(*this);
 }
 
+
+template<class EvaluableT>
+levi::ExpressionComponent<levi::EvaluableVariable<typename EvaluableT::col_type> > levi::ExpressionComponent<EvaluableT>::asVariable()
+{
+    assert(m_evaluable && "The expression is empty.");
+
+    return levi::ExpressionComponent<levi::VariableFromExpressionEvaluable<EvaluableT>>(*this);
+}
+
 template<typename EvaluableT>
 template<typename VariableType>
 levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> levi::ExpressionComponent<EvaluableT>::getColumnDerivative(Eigen::Index column,

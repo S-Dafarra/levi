@@ -17,7 +17,7 @@ int main() {
 
     Variable quaternion(4, "q");
 
-    Expression normalizedQuaternion = quaternion/(quaternion.transpose() * quaternion).pow(0.5);
+    Variable normalizedQuaternion = (quaternion/(quaternion.transpose() * quaternion).pow(0.5)).asVariable();
 
     Expression skewQuaternion = normalizedQuaternion.block(1,0,3,1).skew();
 
@@ -101,7 +101,7 @@ int main() {
     output = rotatedVector.evaluate();
 
     begin = std::chrono::steady_clock::now();
-    Expression rotatedVectorDerivative = rotatedVector.getColumnDerivative(0, quaternion);
+    Expression rotatedVectorDerivative = rotatedVector.getColumnDerivative(0, normalizedQuaternion) * normalizedQuaternion.getColumnDerivative(0, quaternion);
     end= std::chrono::steady_clock::now();
     std::cout << "Elapsed time ms (compute first derivative): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 

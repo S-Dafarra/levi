@@ -10,7 +10,8 @@
 #include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
 #include <levi/Evaluable.h>
-#include <levi/VariableBase.h>
+#include <levi/Variable.h>
+#include <levi/OperatorsBase.h>
 #include <levi/Expression.h>
 
 /**
@@ -217,5 +218,81 @@ public:
     }
 
 };
+
+template <typename EvaluableT>
+class levi::VariableFromExpressionEvaluable : public levi::EvaluableVariable<typename EvaluableT::col_type> {
+    levi::ExpressionComponent<EvaluableT> m_expression;
+
+    using DerivativeMap = std::unordered_map<std::string, std::vector<levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable>>>;
+
+    using DerivativeMapKey = std::pair<std::string, std::vector<levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable>>>;
+
+    DerivativeMap m_derivativeBuffer;
+
+public:
+
+    VariableFromExpressionEvaluable(const levi::ExpressionComponent<EvaluableT>& expression)
+        : levi::EvaluableVariable<typename EvaluableT::col_type>(expression.rows(), expression.name())
+          , m_expression(expression)
+    {
+        static_assert (EvaluableT::cols_at_compile_time == 1 || EvaluableT::cols_at_compile_time == Eigen::Dynamic, "Can't obtain a variable from a matrix evaluable" );
+        assert(expression.cols() == 1 && "Can't obtain a variable from a matrix evaluable");
+
+    }
+
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
+    }
+
+    virtual const typename EvaluableT::col_type& evaluate() final {
+        this->m_evaluationBuffer = m_expression.evaluate();
+        return this->m_evaluationBuffer;
+    }
+
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+        return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) || m_expression.isDependentFrom(variable);
+    }
+
+    levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
+                                                                                                                                    std::shared_ptr<levi::VariableBase> variable) {
+        levi::unused(column);
+        assert(column == 0);
+        if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
+            return this->m_identityDerivative;
+        } else if (m_expression.isDependentFrom(variable)) {
+            return m_expression.getColumnDerivative(column, variable);
+        } else {
+            return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension(),
+                                                                                                                                                              "d " + this->variableName() + "/(d " + variable->variableName() + ")");
+        }
+    }
+
+    virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                                                      std::shared_ptr<levi::VariableBase> variable) final {
+        typename DerivativeMap::iterator element = m_derivativeBuffer.find(variable->variableName());
+
+        levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> emptyExpression;
+
+        if (element == m_derivativeBuffer.end()) {
+            DerivativeMapKey newPair;
+            newPair.first = variable->variableName();
+            newPair.second.resize(this->cols(), emptyExpression);
+            auto insertedElement = m_derivativeBuffer.insert(newPair);
+            element = insertedElement.first;
+        }
+
+        if (!(element->second.at(column).isValidExpression())) {
+            element->second.at(column) = getNewColumnDerivative(column, variable);
+        }
+
+        return element->second.at(column);
+    }
+
+};
+
+
 
 #endif // LEVI_ADVANCEDCONSTRUCTORS_H

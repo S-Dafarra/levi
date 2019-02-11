@@ -147,6 +147,9 @@ namespace levi {
     template <typename EvaluableT>
     class ConstructorByCols;
 
+    template <typename EvaluableT>
+    class VariableFromExpressionEvaluable;
+
     typedef Evaluable<LEVI_DEFAULT_MATRIX_TYPE> DefaultEvaluable;
 
     typedef ExpressionComponent<DefaultEvaluable> Expression;

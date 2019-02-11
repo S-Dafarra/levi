@@ -20,7 +20,7 @@
  */
 template <typename Vector>
 class levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type> : public levi::VariableBase, public levi::Evaluable<Vector> {
-
+protected:
     levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Vector>::derivative_evaluable::matrix_type>> m_identityDerivative;
 
     template<typename OtherVector, bool isScalar>
@@ -83,12 +83,12 @@ public:
         this->resetEvaluationRegister();
     }
 
-    virtual const Vector& evaluate() final {
+    virtual const Vector& evaluate() override {
         return this->m_evaluationBuffer;
     }
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<Vector>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                  std::shared_ptr<levi::VariableBase> variable) final {
+                                                                                                                  std::shared_ptr<levi::VariableBase> variable) override {
         levi::unused(column);
         assert(column == 0);
         if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
@@ -99,7 +99,7 @@ public:
         }
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) override {
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension()));
     }
 
@@ -113,10 +113,18 @@ public:
  */
 template <typename Scalar>
 class levi::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public levi::VariableBase, public levi::Evaluable<Scalar> {
-
+protected:
     levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>> m_identityDerivative;
 
 public:
+
+    EvaluableVariable(Eigen::Index dimension, const std::string& name)
+        : levi::VariableBase(1, name)
+          , levi::Evaluable<Scalar>(1, 1, name)
+          , m_identityDerivative(1, 1, "d " + name + "/(d " + name + ")")
+    {
+        assert(dimension == 1 && "double has been choosen as a type but a dimension different from 1 has been used.");
+    }
 
     EvaluableVariable(const std::string& name)
         : levi::VariableBase(1, name)
@@ -148,12 +156,12 @@ public:
         this->resetEvaluationRegister();
     }
 
-    virtual const Scalar& evaluate() final {
+    virtual const Scalar& evaluate() override {
         return this->m_evaluationBuffer;
     }
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<Scalar>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                  std::shared_ptr<levi::VariableBase> variable) final {
+                                                                                                                  std::shared_ptr<levi::VariableBase> variable) override {
         levi::unused(column);
         assert(column == 0);
         if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
@@ -163,7 +171,7 @@ public:
         }
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) override {
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension()));
     }
 

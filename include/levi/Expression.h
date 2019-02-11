@@ -379,6 +379,14 @@ public:
     ExpressionComponent<levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>> transpose();
 
     /**
+     * @brief get a variable from the current expression
+     * @return A variable obtained by interpreting the current expression as a variable.
+     *
+     * @note The expression must have a single column.
+     */
+    ExpressionComponent<levi::EvaluableVariable<typename EvaluableT::col_type>> asVariable();
+
+    /**
      * @brief Retrieve the column derivative with respect to the specified variable
      *
      * @param column The column of interest

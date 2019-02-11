@@ -44,6 +44,23 @@ int main() {
 
     assert((kSquaredDerivative.evaluate() - 2*k_values.transpose()).cwiseAbs().maxCoeff() < 1e-10);
 
+    Expression twiceX;
+
+    twiceX = 2.0 * x;
+
+    Variable x2 = twiceX.asVariable();
+
+    Expression test = x2.transpose() * x2;
+
+    Expression testDerivative = test.getColumnDerivative(0, x2);
+
+    assert(testDerivative.evaluate() == (2.0 * twiceX).evaluate().transpose());
+
+    Expression testDoubleDerivative = testDerivative.getColumnDerivative(0, x);
+
+    assert(testDoubleDerivative.evaluate()(0,0) == 4.0 && testDoubleDerivative.evaluate()(0,1) == 0.0);
+
+
     return 0;
 
 }
