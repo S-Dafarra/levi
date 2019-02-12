@@ -119,7 +119,7 @@ levi::ExpressionComponent<EvaluableT>::~ExpressionComponent()
 }
 
 template <class EvaluableT>
-std::weak_ptr<EvaluableT> levi::ExpressionComponent<EvaluableT>::evaluable() {
+std::weak_ptr<EvaluableT> levi::ExpressionComponent<EvaluableT>::evaluable() const {
     return m_evaluable;
 }
 
@@ -142,7 +142,7 @@ Eigen::Index levi::ExpressionComponent<EvaluableT>::cols() const {
 }
 
 template <class EvaluableT>
-bool levi::ExpressionComponent<EvaluableT>::isNew() {
+bool levi::ExpressionComponent<EvaluableT>::isNew() const {
     if (!m_evaluable)
         return false;
 
@@ -157,7 +157,7 @@ const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::e
 
 template <class EvaluableT>
 template<class EvaluableRhs>
-levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::operator+(const levi::ExpressionComponent<EvaluableRhs>& rhs) {
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::operator+(const levi::ExpressionComponent<EvaluableRhs>& rhs) const {
     assert(rows() == rhs.rows());
     assert(cols() == rhs.cols());
     assert(m_evaluable && "This expression is empty.");
@@ -173,7 +173,7 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
 
 template <class EvaluableT>
 template <typename Matrix>
-levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> levi::ExpressionComponent<EvaluableT>::operator+(const Matrix& rhs) {
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> levi::ExpressionComponent<EvaluableT>::operator+(const Matrix& rhs) const {
     levi::ExpressionComponent<levi::ConstantEvaluable<Matrix>> constant = levi::build_constant(levi::bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
 
     return operator+(constant);
@@ -181,7 +181,7 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
 
 template <class EvaluableT>
 template<class EvaluableRhs>
-levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::operator-(const levi::ExpressionComponent<EvaluableRhs>& rhs) {
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::operator-(const levi::ExpressionComponent<EvaluableRhs>& rhs) const {
     assert(rows() == rhs.rows());
     assert(cols() == rhs.cols());
     assert(m_evaluable && "This expression is empty.");
@@ -196,7 +196,7 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
 
 template <class EvaluableT>
 template <typename Matrix>
-levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> levi::ExpressionComponent<EvaluableT>::operator-(const Matrix& rhs) {
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> levi::ExpressionComponent<EvaluableT>::operator-(const Matrix& rhs) const {
     levi::ExpressionComponent<levi::ConstantEvaluable<Matrix>> constant = levi::build_constant(levi::bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
 
     return operator-(constant);
@@ -215,7 +215,7 @@ levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> lev
 
 template <class EvaluableT>
 template<class EvaluableRhs>
-levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::operator*(const levi::ExpressionComponent<EvaluableRhs>& rhs) {
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::operator*(const levi::ExpressionComponent<EvaluableRhs>& rhs) const {
     assert((cols() == 1 && rows() == 1) || (rhs.cols() == 1 && rhs.rows() == 1) || (cols() == rhs.rows()) && "Dimension mismatch for product.");
     assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
@@ -229,7 +229,7 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
 
 template <class EvaluableT>
 template <typename Matrix>
-levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Matrix>::type>> levi::ExpressionComponent<EvaluableT>::operator*(const Matrix& rhs) {
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Matrix>::type>> levi::ExpressionComponent<EvaluableT>::operator*(const Matrix& rhs) const {
     levi::ExpressionComponent<levi::ConstantEvaluable<Matrix>> constant = levi::build_constant(levi::bool_value<std::is_arithmetic<Matrix>::value>(), rhs);
 
     return operator*(constant);
@@ -238,7 +238,7 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
 template <class EvaluableT>
 template<class EvaluableRhs>
 levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::value_type>::type>>
-levi::ExpressionComponent<EvaluableT>::operator/(const levi::ExpressionComponent<EvaluableRhs> &rhs)
+levi::ExpressionComponent<EvaluableT>::operator/(const levi::ExpressionComponent<EvaluableRhs> &rhs) const
 {
     static_assert ((EvaluableRhs::rows_at_compile_time == Eigen::Dynamic || EvaluableRhs::rows_at_compile_time == 1) && (EvaluableRhs::cols_at_compile_time == Eigen::Dynamic || EvaluableRhs::cols_at_compile_time == 1),
                    "The operator/ can be used only when the rhs is a scalar or a 1x1 matrix.");
@@ -256,7 +256,7 @@ levi::ExpressionComponent<EvaluableT>::operator/(const levi::ExpressionComponent
 
 template <class EvaluableT>
 template<typename Scalar>
-levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Scalar>::type>> levi::ExpressionComponent<EvaluableT>::operator/(const Scalar &rhs)
+levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Scalar>::type>> levi::ExpressionComponent<EvaluableT>::operator/(const Scalar &rhs) const
 {
     static_assert (std::is_arithmetic<Scalar>::value, "The rhs has to be a scalar.");
     assert(m_evaluable && "This expression is empty.");
@@ -267,7 +267,7 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
 }
 
 template<class EvaluableT>
-levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type> > levi::ExpressionComponent<EvaluableT>::pow(typename EvaluableT::value_type exponent)
+levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type> > levi::ExpressionComponent<EvaluableT>::pow(typename EvaluableT::value_type exponent) const
 {
     static_assert ((EvaluableT::rows_at_compile_time == Eigen::Dynamic || EvaluableT::rows_at_compile_time == 1) && (EvaluableT::cols_at_compile_time == Eigen::Dynamic || EvaluableT::cols_at_compile_time == 1),
                    "pow can be used only with scalars or 1x1 matrices.");
@@ -319,7 +319,7 @@ void levi::ExpressionComponent<EvaluableT>::operator=(const Matrix& rhs) {
 }
 
 template <class EvaluableT>
-levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>> levi::ExpressionComponent<EvaluableT>::row(Eigen::Index row) {
+levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>> levi::ExpressionComponent<EvaluableT>::row(Eigen::Index row) const {
     assert(row < this->rows());
     assert(m_evaluable && "Cannot extract a row from this expression");
 
@@ -330,7 +330,7 @@ levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>> levi::
 }
 
 template <class EvaluableT>
-levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>> levi::ExpressionComponent<EvaluableT>::col(Eigen::Index col) {
+levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>> levi::ExpressionComponent<EvaluableT>::col(Eigen::Index col) const {
     assert(col < this->cols());
     assert(m_evaluable && "Cannot extract a column from this expression");
 
@@ -341,7 +341,7 @@ levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>> levi::
 }
 
 template<class EvaluableT>
-levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> levi::ExpressionComponent<EvaluableT>::operator()(Eigen::Index row, Eigen::Index col)
+levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> levi::ExpressionComponent<EvaluableT>::operator()(Eigen::Index row, Eigen::Index col) const
 {
     assert(row < this->rows());
     assert(col < this->cols());
@@ -354,7 +354,7 @@ levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> levi
 }
 
 template<class EvaluableT>
-levi::ExpressionComponent<levi::Evaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::block(Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
+levi::ExpressionComponent<levi::Evaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::block(Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols) const
 {
     assert(m_evaluable && "Cannot extract a block from this expression");
     assert(((startRow + numberOfRows) <= rows()) && ((startCol + numberOfCols) <= cols()) && "Invalid block settings.");
@@ -395,7 +395,7 @@ levi::ExpressionComponent<levi::EvaluableVariable<typename EvaluableT::col_type>
 template<typename EvaluableT>
 template<typename VariableType>
 levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> levi::ExpressionComponent<EvaluableT>::getColumnDerivative(Eigen::Index column,
-                                                                                                                                const levi::ExpressionComponent<levi::EvaluableVariable<VariableType>> &variable)
+                                                                                                                                const levi::ExpressionComponent<levi::EvaluableVariable<VariableType>> &variable) const
 {
     assert(m_evaluable && "Cannot compute the derivative of this expression.");
     assert(column < cols());
@@ -405,7 +405,7 @@ levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> levi::Expre
 }
 
 template<typename EvaluableT>
-levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> levi::ExpressionComponent<EvaluableT>::getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable)
+levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> levi::ExpressionComponent<EvaluableT>::getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) const
 {
     assert(m_evaluable && "Cannot compute the derivative of this expression.");
     assert(column < cols());
@@ -416,7 +416,7 @@ levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> levi::Expre
 
 template<typename EvaluableT>
 template<typename VariableType>
-bool levi::ExpressionComponent<EvaluableT>::isDependentFrom(const levi::ExpressionComponent<levi::EvaluableVariable<VariableType>> &variable)
+bool levi::ExpressionComponent<EvaluableT>::isDependentFrom(const levi::ExpressionComponent<levi::EvaluableVariable<VariableType>> &variable) const
 {
     assert(m_evaluable && "Cannot compute the derivative of this expression.");
     assert(variable.m_evaluable && "Invalid variable.");
@@ -425,7 +425,7 @@ bool levi::ExpressionComponent<EvaluableT>::isDependentFrom(const levi::Expressi
 }
 
 template<typename EvaluableT>
-bool levi::ExpressionComponent<EvaluableT>::isDependentFrom(std::shared_ptr<levi::VariableBase> variable)
+bool levi::ExpressionComponent<EvaluableT>::isDependentFrom(std::shared_ptr<levi::VariableBase> variable) const
 {
     assert(m_evaluable && "Cannot compute the derivative of this expression.");
     assert(variable && "Empty variable pointer.");

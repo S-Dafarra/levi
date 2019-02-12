@@ -149,7 +149,7 @@ public:
      *
      * @return a weak pointer to the evaluable
      */
-    std::weak_ptr<EvaluableT> evaluable();
+    std::weak_ptr<EvaluableT> evaluable() const ;
 
     /**
      * @brief Name of the expression
@@ -182,7 +182,7 @@ public:
      * @brief Check if the expression has a new value
      * @return True if new
      */
-    bool isNew();
+    bool isNew() const;
 
     /**
      * @brief Evaluate the pointed evaluable.
@@ -198,7 +198,7 @@ public:
      * @return An expression which points to an evaluable performing the additions.
      */
     template<class EvaluableRhs>
-    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator+(const ExpressionComponent<EvaluableRhs>& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator+(const ExpressionComponent<EvaluableRhs>& rhs) const;
 
     /**
      * @brief Operator +
@@ -208,7 +208,7 @@ public:
      * @return An expression which points to an evaluable performing the addition.
      */
     template <typename Matrix>
-    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator+(const Matrix& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator+(const Matrix& rhs) const;
 
     /**
      * @brief Operator -
@@ -216,7 +216,7 @@ public:
      * @return An expression which points to an evaluable performing the subtraction.
      */
     template<class EvaluableRhs>
-    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator-(const ExpressionComponent<EvaluableRhs>& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator-(const ExpressionComponent<EvaluableRhs>& rhs) const;
 
     /**
      * @brief Operator -
@@ -226,7 +226,7 @@ public:
      * @return An expression which points to an evaluable performing the subtraction.
      */
     template <typename Matrix>
-    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator-(const Matrix& rhs) const;
 
     /**
      * @brief Operator -
@@ -241,7 +241,7 @@ public:
      * @return An expression which points to an evaluable performing the multiplication.
      */
     template<class EvaluableRhs>
-    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator*(const ExpressionComponent<EvaluableRhs>& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> operator*(const ExpressionComponent<EvaluableRhs>& rhs) const;
 
     /**
      * @brief Operator *
@@ -251,7 +251,7 @@ public:
      * @return An expression which points to an evaluable performing the multiplication.
      */
     template <typename Matrix>
-    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Matrix>::type>> operator*(const Matrix& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Matrix>::type>> operator*(const Matrix& rhs) const;
 
     /**
      * @brief Operator /
@@ -259,7 +259,7 @@ public:
      * @return An expression which points to an evaluable performing the division by a scalar.
      */
     template<class EvaluableRhs>
-    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::value_type>::type>> operator/(const ExpressionComponent<EvaluableRhs>& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::value_type>::type>> operator/(const ExpressionComponent<EvaluableRhs>& rhs) const;
 
     /**
      * @brief Operator /
@@ -269,7 +269,7 @@ public:
      * @return An expression which points to an evaluable performing the division.
      */
     template <typename Scalar>
-    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Scalar>::type>> operator/(const Scalar& rhs);
+    ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Scalar>::type>> operator/(const Scalar& rhs) const;
 
     /**
      * @brief Computes the power of the current evaluable
@@ -278,7 +278,7 @@ public:
      *
      * @note This can be used only with scalars or 1x1 matrices.
      */
-    ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> pow(typename EvaluableT::value_type exponent);
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> pow(typename EvaluableT::value_type exponent) const;
 
     /**
      * @brief Assignement operator from other expressions
@@ -330,7 +330,7 @@ public:
      *
      * @Note This has to be considered as read only accessor.
      */
-    ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>> row(Eigen::Index row);
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>> row(Eigen::Index row) const;
 
     /**
      * @brief Returns an expression corresponding to a column of the current evaluable
@@ -339,7 +339,7 @@ public:
      *
      * @Note This has to be considered as read only accessor.
      */
-    ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>> col(Eigen::Index col);
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>> col(Eigen::Index col) const;
 
     /**
      * @brief Accessor to element (read only)
@@ -350,7 +350,7 @@ public:
      * @Note This has to be considered as read only accessor.
      *
      */
-    ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> operator()(Eigen::Index row, Eigen::Index col);
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> operator()(Eigen::Index row, Eigen::Index col) const;
 
     /**
      * @brief Accessor to element (read only)
@@ -360,7 +360,7 @@ public:
      * @param numberOfCols The number of columns of the block
      * @return An expression pointing to an evaluable taking only the specified block out of the current evaluable.
      */
-    ExpressionComponent<levi::Evaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>> block(Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols);
+    ExpressionComponent<levi::Evaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>> block(Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols) const;
 
     /**
      * @brief Computes the skew symmetric matrix out of the current evaluable
@@ -394,7 +394,7 @@ public:
      * @return An expression pointing to the column derivative.
      */
     template<typename VariableType>
-    ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, const ExpressionComponent<levi::EvaluableVariable<VariableType>>& variable);
+    ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, const ExpressionComponent<levi::EvaluableVariable<VariableType>>& variable) const;
 
     /**
      * @brief Retrieve the column derivative with respect to the specified variable
@@ -403,7 +403,7 @@ public:
      * @param variable Shared pointer to the variable of interest
      * @return An expression pointing to the column derivative.
      */
-    ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable);
+    ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) const;
 
     /**
      * @brief Check whether the pointed evaluable depends on a specified variable
@@ -411,14 +411,14 @@ public:
      * @return True if dependent
      */
     template<typename VariableType>
-    bool isDependentFrom(const ExpressionComponent<levi::EvaluableVariable<VariableType>>& variable);
+    bool isDependentFrom(const ExpressionComponent<levi::EvaluableVariable<VariableType>>& variable) const;
 
     /**
      * @brief Check whether the pointed evaluable depends on a specified variable
      * @param variable The variable of interest
      * @return True if dependent
      */
-    bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable);
+    bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) const;
 
     /**
      * @brief Check if the expression is valid
