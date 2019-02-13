@@ -313,6 +313,13 @@ public:
         return element->second.at(column);
     }
 
+    /**
+     * @brief Clears the cache of derivatives
+     */
+    void clearDerivativesCache() {
+        m_derivativeBuffer.clear();
+    }
+
     Evaluable<Matrix>& operator=(const Evaluable& other) = delete;
 
     void operator=(Evaluable&& other) = delete;
@@ -613,6 +620,13 @@ public:
         }
 
         return element->second.at(column);
+    }
+
+    /**
+     * @brief Clears the cache of derivatives
+     */
+    void clearDerivativesCache() {
+        m_derivativeBuffer.clear();
     }
 
     Evaluable<Scalar>& operator=(const Evaluable& other) = delete;

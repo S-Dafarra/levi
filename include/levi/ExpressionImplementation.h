@@ -414,6 +414,14 @@ levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> levi::Expre
     return m_evaluable->getColumnDerivative(column, variable);
 }
 
+template<class EvaluableT>
+void levi::ExpressionComponent<EvaluableT>::clearDerivativesCache()
+{
+    if (m_evaluable) {
+        m_evaluable->clearDerivativesCache();
+    }
+}
+
 template<typename EvaluableT>
 template<typename VariableType>
 bool levi::ExpressionComponent<EvaluableT>::isDependentFrom(const levi::ExpressionComponent<levi::EvaluableVariable<VariableType>> &variable) const

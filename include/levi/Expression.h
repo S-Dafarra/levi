@@ -406,6 +406,11 @@ public:
     ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) const;
 
     /**
+     * @brief Clears the cache of derivatives
+     */
+    void clearDerivativesCache();
+
+    /**
      * @brief Check whether the pointed evaluable depends on a specified variable
      * @param variable The variable of interest
      * @return True if dependent
