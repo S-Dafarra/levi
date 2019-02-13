@@ -25,12 +25,6 @@ class levi::ConstructorByRows : public levi::Evaluable<typename EvaluableT::matr
     std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>>> m_rows;
     std::vector<levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::row_type>::derivative_evaluable>> m_derivatives;
 
-    using DerivativeMap = std::unordered_map<std::string, std::vector<levi::ExpressionComponent<typename EvaluableT::derivative_evaluable>>>;
-
-    using DerivativeMapKey = std::pair<std::string, std::vector<levi::ExpressionComponent<typename EvaluableT::derivative_evaluable>>>;
-
-    DerivativeMap m_derivativeBuffer;
-
 public:
 
     ConstructorByRows(const std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>>>& rows, std::string name)
@@ -74,7 +68,7 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
+    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) final {
 
         for (size_t i = 0; i < m_rows.size(); ++i) {
             m_derivatives[i] = m_rows[i](0, column).getColumnDerivative(0, variable); //the i-th row of the column derivative corresponds to the (only) column derivative of the element (i, column)
@@ -85,27 +79,6 @@ public:
         derivative = levi::ExpressionComponent<typename EvaluableT::derivative_evaluable>::ComposeByRows(m_derivatives, "d(" + this->name() + ")/d" + variable->variableName());
 
         return derivative;
-    }
-
-    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                     std::shared_ptr<levi::VariableBase> variable) final {
-        typename DerivativeMap::iterator element = m_derivativeBuffer.find(variable->variableName());
-
-        levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> emptyExpression;
-
-        if (element == m_derivativeBuffer.end()) {
-            DerivativeMapKey newPair;
-            newPair.first = variable->variableName();
-            newPair.second.resize(this->cols(), emptyExpression);
-            auto insertedElement = m_derivativeBuffer.insert(newPair);
-            element = insertedElement.first;
-        }
-
-        if (!(element->second.at(column).isValidExpression())) {
-            element->second.at(column) = getNewColumnDerivative(column, variable);
-        }
-
-        return element->second.at(column);
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
@@ -129,12 +102,6 @@ template <typename EvaluableT>
 class levi::ConstructorByCols : public levi::Evaluable<typename EvaluableT::matrix_type> {
 
     std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>>> m_cols;
-
-    using DerivativeMap = std::unordered_map<std::string, std::vector<levi::ExpressionComponent<typename EvaluableT::derivative_evaluable>>>;
-
-    using DerivativeMapKey = std::pair<std::string, std::vector<levi::ExpressionComponent<typename EvaluableT::derivative_evaluable>>>;
-
-    DerivativeMap m_derivativeBuffer;
 
 public:
 
@@ -177,34 +144,13 @@ public:
         return this->m_evaluationBuffer;
     }
 
-    levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
+    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) final {
 
         levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> derivative;
 
         derivative = m_cols[column].getColumnDerivative(0, variable);
 
         return derivative;
-    }
-
-    virtual levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                     std::shared_ptr<levi::VariableBase> variable) final {
-        typename DerivativeMap::iterator element = m_derivativeBuffer.find(variable->variableName());
-
-        levi::ExpressionComponent<typename EvaluableT::derivative_evaluable> emptyExpression;
-
-        if (element == m_derivativeBuffer.end()) {
-            DerivativeMapKey newPair;
-            newPair.first = variable->variableName();
-            newPair.second.resize(this->cols(), emptyExpression);
-            auto insertedElement = m_derivativeBuffer.insert(newPair);
-            element = insertedElement.first;
-        }
-
-        if (!(element->second.at(column).isValidExpression())) {
-            element->second.at(column) = getNewColumnDerivative(column, variable);
-        }
-
-        return element->second.at(column);
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
@@ -222,12 +168,6 @@ public:
 template <typename EvaluableT>
 class levi::VariableFromExpressionEvaluable : public levi::EvaluableVariable<typename EvaluableT::col_type> {
     levi::ExpressionComponent<EvaluableT> m_expression;
-
-    using DerivativeMap = std::unordered_map<std::string, std::vector<levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable>>>;
-
-    using DerivativeMapKey = std::pair<std::string, std::vector<levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable>>>;
-
-    DerivativeMap m_derivativeBuffer;
 
 public:
 
@@ -256,8 +196,8 @@ public:
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) || m_expression.isDependentFrom(variable);
     }
 
-    levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
-                                                                                                                                    std::shared_ptr<levi::VariableBase> variable) {
+    virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
+                                                                                                                                            std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(column);
         assert(column == 0);
         if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
@@ -268,27 +208,6 @@ public:
             return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension(),
                                                                                                                                                               "d " + this->variableName() + "/(d " + variable->variableName() + ")");
         }
-    }
-
-    virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                      std::shared_ptr<levi::VariableBase> variable) final {
-        typename DerivativeMap::iterator element = m_derivativeBuffer.find(variable->variableName());
-
-        levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> emptyExpression;
-
-        if (element == m_derivativeBuffer.end()) {
-            DerivativeMapKey newPair;
-            newPair.first = variable->variableName();
-            newPair.second.resize(this->cols(), emptyExpression);
-            auto insertedElement = m_derivativeBuffer.insert(newPair);
-            element = insertedElement.first;
-        }
-
-        if (!(element->second.at(column).isValidExpression())) {
-            element->second.at(column) = getNewColumnDerivative(column, variable);
-        }
-
-        return element->second.at(column);
     }
 
 };

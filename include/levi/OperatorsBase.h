@@ -19,12 +19,6 @@ protected:
 
     levi::ExpressionComponent<EvaluableT> m_expression;
 
-    using DerivativeMap = std::unordered_map<std::string, std::vector<levi::ExpressionComponent<typename levi::Evaluable<MatrixType>::derivative_evaluable>>>;
-
-    using DerivativeMapKey = std::pair<std::string, std::vector<levi::ExpressionComponent<typename levi::Evaluable<MatrixType>::derivative_evaluable>>>;
-
-    DerivativeMap m_derivativeBuffer;
-
 public:
 
     UnaryOperator(const levi::ExpressionComponent<EvaluableT>& expression, const std::string& name)
@@ -53,30 +47,6 @@ public:
         return m_expression.isDependentFrom(variable);
     }
 
-    virtual levi::ExpressionComponent<typename levi::Evaluable<MatrixType>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
-                                                                                                                         std::shared_ptr<levi::VariableBase> variable) = 0;
-
-    virtual levi::ExpressionComponent<typename levi::Evaluable<MatrixType>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                      std::shared_ptr<levi::VariableBase> variable) final {
-        typename DerivativeMap::iterator element = m_derivativeBuffer.find(variable->variableName());
-
-        levi::ExpressionComponent<typename levi::Evaluable<MatrixType>::derivative_evaluable> emptyExpression;
-
-        if (element == m_derivativeBuffer.end()) {
-            DerivativeMapKey newPair;
-            newPair.first = variable->variableName();
-            newPair.second.resize(this->cols(), emptyExpression);
-            auto insertedElement = m_derivativeBuffer.insert(newPair);
-            element = insertedElement.first;
-        }
-
-        if (!(element->second.at(column).isValidExpression())) {
-            element->second.at(column) = getNewColumnDerivative(column, variable);
-        }
-
-        return element->second.at(column);
-    }
-
 };
 
 template <typename MatrixType, class LeftEvaluable, class RightEvaluable>
@@ -85,12 +55,6 @@ protected:
 
     levi::ExpressionComponent<LeftEvaluable> m_lhs;
     levi::ExpressionComponent<RightEvaluable> m_rhs;
-
-    using DerivativeMap = std::unordered_map<std::string, std::vector<levi::ExpressionComponent<typename levi::Evaluable<MatrixType>::derivative_evaluable>>>;
-
-    using DerivativeMapKey = std::pair<std::string, std::vector<levi::ExpressionComponent<typename levi::Evaluable<MatrixType>::derivative_evaluable>>>;
-
-    DerivativeMap m_derivativeBuffer;
 
 public:
 
@@ -123,29 +87,6 @@ public:
         return m_lhs.isDependentFrom(variable) || m_rhs.isDependentFrom(variable);
     }
 
-    virtual levi::ExpressionComponent<typename levi::Evaluable<MatrixType>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
-                                                                                                                         std::shared_ptr<levi::VariableBase> variable) = 0;
-
-    virtual levi::ExpressionComponent<typename levi::Evaluable<MatrixType>::derivative_evaluable> getColumnDerivative(Eigen::Index column,
-                                                                                                                      std::shared_ptr<levi::VariableBase> variable) final {
-        typename DerivativeMap::iterator element = m_derivativeBuffer.find(variable->variableName());
-
-        levi::ExpressionComponent<typename levi::Evaluable<MatrixType>::derivative_evaluable> emptyExpression;
-
-        if (element == m_derivativeBuffer.end()) {
-            DerivativeMapKey newPair;
-            newPair.first = variable->variableName();
-            newPair.second.resize(this->cols(), emptyExpression);
-            auto insertedElement = m_derivativeBuffer.insert(newPair);
-            element = insertedElement.first;
-        }
-
-        if (!(element->second.at(column).isValidExpression())) {
-            element->second.at(column) = getNewColumnDerivative(column, variable);
-        }
-
-        return element->second.at(column);
-    }
 };
 
 #endif // LEVI_OPERATORSBASE_H

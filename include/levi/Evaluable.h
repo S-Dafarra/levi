@@ -9,6 +9,7 @@
 
 #include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
+#include <levi/VariableBase.h>
 
 /**
  * @brief Evaluable class (for matrix type)
@@ -96,6 +97,15 @@ protected:
      * @brief Check if the buffer has been filled at least once since the evaluation register has been resetted
      */
     bool m_alreadyComputed;
+
+    using DerivativeMap = std::unordered_map<std::string, std::vector<levi::ExpressionComponent<derivative_evaluable>>>;
+
+    using DerivativeMapKey = std::pair<std::string, std::vector<levi::ExpressionComponent<derivative_evaluable>>>;
+
+    /**
+     * @brief Map that contains the expressions of derivatives already computed
+     */
+    DerivativeMap m_derivativeBuffer;
 
 public:
 
@@ -256,7 +266,7 @@ public:
      * @param variable The variable with respect to the derivative has to be computed.
      * @return An expression containing an evaluable of type derivative_evaluable.
      */
-    virtual levi::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
+    virtual levi::ExpressionComponent<derivative_evaluable> getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
         levi::unused(column, variable);
         return levi::ExpressionComponent<derivative_evaluable>();
     }
@@ -271,6 +281,36 @@ public:
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
         levi::unused(variable);
         return true;
+    }
+
+    /**
+     * @brief Get the derivative of a specified column with respect to a specified variable
+     * @param column The index with respect to the derivative has to be computed.
+     * @param variable The variable with respect to the derivative has to be computed.
+     * @return An expression containing an evaluable of type derivative_evaluable.
+     *
+     * @note This will be the method called by ExpressionComponent. This allow to cache the expressions of derivatives which have been already computed.
+     * Override this method if you want to avoid caching expressions.
+     */
+    virtual levi::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                std::shared_ptr<levi::VariableBase> variable) {
+        typename DerivativeMap::iterator element = m_derivativeBuffer.find(variable->variableName());
+
+        levi::ExpressionComponent<derivative_evaluable> emptyExpression;
+
+        if (element == m_derivativeBuffer.end()) {
+            DerivativeMapKey newPair;
+            newPair.first = variable->variableName();
+            newPair.second.resize(this->cols(), emptyExpression);
+            auto insertedElement = m_derivativeBuffer.insert(newPair);
+            element = insertedElement.first;
+        }
+
+        if (!(element->second.at(column).isValidExpression())) {
+            element->second.at(column) = getNewColumnDerivative(column, variable);
+        }
+
+        return element->second.at(column);
     }
 
     Evaluable<Matrix>& operator=(const Evaluable& other) = delete;
@@ -359,6 +399,15 @@ protected:
      * @brief Check if the buffer has been filled at least once since the evaluation register has been resetted
      */
     bool m_alreadyComputed;
+
+    using DerivativeMap = std::unordered_map<std::string, std::vector<levi::ExpressionComponent<derivative_evaluable>>>;
+
+    using DerivativeMapKey = std::pair<std::string, std::vector<levi::ExpressionComponent<derivative_evaluable>>>;
+
+    /**
+     * @brief Map that contains the expressions of derivatives already computed
+     */
+    DerivativeMap m_derivativeBuffer;
 
 public:
 
@@ -519,7 +568,7 @@ public:
      * @param variable The variable with respect to the derivative has to be computed.
      * @return An expression containing an evaluable of type derivative_evaluable.
      */
-    virtual levi::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
+    virtual levi::ExpressionComponent<derivative_evaluable> getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
         levi::unused(column, variable);
         return levi::ExpressionComponent<derivative_evaluable>();
     }
@@ -534,6 +583,36 @@ public:
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
         levi::unused(variable);
         return true;
+    }
+
+    /**
+     * @brief Get the derivative of a specified column with respect to a specified variable
+     * @param column The index with respect to the derivative has to be computed.
+     * @param variable The variable with respect to the derivative has to be computed.
+     * @return An expression containing an evaluable of type derivative_evaluable.
+     *
+     * @note This will be the method called by ExpressionComponent. This allow to cache the expressions of derivatives which have been already computed.
+     * Override this method if you want to avoid caching expressions.
+     */
+    virtual levi::ExpressionComponent<derivative_evaluable> getColumnDerivative(Eigen::Index column,
+                                                                                std::shared_ptr<levi::VariableBase> variable) {
+        typename DerivativeMap::iterator element = m_derivativeBuffer.find(variable->variableName());
+
+        levi::ExpressionComponent<derivative_evaluable> emptyExpression;
+
+        if (element == m_derivativeBuffer.end()) {
+            DerivativeMapKey newPair;
+            newPair.first = variable->variableName();
+            newPair.second.resize(this->cols(), emptyExpression);
+            auto insertedElement = m_derivativeBuffer.insert(newPair);
+            element = insertedElement.first;
+        }
+
+        if (!(element->second.at(column).isValidExpression())) {
+            element->second.at(column) = getNewColumnDerivative(column, variable);
+        }
+
+        return element->second.at(column);
     }
 
     Evaluable<Scalar>& operator=(const Evaluable& other) = delete;
