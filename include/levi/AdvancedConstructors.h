@@ -212,6 +212,58 @@ public:
 
 };
 
+template <typename CompositeEvaluable, typename LeftEvaluable, typename RightEvaluable>
+class levi::HorzcatEvaluable : public levi::BinaryOperator<typename CompositeEvaluable::matrix_type, LeftEvaluable, RightEvaluable>
+{
+public:
 
+    HorzcatEvaluable(const levi::ExpressionComponent<LeftEvaluable>& lhs,
+                     const levi::ExpressionComponent<RightEvaluable>& rhs, const std::string& name)
+        : levi::BinaryOperator<typename CompositeEvaluable::matrix_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(),
+                                                                                                        lhs.cols() + rhs.cols(), name)
+    { }
+
+    virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
+        this->m_evaluationBuffer.leftCols(this->m_lhs.cols()) = this->m_lhs.evaluate();
+        this->m_evaluationBuffer.rightCols(this->m_rhs.cols()) = this->m_rhs.evaluate();
+        return this->m_evaluationBuffer;
+    }
+
+    virtual levi::ExpressionComponent<typename CompositeEvaluable::derivative_evaluable>
+    getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
+        if (column < this->m_lhs.cols()) {
+            return this->m_lhs.getColumnDerivative(column, variable);
+        } else {
+            return this->m_rhs.getColumnDerivative(column - this->m_lhs.cols(), variable);
+        }
+    }
+};
+
+template <typename CompositeEvaluable, typename TopEvaluable, typename BottomEvaluable>
+class levi::VertcatEvaluable : public levi::BinaryOperator<typename CompositeEvaluable::matrix_type, TopEvaluable, BottomEvaluable>
+{
+public:
+
+    VertcatEvaluable(const levi::ExpressionComponent<TopEvaluable>& top,
+                     const levi::ExpressionComponent<BottomEvaluable>& bottom, const std::string& name)
+        : levi::BinaryOperator<typename CompositeEvaluable::matrix_type, TopEvaluable, BottomEvaluable>(top, bottom, top.rows() + bottom.rows(),
+                                                                                                        top.cols(), name)
+    { }
+
+    virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
+        this->m_evaluationBuffer.topRows(this->m_lhs.rows()) = this->m_lhs.evaluate();
+        this->m_evaluationBuffer.bottomRows(this->m_rhs.rows()) = this->m_rhs.evaluate();
+        return this->m_evaluationBuffer;
+    }
+
+    virtual levi::ExpressionComponent<typename CompositeEvaluable::derivative_evaluable>
+    getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
+        return levi::ExpressionComponent<
+            typename CompositeEvaluable::derivative_evaluable>::Vertcat(this->m_lhs.getColumnDerivative(column, variable),
+                                                                        this->m_rhs.getColumnDerivative(column, variable),
+                                                                        "d[" + this->name() + "(:," + std::to_string(column) + ")]/d"
+                                                                            + variable->variableName());
+    }
+};
 
 #endif // LEVI_ADVANCEDCONSTRUCTORS_H

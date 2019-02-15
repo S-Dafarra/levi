@@ -446,6 +446,16 @@ public:
      * @return An expression made of the specified columns
      */
     static ExpressionComponent<EvaluableT> ComposeByCols(const std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>>>& cols, std::string name);
+
+    template <typename LeftEvaluable, typename RightEvaluable>
+    static ExpressionComponent<EvaluableT> Horzcat(const ExpressionComponent<LeftEvaluable>& lhs,
+                                                   const ExpressionComponent<RightEvaluable>& rhs,
+                                                   const std::string& name);
+
+    template <typename TopEvaluable, typename BottomEvaluable>
+    static ExpressionComponent<EvaluableT> Vertcat(const ExpressionComponent<TopEvaluable>& top,
+                                                   const ExpressionComponent<BottomEvaluable>& bottom,
+                                                   const std::string& name);
 };
 
 

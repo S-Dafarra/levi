@@ -150,6 +150,12 @@ namespace levi {
     template <typename EvaluableT>
     class VariableFromExpressionEvaluable;
 
+    template <typename CompositeEvaluable, typename leftEvaluable, typename rightEvaluable>
+    class HorzcatEvaluable;
+
+    template <typename CompositeEvaluable, typename TopEvaluable, typename BottomEvaluable>
+    class VertcatEvaluable;
+
     typedef Evaluable<LEVI_DEFAULT_MATRIX_TYPE> DefaultEvaluable;
 
     typedef ExpressionComponent<DefaultEvaluable> Expression;

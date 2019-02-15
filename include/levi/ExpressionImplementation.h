@@ -459,6 +459,30 @@ levi::ExpressionComponent<EvaluableT> levi::ExpressionComponent<EvaluableT>::Com
     return levi::ExpressionComponent<levi::ConstructorByCols<EvaluableT>>(cols, name);
 }
 
+template<class EvaluableT>
+template <typename LeftEvaluable, typename RightEvaluable>
+levi::ExpressionComponent<EvaluableT> levi::ExpressionComponent<EvaluableT>::Horzcat(const levi::ExpressionComponent<LeftEvaluable>& lhs,
+                                                                                     const levi::ExpressionComponent<RightEvaluable>& rhs,
+                                                                                     const std::string &name) {
+    static_assert(typename LeftEvaluable::value_type() == typename RightEvaluable::value_type(), "You are mixing matrices of different types.");
+    static_assert ((LeftEvaluable::rows_at_compile_time == RightEvaluable::rows_at_compile_time) ||
+                      (LeftEvaluable::rows_at_compile_time * RightEvaluable::rows_at_compile_time < 0), "The two evaluables have different number of columns");
+    assert(lhs.rows() == rhs.rows() && "The two evaluables have different number of columns");
+    return levi::ExpressionComponent<levi::HorzcatEvaluable<EvaluableT, LeftEvaluable, RightEvaluable>>(lhs, rhs, name);
+}
+
+template<class EvaluableT>
+template <typename TopEvaluable, typename BottomEvaluable>
+levi::ExpressionComponent<EvaluableT> levi::ExpressionComponent<EvaluableT>::Vertcat(const levi::ExpressionComponent<TopEvaluable>& top,
+                                                                                     const levi::ExpressionComponent<BottomEvaluable>& bottom,
+                                                                                     const std::string& name) {
+    static_assert(typename TopEvaluable::value_type() == typename BottomEvaluable::value_type(), "You are mixing matrices of different types.");
+    static_assert ((TopEvaluable::cols_at_compile_time == BottomEvaluable::cols_at_compile_time) ||
+                      (TopEvaluable::cols_at_compile_time * BottomEvaluable::cols_at_compile_time < 0), "The two evaluables have different number of columns");
+    assert(top.cols() == bottom.cols() && "The two evaluables have different number of columns");
+    return levi::ExpressionComponent<levi::VertcatEvaluable<EvaluableT, TopEvaluable, BottomEvaluable>>(top, bottom, name);
+}
+
 //end of ExpressionComponent implementation
 
 template <typename Matrix, class EvaluableT>
