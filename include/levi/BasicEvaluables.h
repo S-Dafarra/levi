@@ -34,7 +34,7 @@ public:
         : levi::Evaluable<Matrix>(rows, cols, name)
     { }
 
-    virtual const Matrix& evaluate() final {
+    virtual typename levi::eval_return_type<Matrix>::type evaluate() final {
         return this->m_evaluationBuffer;
     }
 
@@ -68,7 +68,7 @@ public:
         : levi::Evaluable<Scalar>(constant)
     { }
 
-    virtual const Scalar& evaluate() final {
+    virtual typename levi::eval_return_type<Scalar>::type evaluate() final {
         return this->m_evaluationBuffer;
     }
 
@@ -123,7 +123,7 @@ public:
         this->resetEvaluationRegister();
     }
 
-    virtual const Matrix& evaluate() final {
+    virtual typename levi::eval_return_type<Matrix>::type evaluate() final {
         return this->m_evaluationBuffer;
     }
 
@@ -203,7 +203,7 @@ public:
         this->resetEvaluationRegister();
     }
 
-    virtual const Matrix& evaluate() final {
+    virtual typename levi::eval_return_type<Matrix>::type evaluate() final {
         return this->m_evaluationBuffer;
     }
 

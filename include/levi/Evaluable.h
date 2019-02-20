@@ -11,6 +11,16 @@
 #include <levi/ForwardDeclarations.h>
 #include <levi/VariableBase.h>
 
+template<class Matrix>
+struct levi::eval_return_type<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> {
+    typedef Matrix type;
+};
+
+template<class Scalar>
+struct levi::eval_return_type<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
+    typedef Scalar type;
+};
+
 /**
  * @brief Evaluable class (for matrix type)
  *
@@ -184,14 +194,14 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    const Matrix& evaluateID(size_t callerID) {
+    virtual typename levi::eval_return_type<Matrix>::type evaluateID(size_t callerID) {
         if (callerID < m_evaluationRegister.size()) {
             if (this->isNew(callerID)) {
                 if (m_alreadyComputed) {
                     m_evaluationRegister[callerID] = true;
                     return m_evaluationBuffer;
                 } else {
-                    const Matrix& output = evaluate();
+                    typename levi::eval_return_type<Matrix>::type output = evaluate();
                     m_evaluationRegister[callerID] = true;
                     m_alreadyComputed = true;
                     return output;
@@ -258,7 +268,7 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    virtual const Matrix& evaluate() = 0;
+    virtual typename levi::eval_return_type<Matrix>::type evaluate() = 0;
 
     /**
      * @brief Get the derivative of a specified column with respect to a specified variable
@@ -504,7 +514,7 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    const Scalar& evaluateID(size_t callerID) {
+    typename levi::eval_return_type<Scalar>::type evaluateID(size_t callerID) {
         if (callerID < m_evaluationRegister.size()) {
             if (this->isNew(callerID)) {
                 if (m_alreadyComputed) {
@@ -567,7 +577,7 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    virtual const Scalar& evaluate() = 0;
+    virtual typename levi::eval_return_type<Scalar>::type evaluate() = 0;
 
     /**
      * @brief Get the derivative of a specified column with respect to a specified variable

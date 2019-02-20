@@ -80,11 +80,22 @@ public:
         , m_row(row)
     { }
 
-    virtual const typename EvaluableT::row_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename EvaluableT::row_type>::type evaluateID(size_t callerID) final {
+        if (callerID < this->m_evaluationRegister.size()) {
+            this->m_evaluationRegister[callerID] = true;
+            this->m_alreadyComputed = true;
+        }
+        return evaluate();
+    }
+
+    virtual typename levi::eval_return_type<typename EvaluableT::row_type>::type evaluate() final {
+        return this->m_expression.evaluate().row(m_row);
+
         this->m_evaluationBuffer = this->m_expression.evaluate().row(m_row);
 
         return this->m_evaluationBuffer;
     }
+
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::row_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
                                                                                                                                             std::shared_ptr<levi::VariableBase> variable) final {
@@ -114,7 +125,7 @@ public:
         assert(row == 0);
     }
 
-    virtual const typename EvaluableT::row_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename EvaluableT::row_type>::type evaluate() final {
         this->m_evaluationBuffer = this->m_expression.evaluate();
 
         return this->m_evaluationBuffer;
@@ -146,11 +157,17 @@ public:
         , m_col(col)
     { }
 
-    virtual const typename EvaluableT::col_type& evaluate() final {
-        this->m_evaluationBuffer = this->m_expression.evaluate().col(m_col);
-
-        return this->m_evaluationBuffer;
+    virtual typename levi::eval_return_type<typename EvaluableT::col_type>::type evaluateID(size_t callerID) final {
+        if (callerID < this->m_evaluationRegister.size()) {
+            this->m_evaluationRegister[callerID] = true;
+            this->m_alreadyComputed = true;
+        }
+        return evaluate();
     }
+
+    virtual typename levi::eval_return_type<typename EvaluableT::col_type>::type evaluate() final {
+        return this->m_expression.evaluate().col(m_col);
+   }
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
                                                                                                                                             std::shared_ptr<levi::VariableBase> variable) final {
@@ -182,7 +199,7 @@ public:
         assert(col == 0);
     }
 
-    virtual const typename EvaluableT::col_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename EvaluableT::col_type>::type evaluate() final {
         this->m_evaluationBuffer = this->m_expression.evaluate();
 
         return this->m_evaluationBuffer;
@@ -215,7 +232,7 @@ public:
         , m_col(col)
     { }
 
-    virtual const typename EvaluableT::value_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename EvaluableT::value_type>::type evaluate() final {
         this->m_evaluationBuffer = this->m_expression.evaluate()(m_row, m_col);
 
         return this->m_evaluationBuffer;
@@ -250,7 +267,7 @@ public:
         assert(row == 0 && col == 0);
     }
 
-    virtual const typename EvaluableT::value_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename EvaluableT::value_type>::type evaluate() final {
         this->m_evaluationBuffer = this->m_expression.evaluate();
         return this->m_evaluationBuffer;
     }
@@ -271,22 +288,25 @@ template <class InputEvaluable, class OutputEvaluable>
 class levi::BlockEvaluable<InputEvaluable, OutputEvaluable, typename std::enable_if<!std::is_arithmetic<typename InputEvaluable::matrix_type>::value>::type>
         : public levi::UnaryOperator<typename OutputEvaluable::matrix_type, InputEvaluable>
 {
-    Eigen::Index m_startRow, m_startCol;
-
-    template<bool value>
-    void eval(levi::bool_value<value>);
-
-    void eval(levi::bool_value<true>) {
-        this->m_evaluationBuffer = (this->m_expression.evaluate()).template block<OutputEvaluable::rows_at_compile_time, OutputEvaluable::cols_at_compile_time>(m_startRow, m_startCol);
-    }
-
-    void eval(levi::bool_value<false>) {
-        this->m_evaluationBuffer = this->m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols());
-    }
-
 public:
 
     typedef typename OutputEvaluable::matrix_type block_type;
+
+private:
+    Eigen::Index m_startRow, m_startCol;
+
+    template<bool value>
+    typename levi::eval_return_type<block_type>::type eval(levi::bool_value<value>);
+
+    typename levi::eval_return_type<block_type>::type eval(levi::bool_value<true>) {
+        return (this->m_expression.evaluate()).template block<OutputEvaluable::rows_at_compile_time, OutputEvaluable::cols_at_compile_time>(m_startRow, m_startCol);
+    }
+
+    typename levi::eval_return_type<block_type>::type eval(levi::bool_value<false>) {
+        return this->m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols());
+    }
+
+public:
 
     BlockEvaluable(const levi::ExpressionComponent<InputEvaluable>& expression, Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
         : levi::UnaryOperator<block_type, InputEvaluable>(expression, numberOfRows, numberOfCols,
@@ -297,9 +317,17 @@ public:
         assert(((startRow + numberOfRows) <= expression.rows()) && ((startCol + numberOfCols) <= expression.cols()));
     }
 
-    virtual const block_type& evaluate() final {
+    virtual typename levi::eval_return_type<block_type>::type evaluateID(size_t callerID) final{
+        if (callerID < this->m_evaluationRegister.size()) {
+            this->m_evaluationRegister[callerID] = true;
+            this->m_alreadyComputed = true;
+        }
+        return evaluate();
+    }
 
-        eval(levi::bool_value<OutputEvaluable::rows_at_compile_time != Eigen::Dynamic && OutputEvaluable::cols_at_compile_time != Eigen::Dynamic>());
+    virtual typename levi::eval_return_type<block_type>::type evaluate() final {
+
+        return eval(levi::bool_value<OutputEvaluable::rows_at_compile_time != Eigen::Dynamic && OutputEvaluable::cols_at_compile_time != Eigen::Dynamic>());
 
         return this->m_evaluationBuffer;
     }
@@ -332,7 +360,7 @@ public:
         assert(startRow == 0 && startCol == 0 && numberOfRows == 1 && numberOfCols == 1);
     }
 
-    virtual const block_type& evaluate() final {
+    virtual typename levi::eval_return_type<block_type>::type evaluate() final {
         this->m_evaluationBuffer = this->m_expression.evaluate();
         return this->m_evaluationBuffer;
     }
@@ -362,7 +390,16 @@ public:
         : levi::UnaryOperator<typename LeftEvaluable::matrix_type, RightEvaluable>(rhs, rhs.rows(), rhs.cols(), rhs.name())
     { }
 
-    virtual const typename LeftEvaluable::matrix_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename LeftEvaluable::matrix_type>::type evaluateID(size_t callerID) {
+        if (callerID < this->m_evaluationRegister.size()) {
+            this->m_evaluationRegister[callerID] = true;
+            this->m_alreadyComputed = true;
+        }
+        return evaluate();
+    }
+
+    virtual typename levi::eval_return_type<typename LeftEvaluable::matrix_type>::type evaluate() final {
+        return this->m_expression.evaluate();
         this->m_evaluationBuffer = this->m_expression.evaluate();
 
         return this->m_evaluationBuffer;

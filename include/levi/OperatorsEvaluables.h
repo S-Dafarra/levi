@@ -143,7 +143,17 @@ public:
         : levi::BinaryOperator<sum_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), lhs.cols(), "(" + lhs.name() + " + " + rhs.name() + ")")
     { }
 
-    virtual const sum_type& evaluate() final {
+    virtual typename levi::eval_return_type<sum_type>::type evaluateID(size_t callerID) final {
+        if (callerID < this->m_evaluationRegister.size()) {
+            this->m_evaluationRegister[callerID] = true;
+            this->m_alreadyComputed = true;
+        }
+        return evaluate();
+    }
+
+    virtual typename levi::eval_return_type<sum_type>::type evaluate() final {
+        return this->m_lhs.evaluate() + this->m_rhs.evaluate();
+
         this->m_evaluationBuffer = this->m_lhs.evaluate() + this->m_rhs.evaluate();
 
         return this->m_evaluationBuffer;
@@ -193,7 +203,16 @@ public:
         : levi::BinaryOperator<sum_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), lhs.cols(), "(" + lhs.name() + " - " + rhs.name() + ")")
     { }
 
-    virtual const sum_type& evaluate() final {
+    virtual typename levi::eval_return_type<sum_type>::type evaluateID(size_t callerID) {
+        if (callerID < this->m_evaluationRegister.size()) {
+            this->m_evaluationRegister[callerID] = true;
+            this->m_alreadyComputed = true;
+        }
+        return evaluate();
+    }
+
+    virtual typename levi::eval_return_type<sum_type>::type evaluate() final {
+        return this->m_lhs.evaluate() - this->m_rhs.evaluate();
         this->m_evaluationBuffer = this->m_lhs.evaluate() - this->m_rhs.evaluate();
 
         return this->m_evaluationBuffer;
@@ -238,7 +257,17 @@ public:
         : levi::UnaryOperator<typename EvaluableT::matrix_type, EvaluableT>(expression, expression.rows(), expression.cols(), "-" + expression.name())
     { }
 
-    virtual const typename EvaluableT::matrix_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename EvaluableT::matrix_type>::type evaluateID(size_t callerID) {
+        if (callerID < this->m_evaluationRegister.size()) {
+            this->m_evaluationRegister[callerID] = true;
+            this->m_alreadyComputed = true;
+        }
+        return evaluate();
+    }
+
+    virtual typename levi::eval_return_type<typename EvaluableT::matrix_type>::type evaluate() final {
+        return -(this->m_expression.evaluate());
+
         this->m_evaluationBuffer = -(this->m_expression.evaluate());
 
         return this->m_evaluationBuffer;
@@ -429,7 +458,7 @@ public:
                                         lhs.name() + " * " + rhs.name())
     { }
 
-    virtual const product_type& evaluate() final {
+    virtual typename levi::eval_return_type<product_type>::type evaluate() final {
 
         eval(levi::bool_value<std::is_arithmetic<product_type>::value>());
 
@@ -472,7 +501,7 @@ public:
         assert(this->m_expression.rows() == 1 && this->m_expression.cols() == 1);
     }
 
-    virtual const typename EvaluableT::value_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename EvaluableT::value_type>::type evaluate() final {
 
         this->m_evaluationBuffer = std::pow(get_value(levi::bool_value<std::is_arithmetic<typename EvaluableT::matrix_type>::value>()), m_exponent);
 
@@ -520,7 +549,7 @@ public:
         assert(rhs.rows() == 1 && rhs.cols() == 1);
     }
 
-    virtual const product_type& evaluate() final {
+    virtual typename levi::eval_return_type<product_type>::type evaluate() final {
 
         this->m_evaluationBuffer = this->m_lhs.evaluate() / get_rhs_value(levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>());
 
@@ -557,7 +586,7 @@ public:
         assert((expression.rows() == 3) && (expression.cols() == 1));
     }
 
-    virtual const Eigen::Matrix<typename EvaluableT::value_type, 3, 3>& evaluate() final {
+    virtual typename levi::eval_return_type<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::type evaluate() final {
         m_vector = this->m_expression.evaluate();
 
         this->m_evaluationBuffer(0,0) = 0.0;
@@ -640,7 +669,17 @@ public:
         : levi::UnaryOperator<typename levi::transpose_type<EvaluableT>::type, EvaluableT>(expression, expression.cols(), expression.rows(), expression.name() + "^T")
     { }
 
-    virtual const typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::matrix_type & evaluate() final {
+    virtual typename levi::eval_return_type<typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::matrix_type>::type evaluateID(size_t callerID) final {
+        if (callerID < this->m_evaluationRegister.size()) {
+            this->m_evaluationRegister[callerID] = true;
+            this->m_alreadyComputed = true;
+        }
+        return evaluate();
+    }
+
+    virtual typename levi::eval_return_type<typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::matrix_type>::type evaluate() final {
+        return this->m_expression.evaluate().transpose();
+
         this->m_evaluationBuffer = this->m_expression.evaluate().transpose();
 
         return this->m_evaluationBuffer;

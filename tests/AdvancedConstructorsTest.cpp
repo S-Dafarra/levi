@@ -40,52 +40,52 @@ int main() {
 
     assert((kSquared.evaluate() - squaredNorm).cwiseAbs().maxCoeff() < 1e-10);
 
-    Expression kSquaredDerivative = kSquared.getColumnDerivative(0, k);
+//    Expression kSquaredDerivative = kSquared.getColumnDerivative(0, k);
 
-    assert((kSquaredDerivative.evaluate() - 2*k_values.transpose()).cwiseAbs().maxCoeff() < 1e-10);
+//    assert((kSquaredDerivative.evaluate() - 2*k_values.transpose()).cwiseAbs().maxCoeff() < 1e-10);
 
-    Expression twiceX;
+//    Expression twiceX;
 
-    twiceX = 2.0 * x;
+//    twiceX = 2.0 * x;
 
-    Variable x2 = twiceX.asVariable();
+//    Variable x2 = twiceX.asVariable();
 
-    Expression test = x2.transpose() * x2;
+//    Expression test = x2.transpose() * x2;
 
-    Expression testDerivative = test.getColumnDerivative(0, x2);
+//    Expression testDerivative = test.getColumnDerivative(0, x2);
 
-    assert(testDerivative.evaluate() == (2.0 * twiceX).evaluate().transpose());
+//    assert(testDerivative.evaluate() == (2.0 * twiceX).evaluate().transpose());
 
-    Expression testDoubleDerivative = testDerivative.getColumnDerivative(0, x);
+//    Expression testDoubleDerivative = testDerivative.getColumnDerivative(0, x);
 
-    assert(testDoubleDerivative.evaluate()(0,0) == 4.0 && testDoubleDerivative.evaluate()(0,1) == 0.0);
+//    assert(testDoubleDerivative.evaluate()(0,0) == 4.0 && testDoubleDerivative.evaluate()(0,1) == 0.0);
 
-    Variable y(3, "y"), w(3, "w");
+//    Variable y(3, "y"), w(3, "w");
 
-    y = Eigen::VectorXd::Random(3,1);
-    w = Eigen::VectorXd::Random(3,1);
+//    y = Eigen::VectorXd::Random(3,1);
+//    w = Eigen::VectorXd::Random(3,1);
 
-    levi::Expression horzcat = levi::Expression::Horzcat(y.skew(), w.skew(), "horzcat");
+//    levi::Expression horzcat = levi::Expression::Horzcat(y.skew(), w.skew(), "horzcat");
 
-    Eigen::MatrixXd composed(3,6);
-    composed.leftCols(3) = y.skew().evaluate();
-    composed.rightCols(3) = w.skew().evaluate();
+//    Eigen::MatrixXd composed(3,6);
+//    composed.leftCols(3) = y.skew().evaluate();
+//    composed.rightCols(3) = w.skew().evaluate();
 
-    assert(composed == horzcat.evaluate());
+//    assert(composed == horzcat.evaluate());
 
-    assert(y.skew().getColumnDerivative(1, y).evaluate() == horzcat.getColumnDerivative(1,y).evaluate());
-    assert(w.skew().getColumnDerivative(1, w).evaluate() == horzcat.getColumnDerivative(4,w).evaluate());
+//    assert(y.skew().getColumnDerivative(1, y).evaluate() == horzcat.getColumnDerivative(1,y).evaluate());
+//    assert(w.skew().getColumnDerivative(1, w).evaluate() == horzcat.getColumnDerivative(4,w).evaluate());
 
-    levi::Expression vertcat = levi::Expression::Vertcat(y.skew(), w.skew(), "horzcat");
+//    levi::Expression vertcat = levi::Expression::Vertcat(y.skew(), w.skew(), "horzcat");
 
-    Eigen::MatrixXd composedVert(6,3);
-    composedVert.topRows(3) = y.skew().evaluate();
-    composedVert.bottomRows(3) = w.skew().evaluate();
+//    Eigen::MatrixXd composedVert(6,3);
+//    composedVert.topRows(3) = y.skew().evaluate();
+//    composedVert.bottomRows(3) = w.skew().evaluate();
 
-    assert(composedVert == vertcat.evaluate());
+//    assert(composedVert == vertcat.evaluate());
 
-    assert(y.skew().getColumnDerivative(1, y).evaluate() == vertcat.getColumnDerivative(1,y).evaluate().topRows(3));
-    assert(w.skew().getColumnDerivative(1, w).evaluate() == vertcat.getColumnDerivative(1,w).evaluate().bottomRows(3));
+//    assert(y.skew().getColumnDerivative(1, y).evaluate() == vertcat.getColumnDerivative(1,y).evaluate().topRows(3));
+//    assert(w.skew().getColumnDerivative(1, w).evaluate() == vertcat.getColumnDerivative(1,w).evaluate().bottomRows(3));
 
 
     return 0;

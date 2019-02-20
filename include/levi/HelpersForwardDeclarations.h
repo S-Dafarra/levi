@@ -129,6 +129,15 @@ namespace levi {
     template<typename EvaluableT>
     struct transpose_type<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
 
+    template<class Matrix, class IsScalar = void>
+    struct eval_return_type;
+
+    template<class Matrix>
+    struct eval_return_type<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
+
+    template<class Scalar>
+    struct eval_return_type<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
+
 }
 
 #endif // LEVI_HELPERSFORWARDDECLARATIONS_H

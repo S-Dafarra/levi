@@ -191,7 +191,7 @@ public:
      *
      * @return A const reference to the evaluation buffer of the pointed evaluable.
      */
-    const typename EvaluableT::matrix_type& evaluate();
+    typename levi::eval_return_type<typename EvaluableT::matrix_type>::type evaluate();
 
     /**
      * @brief Operator +

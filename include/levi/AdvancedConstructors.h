@@ -61,7 +61,7 @@ public:
         return !this->m_evaluationRegister[callerID];
     }
 
-    virtual const typename EvaluableT::matrix_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename EvaluableT::matrix_type>::type evaluate() final {
         for (size_t i = 0; i < m_rows.size(); ++i) {
             this->m_evaluationBuffer.row(i) = m_rows[i].evaluate();
         }
@@ -137,7 +137,7 @@ public:
         return !this->m_evaluationRegister[callerID];
     }
 
-    virtual const typename EvaluableT::matrix_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename EvaluableT::matrix_type>::type evaluate() final {
         for (size_t i = 0; i < m_cols.size(); ++i) {
             this->m_evaluationBuffer.col(i) = m_cols[i].evaluate();
         }
@@ -187,7 +187,7 @@ public:
         return !this->m_evaluationRegister[callerID];
     }
 
-    virtual const typename EvaluableT::col_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename EvaluableT::col_type>::type evaluate() final {
         this->m_evaluationBuffer = m_expression.evaluate();
         return this->m_evaluationBuffer;
     }
@@ -223,7 +223,7 @@ public:
                                                                                                         lhs.cols() + rhs.cols(), name)
     { }
 
-    virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename CompositeEvaluable::matrix_type>::type evaluate() final {
         this->m_evaluationBuffer.leftCols(this->m_lhs.cols()) = this->m_lhs.evaluate();
         this->m_evaluationBuffer.rightCols(this->m_rhs.cols()) = this->m_rhs.evaluate();
         return this->m_evaluationBuffer;
@@ -250,7 +250,7 @@ public:
                                                                                                         top.cols(), name)
     { }
 
-    virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
+    virtual typename levi::eval_return_type<typename CompositeEvaluable::matrix_type>::type evaluate() final {
         this->m_evaluationBuffer.topRows(this->m_lhs.rows()) = this->m_lhs.evaluate();
         this->m_evaluationBuffer.bottomRows(this->m_rhs.rows()) = this->m_rhs.evaluate();
         return this->m_evaluationBuffer;

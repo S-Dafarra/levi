@@ -83,7 +83,7 @@ public:
         this->resetEvaluationRegister();
     }
 
-    virtual const Vector& evaluate() override {
+    virtual typename levi::eval_return_type<Vector>::type evaluate() override {
         return this->m_evaluationBuffer;
     }
 
@@ -156,7 +156,7 @@ public:
         this->resetEvaluationRegister();
     }
 
-    virtual const Scalar& evaluate() override {
+    virtual typename levi::eval_return_type<Scalar>::type evaluate() override {
         return this->m_evaluationBuffer;
     }
 
