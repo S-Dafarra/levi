@@ -108,5 +108,8 @@ int main() {
 
     assert(zSquared.getColumnDerivative(0, z).getColumnDerivative(0, z).evaluate()(0,0) == 2.0);
 
+    FixedSizeExpression<3,3> fixedExpr;
+    fixedExpr = v;
+
     return 0;
 }

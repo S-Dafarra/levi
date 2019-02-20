@@ -11,6 +11,10 @@
 #define LEVI_DEFAULT_MATRIX_TYPE levi::INVALID_TYPE
 #endif
 
+#ifndef LEVI_DEFAULT_MATRIX_FIX_TYPE
+#define LEVI_DEFAULT_MATRIX_FIX_TYPE(rows, cols) INVALID_FIXED_TYPE<rows, cols>
+#endif
+
 #ifndef LEVI_DEFAULT_VECTOR_TYPE
 #define LEVI_DEFAULT_VECTOR_TYPE levi::INVALID_TYPE
 #endif
@@ -21,6 +25,9 @@
 namespace levi {
 
     class INVALID_TYPE;
+
+    template<int rows, int cols>
+    class INVALID_FIXED_TYPE;
 
     template<typename Matrix, class Enabler = void>
     class Evaluable;
@@ -123,14 +130,14 @@ namespace levi {
     template <typename EvaluableT>
     class ElementEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
 
-    template<class EvaluableT, class Enabler = void>
+    template<class InputEvaluable, class OutputEvaluable, class Enabler = void>
     class BlockEvaluable;
 
-    template <typename EvaluableT>
-    class BlockEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
+    template <class InputEvaluable, class OutputEvaluable>
+    class BlockEvaluable<InputEvaluable, OutputEvaluable, typename std::enable_if<!std::is_arithmetic<typename InputEvaluable::matrix_type>::value>::type>;
 
-    template <typename EvaluableT>
-    class BlockEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
+    template <class InputEvaluable, class OutputEvaluable>
+    class BlockEvaluable<InputEvaluable, OutputEvaluable, typename std::enable_if<std::is_arithmetic<typename InputEvaluable::matrix_type>::value>::type>;
 
     template <class LeftEvaluable, class RightEvaluable>
     class CastEvaluable;
@@ -158,23 +165,47 @@ namespace levi {
 
     typedef Evaluable<LEVI_DEFAULT_MATRIX_TYPE> DefaultEvaluable;
 
+    template<int rows, int cols>
+    using DefaultFixedSizeEvaluable = Evaluable<LEVI_DEFAULT_MATRIX_FIX_TYPE(rows, cols)>;
+
     typedef ExpressionComponent<DefaultEvaluable> Expression;
 
     typedef ExpressionComponent<Evaluable<double>> ScalarExpression;
 
+    template<int rows, int cols>
+    using FixedSizeExpression = ExpressionComponent<DefaultFixedSizeEvaluable<rows, cols>>;
+
     typedef ExpressionComponent<Evaluable<LEVI_DEFAULT_VECTOR_TYPE>> ColumnExpression;
+
+    template<int rows, int cols>
+    using FixedSizeColumnExpression = ExpressionComponent<Evaluable<LEVI_DEFAULT_MATRIX_FIX_TYPE(rows, 1)>>;
 
     typedef EvaluableVariable<LEVI_DEFAULT_VECTOR_TYPE> DefaultVariableEvaluable;
 
+    template <int dimension>
+    using DefaultFixedSizeVariableEvaluable = EvaluableVariable<LEVI_DEFAULT_MATRIX_FIX_TYPE(dimension, 1)>;
+
     typedef ExpressionComponent<DefaultVariableEvaluable> Variable;
+
+    template <int dimension>
+    using FixedSizeVariable = ExpressionComponent<DefaultFixedSizeVariableEvaluable<dimension>>;
 
     typedef ExpressionComponent<EvaluableVariable<double>> ScalarVariable;
 
     typedef ExpressionComponent<ConstantEvaluable<LEVI_DEFAULT_MATRIX_TYPE>> Constant;
 
+    template<int rows, int cols>
+    using FixedSizeConstant = ExpressionComponent<ConstantEvaluable<LEVI_DEFAULT_MATRIX_FIX_TYPE(rows, cols)>>;
+
     typedef ExpressionComponent<IdentityEvaluable<LEVI_DEFAULT_MATRIX_TYPE>> Identity;
 
+    template<int rows, int cols>
+    using FixedSizeIdentity = ExpressionComponent<IdentityEvaluable<LEVI_DEFAULT_MATRIX_FIX_TYPE(rows, cols)>>;
+
     typedef ExpressionComponent<NullEvaluable<LEVI_DEFAULT_MATRIX_TYPE>> Null;
+
+    template<int rows, int cols>
+    using FixedSizeNull = ExpressionComponent<NullEvaluable<LEVI_DEFAULT_MATRIX_FIX_TYPE(rows, cols)>>;
 
     typedef ExpressionComponent<ConstantEvaluable<double>> Scalar;
 }

@@ -409,6 +409,17 @@ private:
 
     }
 
+    template<bool value>
+    void eval(levi::bool_value<value>);
+
+    void eval(levi::bool_value<true>) {
+        this->m_evaluationBuffer = this->m_lhs.evaluate() * this->m_rhs.evaluate();
+    }
+
+    void eval(levi::bool_value<false>) {
+        this->m_evaluationBuffer.noalias() = this->m_lhs.evaluate() * this->m_rhs.evaluate();
+    }
+
 public:
 
 
@@ -420,7 +431,7 @@ public:
 
     virtual const product_type& evaluate() final {
 
-        this->m_evaluationBuffer = this->m_lhs.evaluate() * this->m_rhs.evaluate();
+        eval(levi::bool_value<std::is_arithmetic<product_type>::value>());
 
         return this->m_evaluationBuffer;
     }

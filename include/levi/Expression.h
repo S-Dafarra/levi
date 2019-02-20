@@ -363,6 +363,16 @@ public:
     ExpressionComponent<levi::Evaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>> block(Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols) const;
 
     /**
+     * @brief Accessor to element (read only)
+     * @param startRow The starting row to be considered in the block
+     * @param startCol The starting column to be considered in the block
+     * @return An expression pointing to an evaluable taking only the specified block out of the current evaluable.
+     */
+    template<unsigned int numberOfRows, unsigned int numberOfCols>
+    ExpressionComponent<levi::Evaluable<typename levi::fixed_block_return<typename EvaluableT::matrix_type, numberOfRows, numberOfCols>::type>> block(Eigen::Index startRow, Eigen::Index startCol) const;
+
+
+    /**
      * @brief Computes the skew symmetric matrix out of the current evaluable
      * @return An expression pointing to an evaluable which computes the skew symmetric matrix
      * @note This works only with three dimensional vectors.

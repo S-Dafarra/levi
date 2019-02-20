@@ -31,6 +31,22 @@ struct levi::dynamic_block_return<Scalar, typename std::enable_if<std::is_arithm
 };
 
 /**
+ * Helper struct for determining the type resulting from a block extraction. Specialization for a matrix.
+ */
+template<typename Matrix, int rows, int cols>
+struct levi::fixed_block_return<Matrix, rows, cols, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> {
+    typedef Eigen::Matrix<typename Matrix::value_type, rows, cols> type;
+};
+
+/**
+ * Helper struct for determining the type resulting from a block extraction. Specialization for a scalar.
+ */
+template<typename Scalar, int rows, int cols>
+struct levi::fixed_block_return<Scalar, rows, cols, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
+    typedef Scalar type;
+};
+
+/**
  * Helper struct for determining the type resulting from a transposition. Specialization for a matrix.
  */
 template<typename EvaluableT>
@@ -251,19 +267,30 @@ public:
 /**
  * @brief The BlockEvaluable. To retrieve a specified block from an evaluable. Specialization for matrix valued evaluables.
  */
-template <typename EvaluableT>
-class levi::BlockEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
-        : public levi::UnaryOperator<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type, EvaluableT>
+template <class InputEvaluable, class OutputEvaluable>
+class levi::BlockEvaluable<InputEvaluable, OutputEvaluable, typename std::enable_if<!std::is_arithmetic<typename InputEvaluable::matrix_type>::value>::type>
+        : public levi::UnaryOperator<typename OutputEvaluable::matrix_type, InputEvaluable>
 {
     Eigen::Index m_startRow, m_startCol;
 
+    template<bool value>
+    void eval(levi::bool_value<value>);
+
+    void eval(levi::bool_value<true>) {
+        this->m_evaluationBuffer = (this->m_expression.evaluate()).template block<OutputEvaluable::rows_at_compile_time, OutputEvaluable::cols_at_compile_time>(m_startRow, m_startCol);
+    }
+
+    void eval(levi::bool_value<false>) {
+        this->m_evaluationBuffer = this->m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols());
+    }
+
 public:
 
-    typedef typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type block_type;
+    typedef typename OutputEvaluable::matrix_type block_type;
 
-    BlockEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
-        : levi::UnaryOperator<block_type, EvaluableT>(expression, numberOfRows, numberOfCols,
-                                                      "[" + expression.name() + "](" + std::to_string(startRow) + ":" + std::to_string(startRow + numberOfRows) + ", " + std::to_string(startCol) + ":" + std::to_string(startCol + numberOfCols) + ")")
+    BlockEvaluable(const levi::ExpressionComponent<InputEvaluable>& expression, Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
+        : levi::UnaryOperator<block_type, InputEvaluable>(expression, numberOfRows, numberOfCols,
+                                                          "[" + expression.name() + "](" + std::to_string(startRow) + ":" + std::to_string(startRow + numberOfRows) + ", " + std::to_string(startCol) + ":" + std::to_string(startCol + numberOfCols) + ")")
         , m_startRow(startRow)
         , m_startCol(startCol)
     {
@@ -271,7 +298,8 @@ public:
     }
 
     virtual const block_type& evaluate() final {
-        this->m_evaluationBuffer = this->m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols());
+
+        eval(levi::bool_value<OutputEvaluable::rows_at_compile_time != Eigen::Dynamic && OutputEvaluable::cols_at_compile_time != Eigen::Dynamic>());
 
         return this->m_evaluationBuffer;
     }
@@ -289,16 +317,16 @@ public:
 /**
  * @brief The BlockEvaluable. To retrieve a specified block from an evaluable. Specialization for scalar valued evaluables.
  */
-template <typename EvaluableT>
-class levi::BlockEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>
-        : public levi::UnaryOperator<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type, EvaluableT> {
+template <class InputEvaluable, class OutputEvaluable>
+class levi::BlockEvaluable<InputEvaluable, OutputEvaluable, typename std::enable_if<std::is_arithmetic<typename InputEvaluable::matrix_type>::value>::type>
+        : public levi::UnaryOperator<typename OutputEvaluable::matrix_type, InputEvaluable> {
 
 public:
 
-    typedef typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type block_type;
+    typedef typename OutputEvaluable::matrix_type block_type;
 
-    BlockEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
-        : levi::UnaryOperator<block_type, EvaluableT>(expression, expression.name())
+    BlockEvaluable(const levi::ExpressionComponent<InputEvaluable>& expression, Eigen::Index startRow, Eigen::Index startCol, Eigen::Index numberOfRows, Eigen::Index numberOfCols)
+        : levi::UnaryOperator<block_type, InputEvaluable>(expression, expression.name())
     {
         levi::unused(startRow, startCol, numberOfRows, numberOfCols);
         assert(startRow == 0 && startCol == 0 && numberOfRows == 1 && numberOfCols == 1);

@@ -19,6 +19,10 @@
 #define LEVI_DEFAULT_MATRIX_TYPE Eigen::MatrixXd
 #endif
 
+#ifndef LEVI_DEFAULT_MATRIX_FIX_TYPE
+#define LEVI_DEFAULT_MATRIX_FIX_TYPE(rows, cols) Eigen::Matrix<double, rows, cols>
+#endif
+
 #ifndef LEVI_DEFAULT_VECTOR_TYPE
 #define LEVI_DEFAULT_VECTOR_TYPE Eigen::VectorXd
 #endif
@@ -106,6 +110,15 @@ namespace levi {
 
     template<typename Scalar>
     struct dynamic_block_return<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
+
+    template<typename Matrix, int rows, int cols, class Enabler = void>
+    struct fixed_block_return;
+
+    template<typename Matrix, int rows, int cols>
+    struct fixed_block_return<Matrix, rows, cols, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
+
+    template<typename Scalar, int rows, int cols>
+    struct fixed_block_return<Scalar, rows, cols, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
 
     template<typename EvaluableT, class Enabler = void>
     struct transpose_type;

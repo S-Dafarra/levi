@@ -22,6 +22,10 @@ template <typename Matrix>
 class levi::ConstantEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> : public levi::Evaluable<Matrix>{
 public:
 
+    ConstantEvaluable(std::string name)
+        : levi::Evaluable<Matrix>(name)
+    { }
+
     ConstantEvaluable(const Matrix& constant, std::string name)
         : levi::Evaluable<Matrix>(constant, name)
     { }
@@ -95,6 +99,12 @@ template <typename Matrix>
 class levi::NullEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> : public levi::Evaluable<Matrix>{
 public:
 
+    NullEvaluable()
+        : levi::Evaluable<Matrix>("0")
+    {
+        this->m_evaluationBuffer.setZero();
+    }
+
     NullEvaluable(Eigen::Index rows, Eigen::Index cols)
         : levi::Evaluable<Matrix>(rows, cols, "0")
     {
@@ -139,11 +149,9 @@ template <typename Scalar>
 class levi::NullEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public levi::Evaluable<Scalar>{
 public:
 
-    NullEvaluable(const Scalar& constant)
-        : levi::Evaluable<Scalar>(constant)
-    {
-        this->m_evaluationBuffer = 0;
-    }
+    NullEvaluable()
+        : levi::Evaluable<Scalar>(0)
+    { }
 
     virtual const Scalar& evaluate() final {
         return this->m_evaluationBuffer;
@@ -171,6 +179,11 @@ template <typename Matrix>
 class levi::IdentityEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> : public levi::Evaluable<Matrix>{
 public:
 
+    IdentityEvaluable()
+        : levi::Evaluable<Matrix>("I")
+    {
+        this->m_evaluationBuffer.setIdentity();
+    }
 
     IdentityEvaluable(Eigen::Index rows, Eigen::Index cols)
         : levi::Evaluable<Matrix>(rows, cols, "I")

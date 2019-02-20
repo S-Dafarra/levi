@@ -378,7 +378,21 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::dynamic_block_return<ty
     assert(m_evaluable && "Cannot extract a block from this expression");
     assert(((startRow + numberOfRows) <= rows()) && ((startCol + numberOfCols) <= cols()) && "Invalid block settings.");
 
-    levi::ExpressionComponent<levi::BlockEvaluable<EvaluableT>> selectedBlock(*this, startRow, startCol, numberOfRows, numberOfCols);
+    levi::ExpressionComponent<levi::BlockEvaluable<EvaluableT, levi::Evaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>>> selectedBlock(*this, startRow, startCol, numberOfRows, numberOfCols);
+
+    return selectedBlock;
+}
+
+template<class EvaluableT>
+template<unsigned int numberOfRows, unsigned int numberOfCols>
+levi::ExpressionComponent<levi::Evaluable<typename levi::fixed_block_return<typename EvaluableT::matrix_type, numberOfRows, numberOfCols>::type> > levi::ExpressionComponent<EvaluableT>::block(Eigen::Index startRow, Eigen::Index startCol) const
+{
+    assert(m_evaluable && "Cannot extract a block from this expression");
+    assert(((startRow + numberOfRows) <= rows()) && ((startCol + numberOfCols) <= cols()) && "Invalid block settings.");
+
+    typedef typename levi::fixed_block_return<typename EvaluableT::matrix_type, numberOfRows, numberOfCols>::type block_type;
+
+    levi::ExpressionComponent<levi::BlockEvaluable<EvaluableT, levi::Evaluable<block_type>>> selectedBlock(*this, startRow, startCol, numberOfRows, numberOfCols);
 
     return selectedBlock;
 }

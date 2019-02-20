@@ -15,20 +15,20 @@
 int main() {
     using namespace levi;
 
-    Variable quaternion(4, "q");
+    FixedSizeVariable<4> quaternion(4, "q");
 
-    Variable normalizedQuaternion = (quaternion/(quaternion.transpose() * quaternion).pow(0.5)).asVariable();
+    FixedSizeVariable<4> normalizedQuaternion = (quaternion/(quaternion.transpose() * quaternion).pow(0.5)).asVariable();
 
-    Expression skewQuaternion = normalizedQuaternion.block(1,0,3,1).skew();
+    FixedSizeExpression<3,3> skewQuaternion = normalizedQuaternion.block<3,1>(1,0).skew();
 
-    Expression twoSkewQuaternion = 2.0 * skewQuaternion;
+    FixedSizeExpression<3,3> twoSkewQuaternion = 2.0 * skewQuaternion;
 
-    Variable x(3, "x");
+    FixedSizeVariable<3> x(3, "x");
 
-    Expression rotation;
+    FixedSizeExpression<3,3> rotation;
 
     //Rodriguez formula
-    rotation = Identity(3,3) + normalizedQuaternion(0,0) * twoSkewQuaternion + twoSkewQuaternion * skewQuaternion;
+    rotation = FixedSizeIdentity<3,3>() + normalizedQuaternion(0,0) * twoSkewQuaternion + twoSkewQuaternion * skewQuaternion;
 
     std::cerr << rotation.name() << std::endl;
 
