@@ -8,6 +8,15 @@
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
+# Enable C++14
+set(CMAKE_CXX_EXTENSIONS OFF)
+if (MSVC)
+    set(CMAKE_CXX_STANDARD 17) #Workaround to fix Eigen alignement problems when using fixed size matrices
+else()
+    set(CMAKE_CXX_STANDARD 14)
+endif()
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # Turn on testing.
 option(RUN_VALGRIND_TESTS "Run tests with Valgrind" FALSE)
 mark_as_advanced(RUN_VALGRIND_TESTS)
