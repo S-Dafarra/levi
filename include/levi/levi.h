@@ -7,6 +7,14 @@
 #ifndef LEVI_H
 #define LEVI_H
 
+#if defined (_MSC_VER)
+    #ifndef _ENABLE_EXTENDED_ALIGNED_STORAGE
+        #ifndef _DISABLE_EXTENDED_ALIGNED_STORAGE
+            #define _ENABLE_EXTENDED_ALIGNED_STORAGE
+        #endif
+    #endif
+#endif
+
 #include "Evaluable.h"
 #include "Variable.h"
 #include "Expression.h"

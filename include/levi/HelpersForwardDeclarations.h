@@ -20,9 +20,6 @@
 #endif
 
 #ifndef LEVI_DEFAULT_MATRIX_FIX_TYPE
-#if defined (_MSC_VER)
-#define _ENABLE_EXTENDED_ALIGNED_STORAGE
-#endif
 #define LEVI_DEFAULT_MATRIX_FIX_TYPE(rows, cols) Eigen::Matrix<double, rows, cols>
 #endif
 
