@@ -153,6 +153,13 @@ public:
         : levi::Evaluable<Scalar>(0)
     { }
 
+    NullEvaluable(Eigen::Index rows, Eigen::Index cols)
+        : levi::Evaluable<Scalar>(0)
+    {
+        levi::unused(rows, cols);
+        assert(rows == 1 && cols == 1 && "You asked for a null evaluable of type double. It must have only one row and one column.");
+    }
+
     virtual const Scalar& evaluate() final {
         return this->m_evaluationBuffer;
     }

@@ -81,7 +81,7 @@ public:
     { }
 
     virtual const typename EvaluableT::row_type& evaluate() final {
-        this->m_evaluationBuffer = this->m_expression.evaluate().row(m_row);
+        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate().row(m_row));
 
         return this->m_evaluationBuffer;
     }
@@ -147,7 +147,7 @@ public:
     { }
 
     virtual const typename EvaluableT::col_type& evaluate() final {
-        this->m_evaluationBuffer = this->m_expression.evaluate().col(m_col);
+        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate().col(m_col));
 
         return this->m_evaluationBuffer;
     }
@@ -277,11 +277,11 @@ class levi::BlockEvaluable<InputEvaluable, OutputEvaluable, typename std::enable
     void eval(levi::bool_value<value>);
 
     void eval(levi::bool_value<true>) {
-        this->m_evaluationBuffer = (this->m_expression.evaluate()).template block<OutputEvaluable::rows_at_compile_time, OutputEvaluable::cols_at_compile_time>(m_startRow, m_startCol);
+        this->m_evaluationBuffer.lazyAssign((this->m_expression.evaluate()).template block<OutputEvaluable::rows_at_compile_time, OutputEvaluable::cols_at_compile_time>(m_startRow, m_startCol));
     }
 
     void eval(levi::bool_value<false>) {
-        this->m_evaluationBuffer = this->m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols());
+        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols()));
     }
 
 public:
@@ -363,7 +363,7 @@ public:
     { }
 
     virtual const typename LeftEvaluable::matrix_type& evaluate() final {
-        this->m_evaluationBuffer = this->m_expression.evaluate();
+        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate());
 
         return this->m_evaluationBuffer;
     }

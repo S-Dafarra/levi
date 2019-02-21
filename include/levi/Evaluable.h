@@ -87,9 +87,7 @@ protected:
      * @brief Reset the evaluation register to notify of new values
      */
     void resetEvaluationRegister() {
-        for (size_t i = 0; i < m_evaluationRegister.size(); ++i) {
-            m_evaluationRegister[i] = false;
-        }
+        std::fill(m_evaluationRegister.begin(), m_evaluationRegister.end(), false);
         m_alreadyComputed = false;
     }
 
@@ -307,7 +305,13 @@ public:
         }
 
         if (!(element->second.at(column).isValidExpression())) {
-            element->second.at(column) = getNewColumnDerivative(column, variable);
+            if (isDependentFrom(variable)) {
+                element->second.at(column) = getNewColumnDerivative(column, variable);
+            } else {
+                element->second.at(column) = levi::ExpressionComponent<levi::NullEvaluable<typename derivative_evaluable::matrix_type>>(rows(),
+                                                                                                                                        variable->dimension(),
+                                                                                                                                        "d(" + name() + ")/d" + variable->variableName());
+            }
         }
 
         return element->second.at(column);
@@ -396,9 +400,7 @@ protected:
      * @brief Reset the evaluation register to notify of new values
      */
     void resetEvaluationRegister() {
-        for (size_t i = 0; i < m_evaluationRegister.size(); ++i) {
-            m_evaluationRegister[i] = false;
-        }
+        std::fill(m_evaluationRegister.begin(), m_evaluationRegister.end(), false);
         m_alreadyComputed = false;
     }
 
@@ -616,7 +618,13 @@ public:
         }
 
         if (!(element->second.at(column).isValidExpression())) {
-            element->second.at(column) = getNewColumnDerivative(column, variable);
+            if (isDependentFrom(variable)) {
+                element->second.at(column) = getNewColumnDerivative(column, variable);
+            } else {
+                element->second.at(column) = levi::ExpressionComponent<levi::NullEvaluable<typename derivative_evaluable::matrix_type>>(rows(),
+                                                                                                                                        variable->dimension(),
+                                                                                                                                        "d(" + name() + ")/d" + variable->variableName());
+            }
         }
 
         return element->second.at(column);

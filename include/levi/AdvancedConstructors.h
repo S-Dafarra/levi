@@ -171,7 +171,7 @@ class levi::VariableFromExpressionEvaluable : public levi::EvaluableVariable<typ
 
 public:
 
-    VariableFromExpressionEvaluable(const levi::ExpressionComponent<EvaluableT>& expression)
+    VariableFromExpressionEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
         : levi::EvaluableVariable<typename EvaluableT::col_type>(expression.rows(), expression.name())
           , m_expression(expression)
     {

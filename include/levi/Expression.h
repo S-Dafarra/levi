@@ -233,7 +233,7 @@ public:
      *
      * @return An expression which points to an evaluable inverting the sign.
      */
-    ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> operator-();
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> operator-() const;
 
     /**
      * @brief Operator *
@@ -377,7 +377,7 @@ public:
      * @return An expression pointing to an evaluable which computes the skew symmetric matrix
      * @note This works only with three dimensional vectors.
      */
-    ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> skew();
+    ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> skew() const;
 
 
     /**
@@ -386,7 +386,7 @@ public:
      *
      * @note The column derivative needs to call the derivative of every column. This may be expensive.
      */
-    ExpressionComponent<levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>> transpose();
+    ExpressionComponent<levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>> transpose() const;
 
     /**
      * @brief get a variable from the current expression
@@ -394,7 +394,7 @@ public:
      *
      * @note The expression must have a single column.
      */
-    ExpressionComponent<levi::EvaluableVariable<typename EvaluableT::col_type>> asVariable();
+    ExpressionComponent<levi::EvaluableVariable<typename EvaluableT::col_type>> asVariable() const;
 
     /**
      * @brief Retrieve the column derivative with respect to the specified variable
