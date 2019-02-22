@@ -117,6 +117,21 @@ public:
         this->m_evaluationBuffer.setZero();
     }
 
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::row_type>> row(Eigen::Index row) final {
+        levi::unused(row);
+        return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Matrix>::row_type>>(1, this->cols());
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::col_type>> col(Eigen::Index col) final {
+        levi::unused(col);
+        return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Matrix>::col_type>>(this->rows(), 1);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::value_type>> element(Eigen::Index row, Eigen::Index col) {
+        levi::unused(row, col);
+        return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Matrix>::value_type>>();
+    }
+
     virtual void resize(Eigen::Index newRows, Eigen::Index newCols) final {
         this->m_evaluationBuffer.resize(newRows, newCols);
         this->m_evaluationBuffer.setZero();
@@ -202,6 +217,14 @@ public:
         : levi::Evaluable<Matrix>(rows, cols, name)
     {
         this->m_evaluationBuffer.setIdentity();
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::value_type>> element(Eigen::Index row, Eigen::Index col) {
+        if (row != col) {
+            return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Matrix>::value_type>>();
+        } else {
+            return levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Matrix>::value_type>>();
+        }
     }
 
     virtual void resize(Eigen::Index newRows, Eigen::Index newCols) final {

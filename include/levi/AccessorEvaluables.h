@@ -80,6 +80,15 @@ public:
         , m_row(row)
     { }
 
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<typename EvaluableT::row_type>::col_type>> col(Eigen::Index col) final {
+        return this->m_expression(m_row, col);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<typename EvaluableT::row_type>::value_type>> element(Eigen::Index row, Eigen::Index col) {
+        levi::unused(row);
+        return this->m_expression(m_row, col);
+    }
+
     virtual const typename EvaluableT::row_type& evaluate() final {
         this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate().row(m_row));
 
@@ -145,6 +154,15 @@ public:
         : levi::UnaryOperator<typename EvaluableT::col_type, EvaluableT>(expression, expression.rows(), 1, "(" + expression.name() + ")(:," + std::to_string(col) + ")")
         , m_col(col)
     { }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<typename EvaluableT::col_type>::row_type>> row(Eigen::Index row) final {
+        return this->m_expression(row, m_col);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<typename EvaluableT::col_type>::value_type>> element(Eigen::Index row, Eigen::Index col) {
+        levi::unused(col);
+        return this->m_expression(row, m_col);
+    }
 
     virtual const typename EvaluableT::col_type& evaluate() final {
         this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate().col(m_col));
@@ -380,6 +398,18 @@ public:
     CastEvaluable(const levi::ExpressionComponent<RightEvaluable>& rhs)
         : levi::UnaryOperator<typename LeftEvaluable::matrix_type, RightEvaluable>(rhs, rhs.rows(), rhs.cols(), rhs.name())
     { }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename LeftEvaluable::row_type>> row(Eigen::Index row) final {
+        return this->m_expression.row(row);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename LeftEvaluable::col_type>> col(Eigen::Index col) final {
+        return this->m_expression.col(col);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename LeftEvaluable::value_type>> element(Eigen::Index row, Eigen::Index col) {
+        return this->m_expression(row, col);
+    }
 
     virtual const typename LeftEvaluable::matrix_type& evaluate() final {
         eval(levi::bool_value<std::is_arithmetic<typename LeftEvaluable::matrix_type>::value>(), levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>());

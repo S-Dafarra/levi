@@ -65,6 +65,10 @@ public:
         return m_rows[row];
     }
 
+    virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        return m_rows[row](0, col);
+    }
+
     virtual const typename EvaluableT::matrix_type& evaluate() final {
         for (size_t i = 0; i < m_rows.size(); ++i) {
             this->m_evaluationBuffer.row(i) = m_rows[i].evaluate();
@@ -129,6 +133,10 @@ public:
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>> col(Eigen::Index col) final {
         return m_cols[col];
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        return m_cols[col](row, 0);
     }
 
     virtual bool isNew(size_t callerID) final{
@@ -231,6 +239,29 @@ public:
                                                                                                         lhs.cols() + rhs.cols(), name)
     { }
 
+    virtual levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::row_type>> row(Eigen::Index row) final {
+        return levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::row_type>>::Horzcat(this->m_lhs.row(row),
+                                                                                                          this->m_rhs.row(row),
+                                                                                                          "[" + this->name() + "](" +
+                                                                                                              std::to_string(row) + ",:)");
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::col_type>> col(Eigen::Index col) final {
+        if (col < this->m_lhs.cols()) {
+            return this->m_lhs.col(col);
+        } else {
+            return this->m_rhs.col(col - this->m_lhs.cols());
+        }
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        if (col < this->m_lhs.cols()) {
+            return this->m_lhs(row, col);
+        } else {
+            return this->m_rhs(row, col - this->m_lhs.cols());
+        }
+    }
+
     virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
         this->m_evaluationBuffer.leftCols(this->m_lhs.cols()) = this->m_lhs.evaluate();
         this->m_evaluationBuffer.rightCols(this->m_rhs.cols()) = this->m_rhs.evaluate();
@@ -257,6 +288,30 @@ public:
         : levi::BinaryOperator<typename CompositeEvaluable::matrix_type, TopEvaluable, BottomEvaluable>(top, bottom, top.rows() + bottom.rows(),
                                                                                                         top.cols(), name)
     { }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::row_type>> row(Eigen::Index row) final {
+
+        if (row < this->m_lhs.rows()) {
+            return this->m_lhs.row(row);
+        } else {
+            return this->m_rhs.row(row - this->m_lhs.rows());
+        }
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::col_type>> col(Eigen::Index col) final {
+        return levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::col_type>>::Vertcat(this->m_lhs.col(col),
+                                                                                                          this->m_rhs.col(col),
+                                                                                                          "[" + this->name() + "](:," +
+                                                                                                              std::to_string(col) + ")");
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        if (row < this->m_lhs.rows()) {
+            return this->m_lhs(row, col);
+        } else {
+            return this->m_rhs(row - this->m_lhs.rows(), col);
+        }
+    }
 
     virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
         this->m_evaluationBuffer.topRows(this->m_lhs.rows()) = this->m_lhs.evaluate();

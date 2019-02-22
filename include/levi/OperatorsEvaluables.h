@@ -87,7 +87,7 @@ struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, l
  */
 template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
 struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
-        typename std::enable_if<lhsRows == 1 && lhsCols == 1>::type> {
+        typename std::enable_if<lhsRows == 1 && lhsCols == 1 && (rhsRows != 1 || rhsCols != 1)>::type> {
     typedef Eigen::Matrix<typename levi::scalar_product_return<Scalar_lhs, Scalar_rhs>::type, rhsRows, rhsCols> type;
 };
 
@@ -98,8 +98,18 @@ struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, l
  */
 template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
 struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
-        typename std::enable_if<rhsRows == 1 && rhsCols == 1>::type> {
+        typename std::enable_if<rhsRows == 1 && rhsCols == 1 && (lhsRows != 1 || lhsCols != 1)>::type> {
     typedef Eigen::Matrix<typename levi::scalar_product_return<Scalar_lhs, Scalar_rhs>::type, lhsRows, lhsCols> type;
+};
+
+/**
+ * Helper struct for determining the type resulting from a multiplication of two matrices. Specialization in the case both the rhs and the lhs have exactly one row and one column.
+ *
+ */
+template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
+struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
+                                   typename std::enable_if<rhsRows == 1 && rhsCols == 1 && lhsRows == 1 && rhsRows == 1>::type> {
+    typedef Eigen::Matrix<typename levi::scalar_product_return<Scalar_lhs, Scalar_rhs>::type, 1, 1> type;
 };
 
 /**
@@ -153,6 +163,18 @@ public:
     SumEvaluable(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs)
         : levi::BinaryOperator<sum_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), lhs.cols(), "(" + lhs.name() + " + " + rhs.name() + ")")
     { }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<sum_type>::row_type>> row(Eigen::Index row) final {
+        return this->m_lhs.row(row) + this->m_rhs.row(row);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<sum_type>::col_type>> col(Eigen::Index col) final {
+        return this->m_lhs.col(col) + this->m_rhs.col(col);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<sum_type>::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        return this->m_lhs(row, col) + this->m_rhs(row, col);
+    }
 
     virtual const sum_type& evaluate() final {
 
@@ -222,6 +244,18 @@ public:
         return this->m_evaluationBuffer;
     }
 
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<sum_type>::row_type>> row(Eigen::Index row) final {
+        return this->m_lhs.row(row) - this->m_rhs.row(row);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<sum_type>::col_type>> col(Eigen::Index col) final {
+        return this->m_lhs.col(col) - this->m_rhs.col(col);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<sum_type>::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        return this->m_lhs(row, col) - this->m_rhs(row, col);
+    }
+
     virtual levi::ExpressionComponent<typename levi::Evaluable<sum_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
                                                                                                                        std::shared_ptr<levi::VariableBase> variable) final {
         levi::ExpressionComponent<typename levi::Evaluable<sum_type>::derivative_evaluable> sumDerivative;
@@ -271,6 +305,18 @@ public:
     SignInvertedEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
         : levi::UnaryOperator<typename EvaluableT::matrix_type, EvaluableT>(expression, expression.rows(), expression.cols(), "-" + expression.name())
     { }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>> row(Eigen::Index row) final {
+        return -this->m_expression.row(row);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>> col(Eigen::Index col) final {
+        return -this->m_expression.col(col);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        return -this->m_expression(row, col);
+    }
 
     virtual const typename EvaluableT::matrix_type& evaluate() final {
         eval(levi::bool_value<std::is_arithmetic<typename EvaluableT::matrix_type>::value>());

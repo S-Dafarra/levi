@@ -440,6 +440,10 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::dynamic_block_return<ty
     assert(m_evaluable && "Cannot extract a block from this expression");
     assert(((startRow + numberOfRows) <= rows()) && ((startCol + numberOfCols) <= cols()) && "Invalid block settings.");
 
+    if (m_isNull) {
+        return levi::ExpressionComponent<levi::NullEvaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>>(numberOfRows, numberOfCols);
+    }
+
     return levi::ExpressionComponent<levi::BlockEvaluable<EvaluableT, levi::Evaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>>>(*this, startRow, startCol, numberOfRows, numberOfCols);
 }
 
@@ -451,6 +455,11 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::fixed_block_return<type
     assert(((startRow + numberOfRows) <= rows()) && ((startCol + numberOfCols) <= cols()) && "Invalid block settings.");
 
     typedef typename levi::fixed_block_return<typename EvaluableT::matrix_type, numberOfRows, numberOfCols>::type block_type;
+
+    if (m_isNull) {
+        return levi::ExpressionComponent<levi::NullEvaluable<block_type>>();
+    }
+
 
     return levi::ExpressionComponent<levi::BlockEvaluable<EvaluableT, levi::Evaluable<block_type>>> (*this, startRow, startCol, numberOfRows, numberOfCols);
 }
