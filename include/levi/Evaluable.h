@@ -177,6 +177,21 @@ public:
         return m_name;
     }
 
+    virtual levi::ExpressionComponent<levi::Evaluable<row_type>> row(Eigen::Index row) {
+        levi::unused(row);
+        return levi::ExpressionComponent<levi::Evaluable<row_type>>();
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<col_type>> col(Eigen::Index col) {
+        levi::unused(col);
+        return levi::ExpressionComponent<levi::Evaluable<col_type>>();
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<value_type>> element(Eigen::Index row, Eigen::Index col) {
+        levi::unused(row, col);
+        return levi::ExpressionComponent<levi::Evaluable<value_type>>();
+    }
+
     /**
      * @brief Evaluate the evaluable keeping track of the caller
      *
@@ -499,6 +514,21 @@ public:
      */
     std::string name() const {
         return m_name;
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<row_type>> row(Eigen::Index row) {
+        levi::unused(row);
+        return levi::ExpressionComponent<levi::Evaluable<row_type>>();
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<col_type>> col(Eigen::Index col) {
+        levi::unused(col);
+        return levi::ExpressionComponent<levi::Evaluable<col_type>>();
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<value_type>> element(Eigen::Index row, Eigen::Index col) {
+        levi::unused(row, col);
+        return levi::ExpressionComponent<levi::Evaluable<value_type>>();
     }
 
     /**

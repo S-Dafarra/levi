@@ -100,6 +100,23 @@ class levi::ExpressionComponent {
     template<typename OtherEvaluable>
     void casted_assignement(levi::bool_value<false>, const levi::ExpressionComponent<OtherEvaluable>& other);
 
+    /**
+     * Helper class to check if it is suitable to return *this
+     */
+    template<bool isSuitable, typename EvaluableOut>
+    levi::ExpressionComponent<EvaluableOut> return_this(levi::bool_value<isSuitable>) const;
+
+    template<typename EvaluableOut>
+    levi::ExpressionComponent<EvaluableOut> return_this(levi::bool_value<true>) const;
+
+    template<typename EvaluableOut>
+    levi::ExpressionComponent<EvaluableOut> return_this(levi::bool_value<false>) const;
+
+    /**
+     * @brief Check if the current evaluable is null
+     */
+    bool m_isNull;
+
 public:
 
     /**

@@ -111,5 +111,8 @@ int main() {
     FixedSizeExpression<3,3> fixedExpr;
     fixedExpr = v;
 
+    Null zero(3,3);
+    Expression testZero = zero;
+
     return 0;
 }

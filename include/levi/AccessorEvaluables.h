@@ -356,6 +356,25 @@ public:
 template <class LeftEvaluable, class RightEvaluable>
 class levi::CastEvaluable : public levi::UnaryOperator<typename LeftEvaluable::matrix_type, RightEvaluable> {
 
+    template <bool leftIsScalar, bool rightIsScalar>
+    void eval(levi::bool_value<leftIsScalar>, levi::bool_value<rightIsScalar>());
+
+    void eval(levi::bool_value<true>, levi::bool_value<true>) {
+        this->m_evaluationBuffer = this->m_expression.evaluate();
+    }
+
+    void eval(levi::bool_value<true>, levi::bool_value<false>) {
+        this->m_evaluationBuffer = this->m_expression.evaluate()(0,0);
+    }
+
+    void eval(levi::bool_value<false>, levi::bool_value<true>) {
+        this->m_evaluationBuffer(0,0) = this->m_expression.evaluate();
+    }
+
+    void eval(levi::bool_value<false>, levi::bool_value<false>) {
+        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate());
+    }
+
 public:
 
     CastEvaluable(const levi::ExpressionComponent<RightEvaluable>& rhs)
@@ -363,8 +382,7 @@ public:
     { }
 
     virtual const typename LeftEvaluable::matrix_type& evaluate() final {
-        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate());
-
+        eval(levi::bool_value<std::is_arithmetic<typename LeftEvaluable::matrix_type>::value>(), levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>());
         return this->m_evaluationBuffer;
     }
 
