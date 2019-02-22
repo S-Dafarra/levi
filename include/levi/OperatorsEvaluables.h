@@ -739,33 +739,33 @@ public:
         Eigen::Matrix<typename EvaluableT::value_type, 3, 3> derivativeBuffer;
 
         derivativeBuffer.setZero();
-        derivativeBuffer(1,2) = 1;
-        derivativeBuffer(2,1) = -1;
+        derivativeBuffer(1,2) = 1.0;
+        derivativeBuffer(2,1) = -1.0;
         m_col0 = derivativeBuffer;
 
         derivativeBuffer.setZero();
-        derivativeBuffer(0,2) = -1;
-        derivativeBuffer(2,0) = 1;
+        derivativeBuffer(0,2) = -1.0;
+        derivativeBuffer(2,0) = 1.0;
         m_col1 = derivativeBuffer;
 
         derivativeBuffer.setZero();
-        derivativeBuffer(0,1) = 1;
-        derivativeBuffer(1,0) = -1;
+        derivativeBuffer(0,1) = 1.0;
+        derivativeBuffer(1,0) = -1.0;
         m_col2 = derivativeBuffer;
 
     }
 
-//    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::row_type>> row(Eigen::Index row) {
-//        return m_col0.row(row) * this->m_expression(0,0) + m_col1.row(row) * this->m_expression(1,0) + m_col2.row(row) * this->m_expression(2,0);
-//    }
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::row_type>> row(Eigen::Index row) {
+        return -m_col0.row(row) * this->m_expression(0,0) - m_col1.row(row) * this->m_expression(1,0) - m_col2.row(row) * this->m_expression(2,0);
+    }
 
-//    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::col_type>> col(Eigen::Index col) {
-//        return m_col0.col(col) * this->m_expression(0,0) + m_col1.col(col) * this->m_expression(1,0) + m_col2.col(col) * this->m_expression(2,0);
-//    }
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::col_type>> col(Eigen::Index col) {
+        return -m_col0.col(col) * this->m_expression(0,0) - m_col1.col(col) * this->m_expression(1,0) - m_col2.col(col) * this->m_expression(2,0);
+    }
 
-//    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::value_type>> element(Eigen::Index row, Eigen::Index col) {
-//        return m_col0(row,col) * this->m_expression(0,0) + m_col1(row,col) * this->m_expression(1,0) + m_col2(row,col) * this->m_expression(2,0);
-//    }
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::value_type>> element(Eigen::Index row, Eigen::Index col) {
+        return -m_col0(row,col) * this->m_expression(0,0) - m_col1(row,col) * this->m_expression(1,0) - m_col2(row,col) * this->m_expression(2,0);
+    }
 
     virtual const Eigen::Matrix<typename EvaluableT::value_type, 3, 3>& evaluate() final {
         m_vector = this->m_expression.evaluate();
@@ -819,6 +819,20 @@ public:
     TransposeEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
         : levi::UnaryOperator<typename levi::transpose_type<EvaluableT>::type, EvaluableT>(expression, expression.cols(), expression.rows(), expression.name() + "^T")
     { }
+
+    typedef levi::Evaluable<typename levi::transpose_type<EvaluableT>::type> ThisEvaluable;
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename ThisEvaluable::row_type>> row(Eigen::Index row) final {
+        return this->m_expression.col(row).transpose();
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename ThisEvaluable::col_type>> col(Eigen::Index col) final {
+        return this->m_expression.row(col).transpose();
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename ThisEvaluable::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        return this->m_expression(col, row);
+    }
 
     virtual const typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::matrix_type & evaluate() final {
         this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate().transpose());

@@ -315,6 +315,18 @@ public:
         assert(((startRow + numberOfRows) <= expression.rows()) && ((startCol + numberOfCols) <= expression.cols()));
     }
 
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<block_type>::row_type>> row(Eigen::Index row) final {
+        return this->m_expression.row(m_startRow + row).block(0, m_startCol, 1, this->cols());
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<block_type>::col_type>> col(Eigen::Index col) final {
+        return this->m_expression.col(m_startCol + col).block(m_startRow, 0, this->rows(), 1);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<block_type>::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        return this->m_expression(m_startRow + row, m_startCol + col);
+    }
+
     virtual const block_type& evaluate() final {
 
         eval(levi::bool_value<OutputEvaluable::rows_at_compile_time != Eigen::Dynamic && OutputEvaluable::cols_at_compile_time != Eigen::Dynamic>());
