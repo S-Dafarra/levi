@@ -189,6 +189,14 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
     assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
 
+    if (m_isNull) {
+        return rhs;
+    }
+
+    if (rhs.m_isNull) {
+        return *this;
+    }
+
     return levi::ExpressionComponent<levi::SumEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
 }
 
@@ -208,6 +216,14 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
     assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
 
+    if (m_isNull) {
+        return -rhs;
+    }
+
+    if (rhs.m_isNull) {
+        return *this;
+    }
+
     return levi::ExpressionComponent<levi::SubtractionEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
 }
 
@@ -225,6 +241,10 @@ levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> lev
     assert(m_evaluable && "This expression is empty.");
     levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> newExpression;
 
+    if (m_isNull) {
+        return *this;
+    }
+
     newExpression = levi::ExpressionComponent<levi::SignInvertedEvaluable<EvaluableT>>(*this, 0);
 
     return newExpression;
@@ -236,6 +256,11 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
     assert((cols() == 1 && rows() == 1) || (rhs.cols() == 1 && rhs.rows() == 1) || (cols() == rhs.rows()) && "Dimension mismatch for product.");
     assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
+
+    if (m_isNull || rhs.m_isNull) {
+        return levi::ExpressionComponent<levi::NullEvaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>>((rows() == 1 && cols() == 1 && rhs.rows() != 1)? rhs.rows() : rows(),
+                                                                                                                                                                                (rhs.rows() == 1 && rhs.cols() == 1 && cols() != 1)? cols() : rhs.cols());
+    }
 
 
     return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);

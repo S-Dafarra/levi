@@ -61,6 +61,10 @@ public:
         return !this->m_evaluationRegister[callerID];
     }
 
+    virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>> row(Eigen::Index row) final {
+        return m_rows[row];
+    }
+
     virtual const typename EvaluableT::matrix_type& evaluate() final {
         for (size_t i = 0; i < m_rows.size(); ++i) {
             this->m_evaluationBuffer.row(i) = m_rows[i].evaluate();
@@ -121,6 +125,10 @@ public:
         }
 
         this->resize(nRows, m_cols.size());
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>> col(Eigen::Index col) final {
+        return m_cols[col];
     }
 
     virtual bool isNew(size_t callerID) final{
