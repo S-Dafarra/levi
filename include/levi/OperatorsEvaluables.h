@@ -350,6 +350,26 @@ private:
 
     typedef levi::ExpressionComponent<typename levi::Evaluable<product_type>::derivative_evaluable> derivative_expression;
 
+    template<typename Matrix>
+    inline const Matrix& cast_unit_matrix(levi::bool_value<false>, const Matrix& input) {
+        return input;
+    }
+
+    template<typename Matrix>
+    inline Matrix& cast_unit_matrix(levi::bool_value<false>, Matrix& input) {
+        return input;
+    }
+
+    template<typename Scalar>
+    inline const Scalar& cast_unit_matrix(levi::bool_value<true>, const Eigen::Matrix<Scalar, 1,1>& input) {
+        return input(0,0);
+    }
+
+    template<typename Scalar>
+    inline Scalar& cast_unit_matrix(levi::bool_value<true>, Eigen::Matrix<Scalar, 1,1>& input) {
+        return input(0,0);
+    }
+
     template<bool lhsIsScalar, bool rhsIsScalar>
     derivative_expression get_derivative(levi::bool_value<lhsIsScalar>, levi::bool_value<rhsIsScalar>, Eigen::Index column, std::shared_ptr<levi::VariableBase> variable);
 
@@ -489,16 +509,66 @@ private:
 
     }
 
-    template<bool value>
-    void eval(levi::bool_value<value>);
-
-    void eval(levi::bool_value<true>) {
-        this->m_evaluationBuffer = this->m_lhs.evaluate() * this->m_rhs.evaluate();
+    inline void eval(levi::bool_value<true>) {
+        cast_unit_matrix(levi::bool_value<!std::is_arithmetic<product_type>::value>(), this->m_evaluationBuffer) = cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename LeftEvaluable::matrix_type>::value>(), this->m_lhs.evaluate()) *
+            cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename RightEvaluable::matrix_type>::value>(), this->m_rhs.evaluate());
     }
 
-    void eval(levi::bool_value<false>) {
-        this->m_evaluationBuffer.lazyAssign(this->m_lhs.evaluate() * this->m_rhs.evaluate());
+    inline void eval(levi::bool_value<false>) {
+        this->m_evaluationBuffer.lazyAssign(cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename LeftEvaluable::matrix_type>::value && LeftEvaluable::rows_at_compile_time == 1 && LeftEvaluable::cols_at_compile_time == 1>(),this->m_lhs.evaluate()) *
+                                            cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename RightEvaluable::matrix_type>::value && RightEvaluable::rows_at_compile_time == 1 && RightEvaluable::cols_at_compile_time == 1>(),this->m_rhs.evaluate()));
     }
+
+    inline levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::row_type>> getRow(levi::bool_value<true>, Eigen::Index row) {
+        return this->m_lhs * this->m_rhs.row(row);
+    }
+
+    inline levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::row_type>> getRow(levi::bool_value<false>, Eigen::Index row) {
+        return this->m_lhs.row(row) * this->m_rhs;
+    }
+
+    inline levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::col_type>> getCol(levi::bool_value<true>, Eigen::Index col) {
+        return this->m_lhs.col(col) * this->m_rhs;
+    }
+
+    inline levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::col_type>> getCol(levi::bool_value<false>, Eigen::Index col) {
+        return this->m_lhs * this->m_rhs.col(col);
+    }
+
+    //Both operands are matrices
+    inline levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::value_type>> getElement(levi::bool_value<false>,
+                                                                                                                     levi::bool_value<false>,
+                                                                                                                     Eigen::Index row,
+                                                                                                                     Eigen::Index col) {
+        return this->m_lhs.row(row) * this->m_rhs.col(col);
+    }
+
+    //Left operand is either a scalar or a unit matrix
+    inline levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::value_type>> getElement(levi::bool_value<true>,
+                                                                                                                     levi::bool_value<false>,
+                                                                                                                     Eigen::Index row,
+                                                                                                                     Eigen::Index col) {
+        return this->m_lhs * this->m_rhs(row, col);
+    }
+
+    //Left operand is either a scalar or a unit matrix
+    inline levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::value_type>> getElement(levi::bool_value<false>,
+                                                                                                                     levi::bool_value<true>,
+                                                                                                                     Eigen::Index row,
+                                                                                                                     Eigen::Index col) {
+        return this->m_lhs(row, col) * this->m_rhs;
+    }
+
+    //Left operand is either a scalar or a unit matrix
+    inline levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::value_type>> getElement(levi::bool_value<true>,
+                                                                                                                     levi::bool_value<true>,
+                                                                                                                     Eigen::Index row,
+                                                                                                                     Eigen::Index col) {
+        levi::unused(row, col);
+        return this->m_lhs * this->m_rhs;
+    }
+
+
 
 public:
 
@@ -509,9 +579,25 @@ public:
                                         lhs.name() + " * " + rhs.name())
     { }
 
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::row_type>> row(Eigen::Index row) final {
+        return getRow(levi::bool_value<std::is_arithmetic<typename LeftEvaluable::matrix_type>::value || (LeftEvaluable::rows_at_compile_time == 1 && LeftEvaluable::cols_at_compile_time == 1)>(), row);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::col_type>> col(Eigen::Index col) final {
+        return getCol(levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value || (RightEvaluable::rows_at_compile_time == 1 && RightEvaluable::cols_at_compile_time == 1)>(), col);
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        return getElement(levi::bool_value<std::is_arithmetic<typename LeftEvaluable::matrix_type>::value || (LeftEvaluable::rows_at_compile_time == 1 && LeftEvaluable::cols_at_compile_time == 1)>(),
+                          levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value || (RightEvaluable::rows_at_compile_time == 1 && RightEvaluable::cols_at_compile_time == 1)>(),
+                          row, col);
+    }
+
     virtual const product_type& evaluate() final {
 
-        eval(levi::bool_value<std::is_arithmetic<product_type>::value>());
+        eval(levi::bool_value<std::is_arithmetic<product_type>::value ||
+                              (LeftEvaluable::rows_at_compile_time == 1 && LeftEvaluable::cols_at_compile_time == 1
+              && RightEvaluable::rows_at_compile_time == 1 && RightEvaluable::cols_at_compile_time == 1)>());
 
         return this->m_evaluationBuffer;
     }
@@ -600,6 +686,18 @@ public:
         assert(rhs.rows() == 1 && rhs.cols() == 1);
     }
 
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::row_type>> row(Eigen::Index row) final {
+        return this->m_lhs.row(row) / this->m_rhs;
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::col_type>> col(Eigen::Index col) final {
+        return this->m_lhs.col(col) / this->m_rhs;
+    }
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        return this->m_lhs(row, col) / this->m_rhs;
+    }
+
     virtual const product_type& evaluate() final {
 
         this->m_evaluationBuffer = this->m_lhs.evaluate() / get_rhs_value(levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>());
@@ -627,15 +725,47 @@ template <typename EvaluableT>
 class levi::SkewEvaluable : public levi::UnaryOperator<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>, EvaluableT> {
 
     Eigen::Matrix<typename EvaluableT::value_type, 3, 1> m_vector;
-    Eigen::Matrix<typename EvaluableT::value_type, 3, 3> m_derivativeBuffer;
+    levi::ExpressionComponent<levi::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> m_col0, m_col1, m_col2;
 
 public:
 
     SkewEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
         : levi::UnaryOperator<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>, EvaluableT>(expression, "skew(" + expression.name() + ")")
+          , m_col0("LeviCivita_ij0")
+          , m_col1("LeviCivita_ij1")
+          , m_col2("LeviCivita_ij2")
     {
         assert((expression.rows() == 3) && (expression.cols() == 1));
+        Eigen::Matrix<typename EvaluableT::value_type, 3, 3> derivativeBuffer;
+
+        derivativeBuffer.setZero();
+        derivativeBuffer(1,2) = 1;
+        derivativeBuffer(2,1) = -1;
+        m_col0 = derivativeBuffer;
+
+        derivativeBuffer.setZero();
+        derivativeBuffer(0,2) = -1;
+        derivativeBuffer(2,0) = 1;
+        m_col1 = derivativeBuffer;
+
+        derivativeBuffer.setZero();
+        derivativeBuffer(0,1) = 1;
+        derivativeBuffer(1,0) = -1;
+        m_col2 = derivativeBuffer;
+
     }
+
+//    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::row_type>> row(Eigen::Index row) {
+//        return m_col0.row(row) * this->m_expression(0,0) + m_col1.row(row) * this->m_expression(1,0) + m_col2.row(row) * this->m_expression(2,0);
+//    }
+
+//    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::col_type>> col(Eigen::Index col) {
+//        return m_col0.col(col) * this->m_expression(0,0) + m_col1.col(col) * this->m_expression(1,0) + m_col2.col(col) * this->m_expression(2,0);
+//    }
+
+//    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::value_type>> element(Eigen::Index row, Eigen::Index col) {
+//        return m_col0(row,col) * this->m_expression(0,0) + m_col1(row,col) * this->m_expression(1,0) + m_col2(row,col) * this->m_expression(2,0);
+//    }
 
     virtual const Eigen::Matrix<typename EvaluableT::value_type, 3, 3>& evaluate() final {
         m_vector = this->m_expression.evaluate();
@@ -657,54 +787,24 @@ public:
                                                                                                                                                                    std::shared_ptr<levi::VariableBase> variable) final {
 
         assert( column < 3);
-        levi::ExpressionComponent<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::derivative_evaluable> derivative;
 
         if (!this->m_expression.isDependentFrom(variable)) {
-            levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::derivative_evaluable::matrix_type>> nullDerivative(this->rows(), this->cols(), "d" + this->name() + "/d" + variable->variableName());
-            derivative = nullDerivative;
-            return derivative;
+            return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::derivative_evaluable::matrix_type>>(this->rows(), this->cols(), "d" + this->name() + "/d" + variable->variableName());
         }
 
         if (column == 0) {
-
-            m_derivativeBuffer.setZero();
-            m_derivativeBuffer(1,2) = 1;
-            m_derivativeBuffer(2,1) = -1;
-
-            levi::ExpressionComponent<levi::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col1(m_derivativeBuffer, "LeviCivita_ij0");
-
-            derivative = col1 * this->m_expression.getColumnDerivative(0, variable);
-            return derivative;
-
+            return m_col0 * this->m_expression.getColumnDerivative(0, variable);
         }
 
         if (column == 1) {
-
-            m_derivativeBuffer.setZero();
-            m_derivativeBuffer(0,2) = -1;
-            m_derivativeBuffer(2,0) = 1;
-
-            levi::ExpressionComponent<levi::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col2(m_derivativeBuffer, "LeviCivita_ij1");
-
-            derivative = col2 * this->m_expression.getColumnDerivative(0, variable);
-            return derivative;
-
+            return m_col1 * this->m_expression.getColumnDerivative(0, variable);
         }
 
         if (column == 2) {
-
-            m_derivativeBuffer.setZero();
-            m_derivativeBuffer(0,1) = 1;
-            m_derivativeBuffer(1,0) = -1;
-
-            levi::ExpressionComponent<levi::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> col3(m_derivativeBuffer, "LeviCivita_ij2");
-
-            derivative = col3 * this->m_expression.getColumnDerivative(0, variable);
-            return derivative;
-
+            return m_col2 * this->m_expression.getColumnDerivative(0, variable);
         }
 
-        return derivative;
+        return levi::ExpressionComponent<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::derivative_evaluable>();
     }
 
 };
