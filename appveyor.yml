@@ -46,7 +46,7 @@ build_script:
   - ps: cd c:\dev\levi
   - ps: md build
   - ps: cd build
-  - ps: cmake -G"$env:CMAKE_GENERATOR" -DEIGEN3_INCLUDE_DIR="C:/Program Files (x86)/Eigen/include/eigen3" -DBUILD_TESTING:BOOL=ON -DCMAKE_CXX_FLAGS:STRING="/W4 /EHsc" ..
+  - ps: cmake -G"$env:CMAKE_GENERATOR" -DEIGEN3_INCLUDE_DIR="C:/Program Files (x86)/Eigen3/include/eigen3" -DBUILD_TESTING:BOOL=ON -DCMAKE_CXX_FLAGS:STRING="/W4 /EHsc" ..
   # Build the library for Release and Debug
   - ps: cmake --build . --config Debug
   - ps: cmake --build . --config Release
