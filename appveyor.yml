@@ -9,7 +9,7 @@ version: 1.0.{build}
 clone_folder: c:\dev\levi
 
 environment:
-  Eigen3_DIR:          C:/Program Files (x86)/Eigen/lib/cmake/eigen3/
+  Eigen3_DIR:          C:/Program Files (x86)/Eigen3/lib/cmake/eigen3/
   matrix:
     #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       #CMAKE_GENERATOR: "Visual Studio 14 2015"
