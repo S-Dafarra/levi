@@ -651,7 +651,11 @@ public:
 
         levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::value_type>::derivative_evaluable> derivative;
 
-        derivative = this->m_expression.pow(m_exponent - 1) * m_exponent * this->m_expression.getColumnDerivative(column, variable);
+        if (std::abs(m_exponent -1) < 1e-15) {
+            derivative = this->m_expression.getColumnDerivative(column, variable);
+        } else {
+            derivative = this->m_expression.pow(m_exponent - 1) * m_exponent * this->m_expression.getColumnDerivative(column, variable);
+        }
 
         return derivative;
     }

@@ -113,9 +113,26 @@ class levi::ExpressionComponent {
     levi::ExpressionComponent<EvaluableOut> return_this(levi::bool_value<false>) const;
 
     /**
+     * Helper class to check if it is suitable to return the rhs
+     */
+    template<bool isSuitable, typename EvaluableOut, typename EvaluableRhs>
+    levi::ExpressionComponent<EvaluableOut> return_rhs(levi::bool_value<isSuitable>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const;
+
+    template<typename EvaluableOut, typename EvaluableRhs>
+    levi::ExpressionComponent<EvaluableOut> return_rhs(levi::bool_value<true>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const;
+
+    template<typename EvaluableOut, typename EvaluableRhs>
+    levi::ExpressionComponent<EvaluableOut> return_rhs(levi::bool_value<false>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const;
+
+    /**
      * @brief Check if the current evaluable is null
      */
     bool m_isNull;
+
+    /**
+     * @brief Check if the current evaluable is a squared identity
+     */
+    bool m_isIdentity;
 
 public:
 
