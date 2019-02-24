@@ -133,6 +133,15 @@ namespace levi {
     template<typename EvaluableT>
     struct transpose_type<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
 
+    template<typename Scalar>
+    struct TripletStruct{
+        Eigen::Index row;
+        Eigen::Index col;
+        Scalar value;
+    };
+
+    template<typename Scalar>
+    using Triplet = TripletStruct<Scalar>;
 }
 
 #endif // LEVI_HELPERSFORWARDDECLARATIONS_H

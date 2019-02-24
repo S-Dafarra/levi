@@ -729,34 +729,19 @@ template <typename EvaluableT>
 class levi::SkewEvaluable : public levi::UnaryOperator<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>, EvaluableT> {
 
     Eigen::Matrix<typename EvaluableT::value_type, 3, 1> m_vector;
-    levi::ExpressionComponent<levi::ConstantEvaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> m_col0, m_col1, m_col2;
+    levi::ExpressionComponent<levi::TwoElementsMatrix<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> m_col0, m_col1, m_col2;
+
+    typedef typename EvaluableT::value_type Scalar;
 
 public:
 
     SkewEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
         : levi::UnaryOperator<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>, EvaluableT>(expression, "skew(" + expression.name() + ")")
-          , m_col0("LeviCivita_ij0")
-          , m_col1("LeviCivita_ij1")
-          , m_col2("LeviCivita_ij2")
+          , m_col0(3, 3, levi::Triplet<Scalar>({1, 2, 1.0}), levi::Triplet<Scalar>({2, 1, -1.0}), "LeviCivita_ij0")
+          , m_col1(3, 3, levi::Triplet<Scalar>({0, 2, -1.0}), levi::Triplet<Scalar>({2, 0, 1.0}), "LeviCivita_ij1")
+          , m_col2(3, 3, levi::Triplet<Scalar>({0, 1, 1.0}), levi::Triplet<Scalar>({1, 0, -1.0}), "LeviCivita_ij2")
     {
         assert((expression.rows() == 3) && (expression.cols() == 1));
-        Eigen::Matrix<typename EvaluableT::value_type, 3, 3> derivativeBuffer;
-
-        derivativeBuffer.setZero();
-        derivativeBuffer(1,2) = 1.0;
-        derivativeBuffer(2,1) = -1.0;
-        m_col0 = derivativeBuffer;
-
-        derivativeBuffer.setZero();
-        derivativeBuffer(0,2) = -1.0;
-        derivativeBuffer(2,0) = 1.0;
-        m_col1 = derivativeBuffer;
-
-        derivativeBuffer.setZero();
-        derivativeBuffer(0,1) = 1.0;
-        derivativeBuffer(1,0) = -1.0;
-        m_col2 = derivativeBuffer;
-
     }
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::row_type>> row(Eigen::Index row) {

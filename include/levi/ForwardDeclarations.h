@@ -79,6 +79,12 @@ namespace levi {
     template <typename Scalar>
     class IdentityEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
 
+    template <typename Matrix, typename = typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>
+    class SingleElementMatrix;
+
+    template <typename Matrix, typename = typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>
+    class TwoElementsMatrix;
+
     template <typename MatrixType, typename EvaluableT>
     class UnaryOperator;
 
