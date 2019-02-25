@@ -197,9 +197,9 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    const Matrix& evaluateID(size_t callerID) {
+    const Matrix& evaluateID(size_t callerID, bool checkDependencies) {
         if (callerID < m_evaluationRegister.size()) {
-            if (this->isNew(callerID)) {
+            if ((checkDependencies && this->isNew(callerID)) || (!checkDependencies && !m_evaluationRegister[callerID])) {
                 if (m_alreadyComputed) {
                     m_evaluationRegister[callerID] = true;
                     return m_evaluationBuffer;
@@ -538,9 +538,9 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    const Scalar& evaluateID(size_t callerID) {
+    const Scalar& evaluateID(size_t callerID, bool checkDependencies) {
         if (callerID < m_evaluationRegister.size()) {
-            if (this->isNew(callerID)) {
+            if ((checkDependencies && this->isNew(callerID)) || (!checkDependencies && !m_evaluationRegister[callerID])) {
                 if (m_alreadyComputed) {
                     m_evaluationRegister[callerID] = true;
                     return m_evaluationBuffer;

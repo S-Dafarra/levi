@@ -83,7 +83,9 @@ public:
     ~BinaryOperator() override;
 
     virtual bool isNew(size_t callerID) final{
-        if (m_lhs.isNew() || m_rhs.isNew()) {
+        bool lhsIsNew = m_lhs.isNew();
+        bool rhsIsNew = m_rhs.isNew();
+        if (lhsIsNew || rhsIsNew) {
             this->resetEvaluationRegister();
         }
         return !this->m_evaluationRegister[callerID];

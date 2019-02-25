@@ -51,9 +51,11 @@ public:
 
     virtual bool isNew(size_t callerID) final{
         bool newVal = false;
+        bool isNew;
 
         for (size_t i = 0; i < m_rows.size(); ++i) {
-            newVal = newVal || m_rows[i].isNew();
+            isNew = m_rows[i].isNew();
+            newVal = isNew || newVal;
         }
 
         if (newVal) {
@@ -73,7 +75,7 @@ public:
 
     virtual const typename EvaluableT::matrix_type& evaluate() final {
         for (size_t i = 0; i < m_rows.size(); ++i) {
-            this->m_evaluationBuffer.row(i) = m_rows[i].evaluate();
+            this->m_evaluationBuffer.row(i) = m_rows[i].evaluate(false);
         }
         return this->m_evaluationBuffer;
     }
@@ -147,9 +149,11 @@ public:
 
     virtual bool isNew(size_t callerID) final{
         bool newVal = false;
+        bool isNew;
 
         for (size_t i = 0; i < m_cols.size(); ++i) {
-            newVal = newVal || m_cols[i].isNew();
+            isNew = m_cols[i].isNew();
+            newVal = isNew || newVal;
         }
 
         if (newVal) {
@@ -161,7 +165,7 @@ public:
 
     virtual const typename EvaluableT::matrix_type& evaluate() final {
         for (size_t i = 0; i < m_cols.size(); ++i) {
-            this->m_evaluationBuffer.col(i) = m_cols[i].evaluate();
+            this->m_evaluationBuffer.col(i) = m_cols[i].evaluate(false);
         }
         return this->m_evaluationBuffer;
     }
@@ -214,7 +218,7 @@ public:
     }
 
     virtual const typename EvaluableT::col_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate();
+        this->m_evaluationBuffer = m_expression.evaluate(false);
         return this->m_evaluationBuffer;
     }
 
@@ -277,8 +281,8 @@ public:
     }
 
     virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
-        this->m_evaluationBuffer.leftCols(this->m_lhs.cols()) = this->m_lhs.evaluate();
-        this->m_evaluationBuffer.rightCols(this->m_rhs.cols()) = this->m_rhs.evaluate();
+        this->m_evaluationBuffer.leftCols(this->m_lhs.cols()) = this->m_lhs.evaluate(false);
+        this->m_evaluationBuffer.rightCols(this->m_rhs.cols()) = this->m_rhs.evaluate(false);
         return this->m_evaluationBuffer;
     }
 
@@ -332,8 +336,8 @@ public:
     }
 
     virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
-        this->m_evaluationBuffer.topRows(this->m_lhs.rows()) = this->m_lhs.evaluate();
-        this->m_evaluationBuffer.bottomRows(this->m_rhs.rows()) = this->m_rhs.evaluate();
+        this->m_evaluationBuffer.topRows(this->m_lhs.rows()) = this->m_lhs.evaluate(false);
+        this->m_evaluationBuffer.bottomRows(this->m_rhs.rows()) = this->m_rhs.evaluate(false);
         return this->m_evaluationBuffer;
     }
 

@@ -81,7 +81,7 @@ public:
     void operator=(const EvaluableVariable<OtherVector>& rhs) {
         static_assert (OtherVector::ColsAtCompileTime == 1, "The chosen VectorType for the rhs should have exactly one column at compile time.");
         assert(rhs.dimension() == this->dimension());
-        this->m_evaluationBuffer = rhs.evaluate();
+        this->m_evaluationBuffer = rhs.evaluate(false);
         this->resetEvaluationRegister();
     }
 
@@ -158,7 +158,7 @@ public:
      * @brief Assignement operator to set the values of the variable equal to another variable.
      */
     void operator=(const EvaluableVariable<Scalar>& rhs) {
-        this->m_evaluationBuffer = rhs.evaluate();
+        this->m_evaluationBuffer = rhs.evaluate(false);
         this->resetEvaluationRegister();
     }
 
