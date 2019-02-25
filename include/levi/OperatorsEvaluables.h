@@ -164,6 +164,8 @@ public:
         : levi::BinaryOperator<sum_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), lhs.cols(), "(" + lhs.name() + " + " + rhs.name() + ")")
     { }
 
+    virtual ~SumEvaluable() final;
+
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<sum_type>::row_type>> row(Eigen::Index row) final {
         return this->m_lhs.row(row) + this->m_rhs.row(row);
     }
@@ -212,6 +214,8 @@ public:
     }
 
 };
+template <class LeftEvaluable, class RightEvaluable>
+levi::SumEvaluable<LeftEvaluable, RightEvaluable>::~SumEvaluable() { }
 
 /**
  * @brief The SubtractionEvaluable. Implements the subtraction of two evaluables.
@@ -237,6 +241,8 @@ public:
     SubtractionEvaluable(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs)
         : levi::BinaryOperator<sum_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), lhs.cols(), "(" + lhs.name() + " - " + rhs.name() + ")")
     { }
+
+    virtual ~SubtractionEvaluable() final;
 
     virtual const sum_type& evaluate() final {
         eval(levi::bool_value<std::is_arithmetic<sum_type>::value>());
@@ -283,8 +289,9 @@ public:
             return sumDerivative;
         }
     }
-
 };
+template <class LeftEvaluable, class RightEvaluable>
+levi::SubtractionEvaluable<LeftEvaluable, RightEvaluable>::~SubtractionEvaluable() { }
 
 template <class EvaluableT>
 class levi::SignInvertedEvaluable : public levi::UnaryOperator<typename EvaluableT::matrix_type, EvaluableT>{
@@ -305,6 +312,8 @@ public:
     SignInvertedEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
         : levi::UnaryOperator<typename EvaluableT::matrix_type, EvaluableT>(expression, expression.rows(), expression.cols(), "-" + expression.name())
     { }
+
+    virtual ~SignInvertedEvaluable() final;
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>> row(Eigen::Index row) final {
         return -this->m_expression.row(row);
@@ -332,8 +341,9 @@ public:
 
         return derivative;
     }
-
 };
+template <class EvaluableT>
+levi::SignInvertedEvaluable<EvaluableT>::~SignInvertedEvaluable() { }
 
 /**
  * @brief The ProductEvaluable. Implements the product of two evaluables.
@@ -579,6 +589,8 @@ public:
                                         lhs.name() + " * " + rhs.name())
     { }
 
+    virtual ~ProductEvaluable() final;
+
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::row_type>> row(Eigen::Index row) final {
         return getRow(levi::bool_value<std::is_arithmetic<typename LeftEvaluable::matrix_type>::value || (LeftEvaluable::rows_at_compile_time == 1 && LeftEvaluable::cols_at_compile_time == 1)>(), row);
     }
@@ -610,8 +622,9 @@ public:
                               levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>(),
                               column, variable);
     }
-
 };
+template <class LeftEvaluable, class RightEvaluable>
+levi::ProductEvaluable<LeftEvaluable, RightEvaluable>::~ProductEvaluable() { }
 
 template <class EvaluableT>
 class levi::PowEvaluable : public levi::UnaryOperator<typename EvaluableT::value_type, EvaluableT> {
@@ -638,6 +651,8 @@ public:
         assert(this->m_expression.rows() == 1 && this->m_expression.cols() == 1);
     }
 
+    virtual ~PowEvaluable() final;
+
     virtual const typename EvaluableT::value_type& evaluate() final {
 
         this->m_evaluationBuffer = std::pow(get_value(levi::bool_value<std::is_arithmetic<typename EvaluableT::matrix_type>::value>()), m_exponent);
@@ -659,8 +674,9 @@ public:
 
         return derivative;
     }
-
 };
+template <class EvaluableT>
+levi::PowEvaluable<EvaluableT>::~PowEvaluable() { }
 
 template <class LeftEvaluable, class RightEvaluable>
 class levi::DivisionEvaluable : public levi::BinaryOperator<typename levi::matrix_product_return<typename LeftEvaluable::matrix_type, typename RightEvaluable::value_type>::type, LeftEvaluable, RightEvaluable>
@@ -690,6 +706,8 @@ public:
         assert(rhs.rows() == 1 && rhs.cols() == 1);
     }
 
+    virtual ~DivisionEvaluable() final;
+
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::row_type>> row(Eigen::Index row) final {
         return this->m_lhs.row(row) / this->m_rhs;
     }
@@ -717,8 +735,9 @@ public:
 
         return derivative;
     }
-
 };
+template <class LeftEvaluable, class RightEvaluable>
+levi::DivisionEvaluable<LeftEvaluable, RightEvaluable>::~DivisionEvaluable() { }
 
 /**
  * @brief The SkewEvaluable.
@@ -744,15 +763,17 @@ public:
         assert((expression.rows() == 3) && (expression.cols() == 1));
     }
 
-    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::row_type>> row(Eigen::Index row) {
+    virtual ~SkewEvaluable() final;
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::row_type>> row(Eigen::Index row) final {
         return -m_col0.row(row) * this->m_expression(0,0) - m_col1.row(row) * this->m_expression(1,0) - m_col2.row(row) * this->m_expression(2,0);
     }
 
-    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::col_type>> col(Eigen::Index col) {
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::col_type>> col(Eigen::Index col) final {
         return -m_col0.col(col) * this->m_expression(0,0) - m_col1.col(col) * this->m_expression(1,0) - m_col2.col(col) * this->m_expression(2,0);
     }
 
-    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::value_type>> element(Eigen::Index row, Eigen::Index col) {
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::value_type>> element(Eigen::Index row, Eigen::Index col) final {
         return -m_col0(row,col) * this->m_expression(0,0) - m_col1(row,col) * this->m_expression(1,0) - m_col2(row,col) * this->m_expression(2,0);
     }
 
@@ -795,8 +816,9 @@ public:
 
         return levi::ExpressionComponent<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>::derivative_evaluable>();
     }
-
 };
+template <typename EvaluableT>
+levi::SkewEvaluable<EvaluableT>::~SkewEvaluable() { }
 
 template <typename EvaluableT>
 class levi::TransposeEvaluable : public levi::UnaryOperator<typename levi::transpose_type<EvaluableT>::type, EvaluableT> {
@@ -808,6 +830,8 @@ public:
     TransposeEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
         : levi::UnaryOperator<typename levi::transpose_type<EvaluableT>::type, EvaluableT>(expression, expression.cols(), expression.rows(), expression.name() + "^T")
     { }
+
+    virtual ~TransposeEvaluable() final;
 
     typedef levi::Evaluable<typename levi::transpose_type<EvaluableT>::type> ThisEvaluable;
 
@@ -839,7 +863,8 @@ public:
 
         return levi::ExpressionComponent<typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::derivative_evaluable>::ComposeByRows(m_derivatives, "d(" + this->name() + ")/d" + variable->variableName());
     }
-
 };
+template <typename EvaluableT>
+levi::TransposeEvaluable<EvaluableT>::~TransposeEvaluable() { }
 
 #endif // LEVI_OPERATORS_H

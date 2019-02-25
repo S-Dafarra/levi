@@ -80,6 +80,8 @@ public:
         , m_row(row)
     { }
 
+    virtual ~RowEvaluable() final;
+
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<typename EvaluableT::row_type>::col_type>> col(Eigen::Index col) final {
         return this->m_expression(m_row, col);
     }
@@ -105,6 +107,9 @@ public:
     }
 
 };
+template <typename EvaluableT>
+levi::RowEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>::~RowEvaluable(){ }
+
 
 /**
  * @brief The RowEvaluable. To retrieve a specified row from an evaluable. Specialization for scalar valued evaluables.
@@ -123,6 +128,8 @@ public:
         assert(row == 0);
     }
 
+    virtual ~RowEvaluable() final;
+
     virtual const typename EvaluableT::row_type& evaluate() final {
         this->m_evaluationBuffer = this->m_expression.evaluate();
 
@@ -138,6 +145,8 @@ public:
     }
 
 };
+template <typename EvaluableT>
+levi::RowEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>::~RowEvaluable(){ }
 
 /**
  * @brief The ColEvaluable. To retrieve a specified column from an evaluable. Specialization for matrix valued evaluables.
@@ -154,6 +163,8 @@ public:
         : levi::UnaryOperator<typename EvaluableT::col_type, EvaluableT>(expression, expression.rows(), 1, "(" + expression.name() + ")(:," + std::to_string(col) + ")")
         , m_col(col)
     { }
+
+    virtual ~ColEvaluable() final;
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<typename EvaluableT::col_type>::row_type>> row(Eigen::Index row) final {
         return this->m_expression(row, m_col);
@@ -182,6 +193,8 @@ public:
     }
 
 };
+template <typename EvaluableT>
+levi::ColEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>::~ColEvaluable(){ }
 
 /**
  * @brief The ColEvaluable. To retrieve a specified column from an evaluable. Specialization for scalar valued evaluables.
@@ -200,6 +213,8 @@ public:
         assert(col == 0);
     }
 
+    virtual ~ColEvaluable() final;
+
     virtual const typename EvaluableT::col_type& evaluate() final {
         this->m_evaluationBuffer = this->m_expression.evaluate();
 
@@ -215,6 +230,9 @@ public:
     }
 
 };
+template <typename EvaluableT>
+levi::ColEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>::~ColEvaluable(){ }
+
 
 /**
  * @brief The ElementEvaluable. To retrieve a specified element from an evaluable. Specialization for matrix valued evaluables.
@@ -232,6 +250,8 @@ public:
         , m_row(row)
         , m_col(col)
     { }
+
+    virtual ~ElementEvaluable() final;
 
     virtual const typename EvaluableT::value_type& evaluate() final {
         this->m_evaluationBuffer = this->m_expression.evaluate()(m_row, m_col);
@@ -251,6 +271,8 @@ public:
     }
 
 };
+template <typename EvaluableT>
+levi::ElementEvaluable<EvaluableT, typename std::enable_if<!std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>::~ElementEvaluable(){ }
 
 /**
  * @brief The ElementEvaluable. To retrieve a specified element from an evaluable. Specialization for scalar valued evaluables.
@@ -268,6 +290,8 @@ public:
         assert(row == 0 && col == 0);
     }
 
+    virtual ~ElementEvaluable() final;
+
     virtual const typename EvaluableT::value_type& evaluate() final {
         this->m_evaluationBuffer = this->m_expression.evaluate();
         return this->m_evaluationBuffer;
@@ -281,6 +305,9 @@ public:
         return this->m_expression.getColumnDerivative(0, variable);
     }
 };
+template <typename EvaluableT>
+levi::ElementEvaluable<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>::~ElementEvaluable() { }
+
 
 /**
  * @brief The BlockEvaluable. To retrieve a specified block from an evaluable. Specialization for matrix valued evaluables.
@@ -315,6 +342,8 @@ public:
         assert(((startRow + numberOfRows) <= expression.rows()) && ((startCol + numberOfCols) <= expression.cols()));
     }
 
+    virtual ~BlockEvaluable() final;
+
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<block_type>::row_type>> row(Eigen::Index row) final {
         return this->m_expression.row(m_startRow + row).block(0, m_startCol, 1, this->cols());
     }
@@ -343,6 +372,8 @@ public:
     }
 
 };
+template <class InputEvaluable, class OutputEvaluable>
+levi::BlockEvaluable<InputEvaluable, OutputEvaluable, typename std::enable_if<!std::is_arithmetic<typename InputEvaluable::matrix_type>::value>::type>::~BlockEvaluable(){ }
 
 /**
  * @brief The BlockEvaluable. To retrieve a specified block from an evaluable. Specialization for scalar valued evaluables.
@@ -362,6 +393,8 @@ public:
         assert(startRow == 0 && startCol == 0 && numberOfRows == 1 && numberOfCols == 1);
     }
 
+    virtual ~BlockEvaluable() final;
+
     virtual const block_type& evaluate() final {
         this->m_evaluationBuffer = this->m_expression.evaluate();
         return this->m_evaluationBuffer;
@@ -376,6 +409,8 @@ public:
     }
 
 };
+template <class InputEvaluable, class OutputEvaluable>
+levi::BlockEvaluable<InputEvaluable, OutputEvaluable, typename std::enable_if<std::is_arithmetic<typename InputEvaluable::matrix_type>::value>::type>::~BlockEvaluable(){ }
 
 
 /**
@@ -411,6 +446,8 @@ public:
         : levi::UnaryOperator<typename LeftEvaluable::matrix_type, RightEvaluable>(rhs, rhs.rows(), rhs.cols(), rhs.name())
     { }
 
+    virtual ~CastEvaluable() final;
+
     virtual levi::ExpressionComponent<levi::Evaluable<typename LeftEvaluable::row_type>> row(Eigen::Index row) final {
         return this->m_expression.row(row);
     }
@@ -437,5 +474,7 @@ public:
         return newCast;
     }
 };
+template <class LeftEvaluable, class RightEvaluable>
+levi::CastEvaluable<LeftEvaluable, RightEvaluable>::~CastEvaluable() {}
 
 #endif // LEVI_ACCESSOREVALUABLES_H

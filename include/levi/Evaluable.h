@@ -151,7 +151,7 @@ public:
     template <typename OtherMatrix>
     Evaluable(Evaluable<OtherMatrix>&& other) = delete;
 
-    virtual ~Evaluable() { }
+    virtual ~Evaluable();
 
     /**
      * @brief Number of rows of the evaluable
@@ -350,6 +350,8 @@ public:
     Evaluable<Matrix>& operator*(const Evaluable& other) const = delete;
 
 };
+template<typename Matrix>
+levi::Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>::~Evaluable() { }
 
 /**
  * @brief Evaluable class (for scalar type)
@@ -490,7 +492,7 @@ public:
     template <typename OtherMatrix, typename OtherDerivativeEvaluable>
     Evaluable(Evaluable<OtherMatrix, OtherDerivativeEvaluable>&& other) = delete;
 
-    virtual ~Evaluable() { }
+    virtual ~Evaluable();
 
     /**
      * @brief Number of rows of the evaluable
@@ -678,5 +680,7 @@ public:
     Evaluable<Scalar>& operator*(const Evaluable& other) const = delete;
 
 };
+template <typename Scalar>
+levi::Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>::~Evaluable() { }
 
 #endif // LEVI_EVALUABLE_H

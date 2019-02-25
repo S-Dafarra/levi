@@ -36,6 +36,8 @@ public:
         , m_expression(expression)
     { }
 
+    virtual ~UnaryOperator() override;
+
     virtual bool isNew(size_t callerID) final{
         if (m_expression.isNew()) {
             this->resetEvaluationRegister();
@@ -48,6 +50,8 @@ public:
     }
 
 };
+template <typename MatrixType, typename EvaluableT>
+levi::UnaryOperator<MatrixType, EvaluableT>::~UnaryOperator() { }
 
 template <typename MatrixType, class LeftEvaluable, class RightEvaluable>
 class levi::BinaryOperator : public levi::Evaluable<MatrixType> {
@@ -76,6 +80,8 @@ public:
         , m_rhs(rhs)
     { }
 
+    ~BinaryOperator() override;
+
     virtual bool isNew(size_t callerID) final{
         if (m_lhs.isNew() || m_rhs.isNew()) {
             this->resetEvaluationRegister();
@@ -88,5 +94,7 @@ public:
     }
 
 };
+template <typename MatrixType, class LeftEvaluable, class RightEvaluable>
+levi::BinaryOperator<MatrixType, LeftEvaluable, RightEvaluable>::~BinaryOperator() { }
 
 #endif // LEVI_OPERATORSBASE_H

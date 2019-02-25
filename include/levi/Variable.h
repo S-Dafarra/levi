@@ -61,6 +61,8 @@ public:
     template <typename otherVector>
     EvaluableVariable(EvaluableVariable<otherVector>&& other) = delete;
 
+    virtual ~EvaluableVariable() override;
+
     /**
      * @brief Assignement operator to set the values of the variable.
      *
@@ -104,6 +106,8 @@ public:
     }
 
 };
+template <typename Vector>
+levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type>::~EvaluableVariable() { }
 
 /**
  * @brief The EvaluableVariable class, specialized for scalar values.
@@ -137,6 +141,8 @@ public:
 
     template <typename otherVector>
     EvaluableVariable(EvaluableVariable<otherVector>&& other) = delete;
+
+    virtual ~EvaluableVariable() override;
 
     /**
      * @brief Assignement operator to set the values of the variable.
@@ -176,6 +182,7 @@ public:
     }
 
 };
-
+template <typename Scalar>
+levi::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>::~EvaluableVariable() { }
 
 #endif // LEVI_VARIABLE_H

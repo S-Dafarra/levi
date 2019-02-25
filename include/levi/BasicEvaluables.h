@@ -34,16 +34,18 @@ public:
         : levi::Evaluable<Matrix>(rows, cols, name)
     { }
 
+    virtual ~ConstantEvaluable() final;
+
     virtual const Matrix& evaluate() final {
         return this->m_evaluationBuffer;
     }
 
-    virtual levi::ExpressionComponent<typename levi::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) final{
+    virtual levi::ExpressionComponent<typename levi::Evaluable<Matrix>::derivative_evaluable> getColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(column);
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(variable);
         return false;
     }
@@ -53,6 +55,8 @@ public:
         this->resetEvaluationRegister();
     }
 };
+template <typename Matrix>
+levi::ConstantEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>::~ConstantEvaluable() { }
 
 /**
  * @brief The ConstantEvaluable
@@ -67,6 +71,8 @@ public:
     ConstantEvaluable(const Scalar& constant)
         : levi::Evaluable<Scalar>(constant)
     { }
+
+    virtual ~ConstantEvaluable() final;
 
     virtual const Scalar& evaluate() final {
         return this->m_evaluationBuffer;
@@ -88,6 +94,8 @@ public:
         this->resetEvaluationRegister();
     }
 };
+template <typename Scalar>
+levi::ConstantEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>::~ConstantEvaluable() { }
 
 /**
  * @brief The NullEvaluable
@@ -116,6 +124,8 @@ public:
     {
         this->m_evaluationBuffer.setZero();
     }
+
+    virtual ~NullEvaluable() final;
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::row_type>> row(Eigen::Index row) final {
         levi::unused(row);
@@ -153,6 +163,8 @@ public:
         return false;
     }
 };
+template <typename Matrix>
+levi::NullEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>::~NullEvaluable() { }
 
 /**
  * @brief The NullEvaluable
@@ -175,6 +187,8 @@ public:
         assert(rows == 1 && cols == 1 && "You asked for a null evaluable of type double. It must have only one row and one column.");
     }
 
+    virtual ~NullEvaluable() final;
+
     virtual const Scalar& evaluate() final {
         return this->m_evaluationBuffer;
     }
@@ -190,6 +204,8 @@ public:
         return false;
     }
 };
+template <typename Scalar>
+levi::NullEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>::~NullEvaluable() { }
 
 /**
  * @brief The IdentityEvaluable
@@ -218,6 +234,8 @@ public:
     {
         this->m_evaluationBuffer.setIdentity();
     }
+
+    virtual ~IdentityEvaluable() final;
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::row_type>> row(Eigen::Index row) final {
         levi::Triplet<typename levi::Evaluable<Matrix>::value_type> nonZero({0, row, 1.0});
@@ -261,6 +279,8 @@ public:
         return false;
     }
 };
+template <typename Matrix>
+levi::IdentityEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>::~IdentityEvaluable() { }
 
 /**
  * @brief The IdentityEvaluable
@@ -275,6 +295,8 @@ public:
     IdentityEvaluable()
         : levi::Evaluable<Scalar>(1)
     { }
+
+    virtual ~IdentityEvaluable() final;
 
     virtual const Scalar& evaluate() final {
         return this->m_evaluationBuffer;
@@ -291,6 +313,8 @@ public:
         return false;
     }
 };
+template <typename Scalar>
+levi::IdentityEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>::~IdentityEvaluable() { }
 
 template <typename Matrix, typename>
 class levi::SingleElementMatrix : public levi::Evaluable<Matrix> {
@@ -304,6 +328,8 @@ public:
         this->m_evaluationBuffer.setZero();
         this->m_evaluationBuffer(element.row, element.col) = element.value;
     }
+
+    virtual ~SingleElementMatrix() final;
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::row_type>> row(Eigen::Index row) final {
         if (row == m_element.row) {
@@ -349,6 +375,8 @@ public:
         return false;
     }
 };
+template <typename Matrix, typename empty>
+levi::SingleElementMatrix<Matrix, empty>::~SingleElementMatrix() { }
 
 template <typename Matrix, typename>
 class levi::TwoElementsMatrix : public levi::Evaluable<Matrix> {
@@ -367,6 +395,8 @@ public:
         this->m_evaluationBuffer(firstElement.row, firstElement.col) = firstElement.value;
         this->m_evaluationBuffer(secondElement.row, secondElement.col) = secondElement.value;
     }
+
+    virtual ~TwoElementsMatrix() final;
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::row_type>> row(Eigen::Index row) final {
         if (row == m_firstElement.row && row == m_secondElement.row) {
@@ -429,10 +459,12 @@ public:
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
+    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(variable);
         return false;
     }
 };
+template <typename Matrix, typename empty>
+levi::TwoElementsMatrix<Matrix, empty>::~TwoElementsMatrix() { }
 
 #endif // LEVI_BASICEVALUABLES_H

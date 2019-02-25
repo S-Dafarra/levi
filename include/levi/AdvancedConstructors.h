@@ -47,6 +47,8 @@ public:
         m_derivatives.resize(m_rows.size());
     }
 
+    virtual ~ConstructorByRows() final;
+
     virtual bool isNew(size_t callerID) final{
         bool newVal = false;
 
@@ -100,6 +102,8 @@ public:
     }
 
 };
+template <typename EvaluableT>
+levi::ConstructorByRows<EvaluableT>::~ConstructorByRows() { }
 
 /**
  * The ConstructorByCols.
@@ -130,6 +134,8 @@ public:
 
         this->resize(nRows, m_cols.size());
     }
+
+    virtual ~ConstructorByCols() final;
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>> col(Eigen::Index col) final {
         return m_cols[col];
@@ -180,6 +186,8 @@ public:
     }
 
 };
+template <typename EvaluableT>
+levi::ConstructorByCols<EvaluableT>::~ConstructorByCols(){}
 
 template <typename EvaluableT>
 class levi::VariableFromExpressionEvaluable : public levi::EvaluableVariable<typename EvaluableT::col_type> {
@@ -195,6 +203,8 @@ public:
         assert(expression.cols() == 1 && "Can't obtain a variable from a matrix evaluable");
 
     }
+
+    virtual ~VariableFromExpressionEvaluable() final;
 
     virtual bool isNew(size_t callerID) final{
         if (m_expression.isNew()) {
@@ -227,6 +237,8 @@ public:
     }
 
 };
+template <typename EvaluableT>
+levi::VariableFromExpressionEvaluable<EvaluableT>::~VariableFromExpressionEvaluable() { }
 
 template <typename CompositeEvaluable, typename LeftEvaluable, typename RightEvaluable>
 class levi::HorzcatEvaluable : public levi::BinaryOperator<typename CompositeEvaluable::matrix_type, LeftEvaluable, RightEvaluable>
@@ -238,6 +250,8 @@ public:
         : levi::BinaryOperator<typename CompositeEvaluable::matrix_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(),
                                                                                                         lhs.cols() + rhs.cols(), name)
     { }
+
+    virtual ~HorzcatEvaluable() final;
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::row_type>> row(Eigen::Index row) final {
         return levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::row_type>>::Horzcat(this->m_lhs.row(row),
@@ -277,6 +291,8 @@ public:
         }
     }
 };
+template <typename CompositeEvaluable, typename LeftEvaluable, typename RightEvaluable>
+levi::HorzcatEvaluable<CompositeEvaluable, LeftEvaluable, RightEvaluable>::~HorzcatEvaluable() { }
 
 template <typename CompositeEvaluable, typename TopEvaluable, typename BottomEvaluable>
 class levi::VertcatEvaluable : public levi::BinaryOperator<typename CompositeEvaluable::matrix_type, TopEvaluable, BottomEvaluable>
@@ -297,6 +313,8 @@ public:
             return this->m_rhs.row(row - this->m_lhs.rows());
         }
     }
+
+    virtual ~VertcatEvaluable() final;
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::col_type>> col(Eigen::Index col) final {
         return levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::col_type>>::Vertcat(this->m_lhs.col(col),
@@ -328,5 +346,7 @@ public:
                                                                             + variable->variableName());
     }
 };
+template <typename CompositeEvaluable, typename LeftEvaluable, typename RightEvaluable>
+levi::VertcatEvaluable<CompositeEvaluable, LeftEvaluable, RightEvaluable>::~VertcatEvaluable() { }
 
 #endif // LEVI_ADVANCEDCONSTRUCTORS_H

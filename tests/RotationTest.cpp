@@ -75,6 +75,8 @@ int main() {
     std::chrono::steady_clock::time_point end= std::chrono::steady_clock::now();
     std::cout << "Elapsed time ms (eigen): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 
+    quaternion = quaternionValue;
+    assert(rotation.isNew());
     begin = std::chrono::steady_clock::now();
     testSpeed = rotation.evaluate();
     end= std::chrono::steady_clock::now();
