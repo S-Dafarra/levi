@@ -149,11 +149,11 @@ class levi::SumEvaluable : public levi::BinaryOperator<typename levi::matrix_sum
     void eval(levi::bool_value<value>);
 
     void eval(levi::bool_value<true>) {
-        this->m_evaluationBuffer = this->m_lhs.evaluate(false) + this->m_rhs.evaluate(false);
+        this->m_evaluationBuffer = this->m_lhs.evaluate() + this->m_rhs.evaluate();
     }
 
     void eval(levi::bool_value<false>) {
-        this->m_evaluationBuffer.lazyAssign(this->m_lhs.evaluate(false) + this->m_rhs.evaluate(false));
+        this->m_evaluationBuffer.lazyAssign(this->m_lhs.evaluate() + this->m_rhs.evaluate());
     }
 
 public:
@@ -227,11 +227,11 @@ class levi::SubtractionEvaluable : public levi::BinaryOperator<typename levi::ma
     void eval(levi::bool_value<value>);
 
     void eval(levi::bool_value<true>) {
-        this->m_evaluationBuffer = this->m_lhs.evaluate(false) - this->m_rhs.evaluate(false);
+        this->m_evaluationBuffer = this->m_lhs.evaluate() - this->m_rhs.evaluate();
     }
 
     void eval(levi::bool_value<false>) {
-        this->m_evaluationBuffer.lazyAssign(this->m_lhs.evaluate(false) - this->m_rhs.evaluate(false));
+        this->m_evaluationBuffer.lazyAssign(this->m_lhs.evaluate() - this->m_rhs.evaluate());
     }
 
 public:
@@ -300,11 +300,11 @@ class levi::SignInvertedEvaluable : public levi::UnaryOperator<typename Evaluabl
     void eval(levi::bool_value<value>);
 
     void eval(levi::bool_value<true>) {
-        this->m_evaluationBuffer = -(this->m_expression.evaluate(false));
+        this->m_evaluationBuffer = -(this->m_expression.evaluate());
     }
 
     void eval(levi::bool_value<false>) {
-        this->m_evaluationBuffer.lazyAssign(-(this->m_expression.evaluate(false)));
+        this->m_evaluationBuffer.lazyAssign(-(this->m_expression.evaluate()));
     }
 
 public:
@@ -520,13 +520,13 @@ private:
     }
 
     inline void eval(levi::bool_value<true>) {
-        cast_unit_matrix(levi::bool_value<!std::is_arithmetic<product_type>::value>(), this->m_evaluationBuffer) = cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename LeftEvaluable::matrix_type>::value>(), this->m_lhs.evaluate(false)) *
-            cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename RightEvaluable::matrix_type>::value>(), this->m_rhs.evaluate(false));
+        cast_unit_matrix(levi::bool_value<!std::is_arithmetic<product_type>::value>(), this->m_evaluationBuffer) = cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename LeftEvaluable::matrix_type>::value>(), this->m_lhs.evaluate()) *
+            cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename RightEvaluable::matrix_type>::value>(), this->m_rhs.evaluate());
     }
 
     inline void eval(levi::bool_value<false>) {
-        this->m_evaluationBuffer.lazyAssign(cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename LeftEvaluable::matrix_type>::value && LeftEvaluable::rows_at_compile_time == 1 && LeftEvaluable::cols_at_compile_time == 1>(),this->m_lhs.evaluate(false)) *
-                                            cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename RightEvaluable::matrix_type>::value && RightEvaluable::rows_at_compile_time == 1 && RightEvaluable::cols_at_compile_time == 1>(),this->m_rhs.evaluate(false)));
+        this->m_evaluationBuffer.lazyAssign(cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename LeftEvaluable::matrix_type>::value && LeftEvaluable::rows_at_compile_time == 1 && LeftEvaluable::cols_at_compile_time == 1>(),this->m_lhs.evaluate()) *
+                                            cast_unit_matrix(levi::bool_value<!std::is_arithmetic<typename RightEvaluable::matrix_type>::value && RightEvaluable::rows_at_compile_time == 1 && RightEvaluable::cols_at_compile_time == 1>(),this->m_rhs.evaluate()));
     }
 
     inline levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<product_type>::row_type>> getRow(levi::bool_value<true>, Eigen::Index row) {
@@ -635,11 +635,11 @@ class levi::PowEvaluable : public levi::UnaryOperator<typename EvaluableT::value
     double get_value(levi::bool_value<rhsIsScalar>);
 
     double get_value(levi::bool_value<true>) {
-        return this->m_expression.evaluate(false);
+        return this->m_expression.evaluate();
     }
 
     double get_value(levi::bool_value<false>) {
-        return this->m_expression.evaluate(false)(0,0);
+        return this->m_expression.evaluate()(0,0);
     }
 
 public:
@@ -691,11 +691,11 @@ private:
     double get_rhs_value(levi::bool_value<rhsIsScalar>);
 
     double get_rhs_value(levi::bool_value<true>) {
-        return this->m_rhs.evaluate(false);
+        return this->m_rhs.evaluate();
     }
 
     double get_rhs_value(levi::bool_value<false>) {
-        return this->m_rhs.evaluate(false)(0,0);
+        return this->m_rhs.evaluate()(0,0);
     }
 
 public:
@@ -722,7 +722,7 @@ public:
 
     virtual const product_type& evaluate() final {
 
-        this->m_evaluationBuffer = this->m_lhs.evaluate(false) / get_rhs_value(levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>());
+        this->m_evaluationBuffer = this->m_lhs.evaluate() / get_rhs_value(levi::bool_value<std::is_arithmetic<typename RightEvaluable::matrix_type>::value>());
 
         return this->m_evaluationBuffer;
     }
@@ -778,7 +778,7 @@ public:
     }
 
     virtual const Eigen::Matrix<typename EvaluableT::value_type, 3, 3>& evaluate() final {
-        m_vector = this->m_expression.evaluate(false);
+        m_vector = this->m_expression.evaluate();
 
         this->m_evaluationBuffer(0,0) = 0.0;
         this->m_evaluationBuffer(0,1) = -m_vector[2];
@@ -848,7 +848,7 @@ public:
     }
 
     virtual const typename levi::Evaluable<typename levi::transpose_type<EvaluableT>::type>::matrix_type & evaluate() final {
-        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate(false).transpose());
+        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate().transpose());
 
         return this->m_evaluationBuffer;
     }

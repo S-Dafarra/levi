@@ -49,20 +49,13 @@ public:
 
     virtual ~ConstructorByRows() final;
 
-    virtual bool isNew(size_t callerID) final{
-        bool newVal = false;
-        bool isNew;
-
+    virtual bool areDependenciesNew() final {
         for (size_t i = 0; i < m_rows.size(); ++i) {
-            isNew = m_rows[i].isNew();
-            newVal = isNew || newVal;
+            if(m_rows[i].isNew()) {
+                return true;
+            }
         }
-
-        if (newVal) {
-            this->resetEvaluationRegister();
-        }
-
-        return !this->m_evaluationRegister[callerID];
+        return false;
     }
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>> row(Eigen::Index row) final {
@@ -75,7 +68,7 @@ public:
 
     virtual const typename EvaluableT::matrix_type& evaluate() final {
         for (size_t i = 0; i < m_rows.size(); ++i) {
-            this->m_evaluationBuffer.row(i) = m_rows[i].evaluate(false);
+            this->m_evaluationBuffer.row(i) = m_rows[i].evaluate();
         }
         return this->m_evaluationBuffer;
     }
@@ -147,25 +140,18 @@ public:
         return m_cols[col](row, 0);
     }
 
-    virtual bool isNew(size_t callerID) final{
-        bool newVal = false;
-        bool isNew;
-
+    virtual bool areDependenciesNew() final {
         for (size_t i = 0; i < m_cols.size(); ++i) {
-            isNew = m_cols[i].isNew();
-            newVal = isNew || newVal;
+            if(m_cols[i].isNew()) {
+                return true;
+            }
         }
-
-        if (newVal) {
-            this->resetEvaluationRegister();
-        }
-
-        return !this->m_evaluationRegister[callerID];
+        return false;
     }
 
     virtual const typename EvaluableT::matrix_type& evaluate() final {
         for (size_t i = 0; i < m_cols.size(); ++i) {
-            this->m_evaluationBuffer.col(i) = m_cols[i].evaluate(false);
+            this->m_evaluationBuffer.col(i) = m_cols[i].evaluate();
         }
         return this->m_evaluationBuffer;
     }
@@ -210,15 +196,12 @@ public:
 
     virtual ~VariableFromExpressionEvaluable() final;
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return !this->m_evaluationRegister[callerID];
+    virtual bool areDependenciesNew() final {
+        return m_expression.isNew();
     }
 
     virtual const typename EvaluableT::col_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate(false);
+        this->m_evaluationBuffer = m_expression.evaluate();
         return this->m_evaluationBuffer;
     }
 
@@ -281,8 +264,8 @@ public:
     }
 
     virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
-        this->m_evaluationBuffer.leftCols(this->m_lhs.cols()) = this->m_lhs.evaluate(false);
-        this->m_evaluationBuffer.rightCols(this->m_rhs.cols()) = this->m_rhs.evaluate(false);
+        this->m_evaluationBuffer.leftCols(this->m_lhs.cols()) = this->m_lhs.evaluate();
+        this->m_evaluationBuffer.rightCols(this->m_rhs.cols()) = this->m_rhs.evaluate();
         return this->m_evaluationBuffer;
     }
 
@@ -336,8 +319,8 @@ public:
     }
 
     virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
-        this->m_evaluationBuffer.topRows(this->m_lhs.rows()) = this->m_lhs.evaluate(false);
-        this->m_evaluationBuffer.bottomRows(this->m_rhs.rows()) = this->m_rhs.evaluate(false);
+        this->m_evaluationBuffer.topRows(this->m_lhs.rows()) = this->m_lhs.evaluate();
+        this->m_evaluationBuffer.bottomRows(this->m_rhs.rows()) = this->m_rhs.evaluate();
         return this->m_evaluationBuffer;
     }
 

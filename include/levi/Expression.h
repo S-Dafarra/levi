@@ -225,7 +225,7 @@ public:
      *
      * @return A const reference to the evaluation buffer of the pointed evaluable.
      */
-    const typename EvaluableT::matrix_type& evaluate(bool checkDependencies = true);
+    const typename EvaluableT::matrix_type& evaluate();
 
     /**
      * @brief Operator +

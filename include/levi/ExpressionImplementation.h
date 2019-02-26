@@ -196,9 +196,9 @@ bool levi::ExpressionComponent<EvaluableT>::isNew() const {
 }
 
 template <class EvaluableT>
-const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::evaluate(bool checkDependencies) {
+const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::evaluate() {
     assert(m_evaluable && "This expression is empty.");
-    return m_evaluable->evaluateID(m_callerID, checkDependencies);
+    return m_evaluable->evaluateID(m_callerID);
 }
 
 template <class EvaluableT>
