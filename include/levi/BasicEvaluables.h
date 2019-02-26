@@ -238,13 +238,13 @@ public:
     virtual ~IdentityEvaluable() final;
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::row_type>> row(Eigen::Index row) final {
-        levi::Triplet<typename levi::Evaluable<Matrix>::value_type> nonZero({0, row, 1.0});
+        levi::Triplet<typename levi::Evaluable<Matrix>::value_type> nonZero = {0, row, 1.0};
         return levi::ExpressionComponent<SingleElementMatrix<typename levi::Evaluable<Matrix>::row_type>>(1, this->cols(), nonZero,
                                                                                                           "e_" + std::to_string(row) + "^T");
     }
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::col_type>> col(Eigen::Index col) final {
-        levi::Triplet<typename levi::Evaluable<Matrix>::value_type> nonZero({col, 0, 1.0});
+        levi::Triplet<typename levi::Evaluable<Matrix>::value_type> nonZero = {col, 0, 1.0};
         return levi::ExpressionComponent<SingleElementMatrix<typename levi::Evaluable<Matrix>::col_type>>(this->rows(), 1, nonZero,
                                                                                                           "e_" + std::to_string(col));
 
@@ -333,7 +333,7 @@ public:
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::row_type>> row(Eigen::Index row) final {
         if (row == m_element.row) {
-            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> nonZero({0, m_element.col, m_element.value});
+            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> nonZero = {0, m_element.col, m_element.value};
             return levi::ExpressionComponent<SingleElementMatrix<typename levi::Evaluable<Matrix>::row_type>>(1, this->cols(), nonZero,
                                                                                                               "[" + this->name() +"](" + std::to_string(row) + ",:)");
         } else {
@@ -343,7 +343,7 @@ public:
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::col_type>> col(Eigen::Index col) final {
         if (col == m_element.col) {
-            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> nonZero({m_element.row, 0, m_element.value});
+            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> nonZero = {m_element.row, 0, m_element.value};
             return levi::ExpressionComponent<SingleElementMatrix<typename levi::Evaluable<Matrix>::col_type>>(this->rows(), 1, nonZero,
                                                                                                               "[" + this->name() +"](:," +
                                                                                                                   std::to_string(col) + ")");
@@ -400,16 +400,16 @@ public:
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::row_type>> row(Eigen::Index row) final {
         if (row == m_firstElement.row && row == m_secondElement.row) {
-            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> firstNonZero({0, m_firstElement.col, m_firstElement.value});
-            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> secondNonZero({0, m_secondElement.col, m_secondElement.value});
+            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> firstNonZero = {0, m_firstElement.col, m_firstElement.value};
+            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> secondNonZero = {0, m_secondElement.col, m_secondElement.value};
             return levi::ExpressionComponent<TwoElementsMatrix<typename levi::Evaluable<Matrix>::row_type>>(1, this->cols(), firstNonZero, secondNonZero,
                                                                                                             "[" + this->name() +"](" + std::to_string(row) + ",:)");
         } else if (row == m_firstElement.row) {
-            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> firstNonZero({0, m_firstElement.col, m_firstElement.value});
+            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> firstNonZero = {0, m_firstElement.col, m_firstElement.value};
             return levi::ExpressionComponent<SingleElementMatrix<typename levi::Evaluable<Matrix>::row_type>>(1, this->cols(), firstNonZero,
                                                                                                             "[" + this->name() +"](" + std::to_string(row) + ",:)");
         } else if (row == m_secondElement.row) {
-            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> secondNonZero({0, m_secondElement.col, m_secondElement.value});
+            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> secondNonZero = {0, m_secondElement.col, m_secondElement.value};
             return levi::ExpressionComponent<SingleElementMatrix<typename levi::Evaluable<Matrix>::row_type>>(1, this->cols(), secondNonZero,
                                                                                                               "[" + this->name() +"](" + std::to_string(row) + ",:)");
         } else {
@@ -419,18 +419,18 @@ public:
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<Matrix>::col_type>> col(Eigen::Index col) final {
         if (col == m_firstElement.col && col == m_secondElement.col) {
-            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> firstNonZero({m_firstElement.row, 0, m_firstElement.value});
-            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> secondNonZero({m_secondElement.row, 0, m_secondElement.value});
+            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> firstNonZero = {m_firstElement.row, 0, m_firstElement.value};
+            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> secondNonZero = {m_secondElement.row, 0, m_secondElement.value};
             return levi::ExpressionComponent<TwoElementsMatrix<typename levi::Evaluable<Matrix>::col_type>>(this->rows(), 1, firstNonZero, secondNonZero,
                                                                                                             "[" + this->name() +"](:," +
                                                                                                                 std::to_string(col) + ")");
         } else if (col == m_firstElement.col) {
-            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> firstNonZero({m_firstElement.row, 0, m_firstElement.value});
+            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> firstNonZero = {m_firstElement.row, 0, m_firstElement.value};
             return levi::ExpressionComponent<SingleElementMatrix<typename levi::Evaluable<Matrix>::col_type>>(this->rows(), 1, firstNonZero,
                                                                                                               "[" + this->name() +"](:," +
                                                                                                                   std::to_string(col) + ")");
         } else if (col == m_secondElement.col) {
-            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> secondNonZero({m_secondElement.row, 0, m_secondElement.value});
+            levi::Triplet<typename levi::Evaluable<Matrix>::value_type> secondNonZero = {m_secondElement.row, 0, m_secondElement.value};
             return levi::ExpressionComponent<SingleElementMatrix<typename levi::Evaluable<Matrix>::col_type>>(this->rows(), 1, secondNonZero,
                                                                                                               "[" + this->name() +"](:," +
                                                                                                                   std::to_string(col) + ")");
