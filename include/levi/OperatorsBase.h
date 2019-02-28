@@ -38,8 +38,11 @@ public:
 
     virtual ~UnaryOperator() override;
 
-    virtual bool areDependenciesNew() final {
-        return m_expression.isNew();
+    virtual bool isNew(size_t callerID) final{
+        if (m_expression.isNew()) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
@@ -79,8 +82,13 @@ public:
 
     ~BinaryOperator() override;
 
-    virtual bool areDependenciesNew() final {
-        return m_lhs.isNew() || m_rhs.isNew();
+    virtual bool isNew(size_t callerID) final{
+        bool lhsIsNew = m_lhs.isNew();
+        bool rhsIsNew = m_rhs.isNew();
+        if (lhsIsNew || rhsIsNew) {
+            this->resetEvaluationRegister();
+        }
+        return !this->m_evaluationRegister[callerID];
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{

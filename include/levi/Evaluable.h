@@ -197,9 +197,9 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    const Matrix& evaluateID(size_t callerID) {
+    const Matrix& evaluateID(size_t callerID, bool checkDependencies) {
         if (callerID < m_evaluationRegister.size()) {
-            if (this->isNew(callerID)) {
+            if ((checkDependencies && this->isNew(callerID)) || (!checkDependencies && !m_evaluationRegister[callerID])) {
                 if (m_alreadyComputed) {
                     m_evaluationRegister[callerID] = true;
                     return m_evaluationBuffer;
@@ -246,26 +246,10 @@ public:
     /**
      * @brief Check if the evaluable has a new value which has not been read by the caller
      * @param callerID The ID of caller
-     * In principle there is no need to override this method
      * @return True if new
      */
-    bool isNew(size_t callerID) {
-
-        if (areDependenciesNew()) {
-            resetEvaluationRegister();
-        }
-
+    virtual bool isNew(size_t callerID) {
         return !m_evaluationRegister[callerID];
-    }
-
-    /**
-     * @brief Check whether the dependencies of the evaluable have changed.
-     * This is useful in case the evaluables depends on other expressions.
-     * It is used as a criterion to reset the evaluation register.
-     * @return true if they are new.
-     */
-    virtual bool areDependenciesNew() {
-        return false;
     }
 
     /**
@@ -544,9 +528,9 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    const Scalar& evaluateID(size_t callerID) {
+    const Scalar& evaluateID(size_t callerID, bool checkDependencies) {
         if (callerID < m_evaluationRegister.size()) {
-            if (this->isNew(callerID)) {
+            if ((checkDependencies && this->isNew(callerID)) || (!checkDependencies && !m_evaluationRegister[callerID])) {
                 if (m_alreadyComputed) {
                     m_evaluationRegister[callerID] = true;
                     return m_evaluationBuffer;
@@ -594,30 +578,10 @@ public:
     /**
      * @brief Check if the evaluable has a new value which has not been read by the caller
      * @param callerID The ID of caller
-     * In principle there is no need to override this method
      * @return True if new
      */
-    bool isNew(size_t callerID) {
-
-        if (!m_alreadyComputed && !m_evaluationRegister[callerID]) { //in case this evaluable is new, there is no need to check the dependencies
-            return true;
-        }
-
-        if (areDependenciesNew()) {
-            resetEvaluationRegister();
-        }
-
+    virtual bool isNew(size_t callerID) {
         return !m_evaluationRegister[callerID];
-    }
-
-    /**
-     * @brief Check whether the dependencies of the evaluable have changed.
-     * This is useful in case the evaluables depends on other expressions.
-     * It is used as a criterion to reset the evaluation register.
-     * @return true if they are new.
-     */
-    virtual bool areDependenciesNew() {
-        return false;
     }
 
     /**
@@ -694,6 +658,7 @@ public:
     void clearDerivativesCache() {
         m_derivativeBuffer.clear();
     }
+
 };
 template <typename Scalar>
 levi::Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>::~Evaluable() { }

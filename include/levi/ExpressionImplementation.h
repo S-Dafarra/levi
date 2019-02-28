@@ -28,6 +28,22 @@ static levi::ExpressionComponent<levi::ConstantEvaluable<T>> levi::build_constan
     return constant;
 }
 
+template<int rowsNumber, class EvaluableT>
+levi::ExpressionComponent<typename levi::ConstructorByRows<EvaluableT>::composite_evaluable>
+levi::ComposeByRows(const std::vector<ExpressionComponent<EvaluableT>>& rows, const std::string& name)
+{
+    static_assert (EvaluableT::rows_at_compile_time == 1, "ComposeByRows can compose only from expressions which have 1 row at compile time.");
+    return levi::ExpressionComponent<levi::ConstructorByRows<EvaluableT, rowsNumber>>(rows, name);
+}
+
+template<int colsNumber, typename EvaluableT>
+levi::ExpressionComponent<typename levi::ConstructorByCols<EvaluableT>::composite_evaluable>
+levi::ComposeByCols(const std::vector<levi::ExpressionComponent<EvaluableT>>& cols, const std::string& name)
+{
+    static_assert (EvaluableT::cols_at_compile_time == 1, "ComposeByCols can compose only from expressions which have 1 col at compile time.");
+    return levi::ExpressionComponent<levi::ConstructorByCols<EvaluableT, colsNumber>>(cols, name);
+}
+
 template <class EvaluableT>
 template<bool value>
 void levi::ExpressionComponent<EvaluableT>::default_constructor(levi::bool_value<value>)
@@ -196,9 +212,17 @@ bool levi::ExpressionComponent<EvaluableT>::isNew() const {
 }
 
 template <class EvaluableT>
-const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::evaluate() {
+bool levi::ExpressionComponent<EvaluableT>::isNull() const {
+    if (!m_evaluable)
+        return true;
+
+    return m_isNull;
+}
+
+template <class EvaluableT>
+const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::evaluate(bool checkDependencies) {
     assert(m_evaluable && "This expression is empty.");
-    return m_evaluable->evaluateID(m_callerID);
+    return m_evaluable->evaluateID(m_callerID, checkDependencies);
 }
 
 template <class EvaluableT>
@@ -590,13 +614,13 @@ bool levi::ExpressionComponent<EvaluableT>::isValidExpression() const
 template<class EvaluableT>
 levi::ExpressionComponent<EvaluableT> levi::ExpressionComponent<EvaluableT>::ComposeByRows(const std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::row_type>>> &rows, std::string name)
 {
-    return levi::ExpressionComponent<levi::ConstructorByRows<EvaluableT>>(rows, name);
+    return levi::ExpressionComponent<levi::ConstructorByRows<levi::Evaluable<typename EvaluableT::row_type>, EvaluableT::rows_at_compile_time>>(rows, name);
 }
 
 template<class EvaluableT>
 levi::ExpressionComponent<EvaluableT> levi::ExpressionComponent<EvaluableT>::ComposeByCols(const std::vector<levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::col_type>>> &cols, std::string name)
 {
-    return levi::ExpressionComponent<levi::ConstructorByCols<EvaluableT>>(cols, name);
+    return levi::ExpressionComponent<levi::ConstructorByCols<levi::Evaluable<typename EvaluableT::col_type>, EvaluableT::cols_at_compile_time>>(cols, name);
 }
 
 template<class EvaluableT>

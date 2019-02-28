@@ -154,10 +154,10 @@ namespace levi {
     template <typename EvaluableT>
     class TransposeEvaluable;
 
-    template <typename EvaluableT>
+    template <typename EvaluableT, int rowsNumber = -1>
     class ConstructorByRows;
 
-    template <typename EvaluableT>
+    template <typename EvaluableT, int colsNumber = -1>
     class ConstructorByCols;
 
     template <typename EvaluableT>

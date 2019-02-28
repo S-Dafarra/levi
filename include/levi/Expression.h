@@ -29,6 +29,26 @@ namespace levi {
     template<typename T>
     static ExpressionComponent<ConstantEvaluable<T>> build_constant(bool_value<false>, const T& rhs);
 
+    /**
+    * @brief Create an epression from a vector of rows
+    * @param rows The vector containing the expressionion composing the rows of the new expression
+    * @param name The name of the new expression
+    * @return An expression made of the specified rows
+    */
+    template<int rowsNumber = -1, typename EvaluableT>
+    ExpressionComponent<typename levi::ConstructorByRows<EvaluableT>::composite_evaluable>
+    ComposeByRows(const std::vector<ExpressionComponent<EvaluableT>>& rows, const std::string& name);
+
+    /**
+     * @brief Create an epression from a vector of cols
+     * @param cols The vector containing the expressionion composing the columns of the new expression
+     * @param name The name of the new expression
+     * @return An expression made of the specified columns
+     */
+    template<int colsNumber = -1, typename EvaluableT>
+    ExpressionComponent<typename levi::ConstructorByCols<EvaluableT>::composite_evaluable>
+    ComposeByCols(const std::vector<levi::ExpressionComponent<EvaluableT>>& cols, const std::string& name);
+
 }
 
 /**
@@ -219,13 +239,19 @@ public:
     bool isNew() const;
 
     /**
+     * @brief Check if the expression is null
+     * @return True if null
+     */
+    bool isNull() const;
+
+    /**
      * @brief Evaluate the pointed evaluable.
      *
      * @warning An assert is used to check whether the evaluable can be evaluated. Test the code in debug mode first to avoid segfaults.
      *
      * @return A const reference to the evaluation buffer of the pointed evaluable.
      */
-    const typename EvaluableT::matrix_type& evaluate();
+    const typename EvaluableT::matrix_type& evaluate(bool checkDependencies = true);
 
     /**
      * @brief Operator +
