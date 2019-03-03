@@ -322,6 +322,8 @@ public:
         if (!(element->second.at(column).isValidExpression())) {
             if (isDependentFrom(variable)) {
                 element->second.at(column) = getNewColumnDerivative(column, variable);
+                assert((element->second.at(column).rows() == rows()) && (element->second.at(column).cols() == variable->dimension())
+                       && "Wrong dimensions when retrieving new derivative.");
             } else {
                 element->second.at(column) = levi::ExpressionComponent<levi::NullEvaluable<typename derivative_evaluable::matrix_type>>(rows(),
                                                                                                                                         variable->dimension(),
@@ -642,6 +644,8 @@ public:
         if (!(element->second.at(column).isValidExpression())) {
             if (isDependentFrom(variable)) {
                 element->second.at(column) = getNewColumnDerivative(column, variable);
+                assert((element->second.at(column).rows() == rows()) && (element->second.at(column).cols() == variable->dimension())
+                       && "Wrong dimensions when retrieving new derivative.");
             } else {
                 element->second.at(column) = levi::ExpressionComponent<levi::NullEvaluable<typename derivative_evaluable::matrix_type>>(rows(),
                                                                                                                                         variable->dimension(),
