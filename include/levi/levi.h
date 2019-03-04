@@ -19,5 +19,6 @@
 #include "Variable.h"
 #include "Expression.h"
 #include "ExpressionImplementation.h"
+#include "DependenciesSet.h"
 
 #endif // LEVI_H

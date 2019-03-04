@@ -34,6 +34,9 @@ namespace levi {
     template<bool T>
     struct bool_value { };
 
+    template<size_t value>
+    struct size_t_value { };
+
     template <typename Scalar_lhs, typename Scalar_rhs>
     struct scalar_sum_return;
 

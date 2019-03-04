@@ -20,6 +20,7 @@
 #endif
 
 #include <type_traits>
+#include <cstddef>
 
 
 namespace levi {
@@ -168,6 +169,30 @@ namespace levi {
 
     template <typename CompositeEvaluable, typename TopEvaluable, typename BottomEvaluable>
     class VertcatEvaluable;
+
+    template<size_t startIndex, typename... Evaluables>
+    class DependenciesSet;
+
+    template<size_t startIndex, typename Evaluable>
+    class DependenciesSet<startIndex, Evaluable>;
+
+    template<typename EvaluableT>
+    class DependenciesSet<0, EvaluableT>;
+
+    template<size_t startIndex, class Evaluable0, class... OtherEvaluables>
+    class DependenciesSet<startIndex, Evaluable0, OtherEvaluables...>;
+
+    template<class Evaluable0, class... OtherEvaluables>
+    class DependenciesSet<0, Evaluable0, OtherEvaluables...>;
+
+    template<>
+    class DependenciesSet<0>;
+
+    template<typename... Evaluables>
+    DependenciesSet<0, Evaluables...> make_dependencies_set(ExpressionComponent<Evaluables>&& ...dependencies);
+
+    template<typename... Evaluables>
+    DependenciesSet<0, Evaluables...> make_dependencies_set(const ExpressionComponent<Evaluables>& ...dependencies);
 
     typedef Evaluable<LEVI_DEFAULT_MATRIX_TYPE> DefaultEvaluable;
 
