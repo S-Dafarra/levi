@@ -107,12 +107,10 @@ levi::ExpressionComponent<EvaluableOut> levi::ExpressionComponent<EvaluableT>::r
     return levi::ExpressionComponent<EvaluableOut>();
 }
 
-
 template <class EvaluableT>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent()
-    : m_isNull(std::is_same<EvaluableT, levi::NullEvaluable<typename EvaluableT::matrix_type>>::value)
-      , m_isIdentity(std::is_same<EvaluableT, levi::IdentityEvaluable<typename EvaluableT::matrix_type>>::value)
 {
+    m_type = levi::detectType(*this);
     default_constructor(levi::bool_value<std::is_constructible<EvaluableT>::value>());
 }
 
@@ -120,8 +118,7 @@ template <class EvaluableT>
 template<class EvaluableOther, typename>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent(const ExpressionComponent<EvaluableOther>& other) {
 
-    m_isNull = other.m_isNull;
-    m_isIdentity = other.m_isIdentity;
+    m_type = other.m_type;
     if (other.isValidExpression()) {
         casted_assignement(levi::bool_value<std::is_base_of<EvaluableT, EvaluableOther>::value>(), other);
     } else {
@@ -131,8 +128,7 @@ levi::ExpressionComponent<EvaluableT>::ExpressionComponent(const ExpressionCompo
 
 template <class EvaluableT>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent(const ExpressionComponent<EvaluableT>& other) {
-    m_isNull = other.m_isNull;
-    m_isIdentity = other.m_isIdentity;
+    m_type = other.m_type;
     m_evaluable = other.m_evaluable;
     if (m_evaluable) {
         m_callerID = m_evaluable->getNewCallerID();
@@ -143,8 +139,7 @@ template <class EvaluableT>
 template<class EvaluableOther, typename>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent(ExpressionComponent<EvaluableOther>&& other) {
 
-    m_isNull = other.m_isNull;
-    m_isIdentity = other.m_isIdentity;
+    m_type = other.m_type;
     if (other.isValidExpression()) {
         casted_assignement(levi::bool_value<std::is_base_of<EvaluableT, EvaluableOther>::value>(), other);
     } else {
@@ -154,8 +149,7 @@ levi::ExpressionComponent<EvaluableT>::ExpressionComponent(ExpressionComponent<E
 
 template <class EvaluableT>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent(ExpressionComponent<EvaluableT>&& other) {
-    m_isNull = other.m_isNull;
-    m_isIdentity = other.m_isIdentity;
+    m_type = other.m_type;
     m_evaluable = other.m_evaluable;
     if (m_evaluable) {
         m_callerID = m_evaluable->getNewCallerID();
@@ -166,9 +160,8 @@ template <class EvaluableT>
 template<class... Args, typename>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent(Args&&... args)
     : m_evaluable(std::make_shared<EvaluableT>(std::forward<Args>(args)...))
-    , m_isNull(std::is_same<EvaluableT, levi::NullEvaluable<typename EvaluableT::matrix_type>>::value)
 {
-    m_isIdentity = (std::is_same<EvaluableT, levi::IdentityEvaluable<typename EvaluableT::matrix_type>>::value) && (rows() == cols());
+    m_type = levi::detectType(*this);
     m_callerID = m_evaluable->getNewCallerID();
 }
 
@@ -216,7 +209,12 @@ bool levi::ExpressionComponent<EvaluableT>::isNull() const {
     if (!m_evaluable)
         return true;
 
-    return m_isNull;
+    return m_type == levi::EvaluableType::Null;
+}
+
+template <class EvaluableT>
+const levi::EvaluableType& levi::ExpressionComponent<EvaluableT>::type() const {
+    return m_type;
 }
 
 template <class EvaluableT>
@@ -233,11 +231,11 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
     assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
 
-    if (m_isNull) {
+    if (m_type == levi::EvaluableType::Null) {
         return rhs;
     }
 
-    if (rhs.m_isNull) {
+    if (rhs.m_type == levi::EvaluableType::Null) {
         return *this;
     }
 
@@ -260,11 +258,11 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
     assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
 
-    if (m_isNull) {
+    if (m_type == levi::EvaluableType::Null) {
         return -rhs;
     }
 
-    if (rhs.m_isNull) {
+    if (rhs.m_type == levi::EvaluableType::Null) {
         return *this;
     }
 
@@ -285,7 +283,7 @@ levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> lev
     assert(m_evaluable && "This expression is empty.");
     levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> newExpression;
 
-    if (m_isNull) {
+    if (m_type == levi::EvaluableType::Null) {
         return *this;
     }
 
@@ -301,21 +299,21 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
     assert(m_evaluable && "This expression is empty.");
     assert(rhs.m_evaluable);
 
-    if (m_isNull || rhs.m_isNull) {
+    if (m_type == levi::EvaluableType::Null || rhs.m_type == levi::EvaluableType::Null) {
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>>((rows() == 1 && cols() == 1 && rhs.rows() != 1)? rhs.rows() : rows(),
                                                                                                                                                                                 (rhs.rows() == 1 && rhs.cols() == 1 && cols() != 1)? cols() : rhs.cols());
     }
 
     typedef levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type> return_evaluable;
 
-    if (rhs.m_isIdentity && (rhs.rows() == rhs.cols()) && ((rhs.rows() == 1) || (cols() == rhs.rows()))) { //i.e. it's not the case of scalar * I
+    if (rhs.m_type == levi::EvaluableType::Identity && (rhs.rows() == rhs.cols()) && ((rhs.rows() == 1) || (cols() == rhs.rows()))) { //i.e. it's not the case of scalar * I
         return return_this<return_evaluable>(bool_value<(((return_evaluable::rows_at_compile_time == EvaluableT::rows_at_compile_time) ||
                                                           (return_evaluable::rows_at_compile_time * EvaluableT::rows_at_compile_time < 0)) &&
                                                          ((return_evaluable::cols_at_compile_time == EvaluableT::cols_at_compile_time) ||
                                                           (return_evaluable::cols_at_compile_time * EvaluableT::cols_at_compile_time < 0)))>());
     }
 
-    if (m_isIdentity && (rows() == cols()) && ((rows() == 1) || (cols() == rhs.rows()))) {
+    if (m_type == levi::EvaluableType::Identity && (rows() == cols()) && ((rows() == 1) || (cols() == rhs.rows()))) {
         return return_rhs<return_evaluable>(bool_value<(((return_evaluable::rows_at_compile_time == EvaluableRhs::rows_at_compile_time) ||
                                                          (return_evaluable::rows_at_compile_time * EvaluableRhs::rows_at_compile_time < 0)) &&
                                                         ((return_evaluable::cols_at_compile_time == EvaluableRhs::cols_at_compile_time) ||
@@ -373,8 +371,7 @@ template <class EvaluableT>
 template<class EvaluableRhs, typename>
 void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableRhs>& rhs) {
     static_assert (!std::is_base_of<levi::VariableBase, EvaluableT>::value, "Cannot assign an expression to a variable." );
-    m_isNull = rhs.m_isNull;
-    m_isIdentity = rhs.m_isIdentity;
+    m_type = rhs.m_type;
 
     if (m_evaluable) {
         m_evaluable->deleteID(m_callerID);
@@ -387,8 +384,8 @@ void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComp
 
 template <class EvaluableT>
 void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableT>& rhs) {
-    m_isNull = rhs.m_isNull;
-    m_isIdentity = rhs.m_isIdentity;
+    m_type = rhs.m_type;
+
     if (m_evaluable) {
         m_evaluable->deleteID(m_callerID);
     }
@@ -403,8 +400,8 @@ template <class EvaluableT>
 template<class EvaluableRhs, typename>
 void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableRhs>&& rhs) {
     static_assert (!std::is_base_of<levi::VariableBase, EvaluableT>::value, "Cannot assign an expression to a variable." );
-    m_isNull = rhs.m_isNull;
-    m_isIdentity = rhs.m_isIdentity;
+    m_type = rhs.m_type;
+
     if (m_evaluable) {
         m_evaluable->deleteID(m_callerID);
     }
@@ -416,8 +413,8 @@ void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComp
 
 template <class EvaluableT>
 void levi::ExpressionComponent<EvaluableT>::operator=(const levi::ExpressionComponent<EvaluableT>&& rhs) {
-    m_isNull = rhs.m_isNull;
-    m_isIdentity = rhs.m_isIdentity;
+    m_type = rhs.m_type;
+
 
     if (m_evaluable) {
         m_evaluable->deleteID(m_callerID);
@@ -504,7 +501,7 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::dynamic_block_return<ty
     assert(m_evaluable && "Cannot extract a block from this expression");
     assert(((startRow + numberOfRows) <= rows()) && ((startCol + numberOfCols) <= cols()) && "Invalid block settings.");
 
-    if (m_isNull) {
+    if (m_type == levi::EvaluableType::Null) {
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::dynamic_block_return<typename EvaluableT::matrix_type>::type>>(numberOfRows, numberOfCols);
     }
 
@@ -520,7 +517,7 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::fixed_block_return<type
 
     typedef typename levi::fixed_block_return<typename EvaluableT::matrix_type, numberOfRows, numberOfCols>::type block_type;
 
-    if (m_isNull) {
+    if (m_type == levi::EvaluableType::Null) {
         return levi::ExpressionComponent<levi::NullEvaluable<block_type>>();
     }
 

@@ -9,6 +9,7 @@
 
 #include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
+#include <levi/TypeDetector.h>
 
 namespace levi {
 
@@ -145,14 +146,9 @@ class levi::ExpressionComponent {
     levi::ExpressionComponent<EvaluableOut> return_rhs(levi::bool_value<false>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const;
 
     /**
-     * @brief Check if the current evaluable is null
+     * @brief Saves the actual type of the evaluable
      */
-    bool m_isNull;
-
-    /**
-     * @brief Check if the current evaluable is a squared identity
-     */
-    bool m_isIdentity;
+    levi::EvaluableType m_type;
 
 public:
 
@@ -243,6 +239,12 @@ public:
      * @return True if null
      */
     bool isNull() const;
+
+    /**
+     * @brief Get the expression type
+     * @return The expression type
+     */
+    const levi::EvaluableType& type() const;
 
     /**
      * @brief Evaluate the pointed evaluable.

@@ -194,6 +194,10 @@ namespace levi {
     template<typename... Evaluables>
     DependenciesSet<0, Evaluables...> make_dependencies_set(const ExpressionComponent<Evaluables>& ...dependencies);
 
+
+    /** Useful typedefs
+     **/
+
     typedef Evaluable<LEVI_DEFAULT_MATRIX_TYPE> DefaultEvaluable;
 
     template<int rows, int cols>
