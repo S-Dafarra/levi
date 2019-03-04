@@ -37,5 +37,13 @@ int main() {
     bool isNull = dependecyList.get(levi::size_t_value<2>()).isNull();
     assert(isNull);
 
+    Variable z(3, "z");
+    Variable k(4, "k");
+
+    auto otherDependecyList = make_dependencies_set(z,k, Null(3,3));
+    otherDependecyList.evaluate(levi::size_t_value<1>());
+
+    dependecyList = otherDependecyList;
+
     return 0;
 }

@@ -22,7 +22,11 @@ public:
     { }
 
     DependenciesSet(levi::ExpressionComponent<EvaluableT>&& dependency)
-        : m_dependency(dependency)
+        : m_dependency(std::forward<levi::ExpressionComponent<EvaluableT>>(dependency))
+    { }
+
+    DependenciesSet(const DependenciesSet<startIndex, EvaluableT>& other)
+        : m_dependency(other.m_dependency)
     { }
 
     template<size_t index>
@@ -60,6 +64,10 @@ public:
 
     DependenciesSet(levi::ExpressionComponent<EvaluableT>&& dependency)
         : m_dependency(dependency)
+    { }
+
+    DependenciesSet(const DependenciesSet<0, EvaluableT>& other)
+        : m_dependency(other.m_dependency)
     { }
 
     template<size_t index>
@@ -127,12 +135,12 @@ public:
 private:
     template<std::size_t currentIndex>
     bool areNewHelper(levi::size_t_value<currentIndex>) const {
-        bool isFirstNew = this->template isNew(levi::size_t_value<currentIndex>());
+        bool isFirstNew = isNew(levi::size_t_value<currentIndex>());
         return areNewHelper(levi::size_t_value<currentIndex + 1>()) || isFirstNew;
     }
 
     bool areNewHelper(levi::size_t_value<sizeof... (OtherEvaluables)>) const {
-        return this->template isNew(levi::size_t_value<sizeof... (OtherEvaluables)>());
+        return isNew(levi::size_t_value<sizeof... (OtherEvaluables)>());
     }
 
 public:
