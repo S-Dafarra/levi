@@ -16,10 +16,15 @@ namespace levi {
         Identity,
         Sum,
         Subtraction,
+        InvertedSign,
         Product,
+        Division,
+        Pow,
+        Transpose,
         Row,
         Column,
-        Element
+        Element,
+        Block
     };
 
     template <typename EvaluableT>
@@ -47,9 +52,29 @@ namespace levi {
         return EvaluableType::Subtraction;
     }
 
+    template <typename EvaluableT>
+    EvaluableType detectType(const ExpressionComponent<SignInvertedEvaluable<EvaluableT>>&) {
+        return EvaluableType::InvertedSign;
+    }
+
     template <typename EvaluableLhs, typename EvaluableRhs>
     EvaluableType detectType(const ExpressionComponent<ProductEvaluable<EvaluableLhs, EvaluableRhs>>&) {
         return EvaluableType::Product;
+    }
+
+    template <typename EvaluableLhs, typename EvaluableRhs>
+    EvaluableType detectType(const ExpressionComponent<DivisionEvaluable<EvaluableLhs, EvaluableRhs>>&) {
+        return EvaluableType::Division;
+    }
+
+    template <typename EvaluableT>
+    EvaluableType detectType(const ExpressionComponent<PowEvaluable<EvaluableT>>&) {
+        return EvaluableType::Pow;
+    }
+
+    template <typename EvaluableT>
+    EvaluableType detectType(const ExpressionComponent<TransposeEvaluable<EvaluableT>>&) {
+        return EvaluableType::Transpose;
     }
 
     template <typename EvaluableT>
@@ -65,6 +90,11 @@ namespace levi {
     template <typename EvaluableT>
     EvaluableType detectType(const ExpressionComponent<ElementEvaluable<EvaluableT>>&) {
         return EvaluableType::Element;
+    }
+
+    template <typename EvaluableT, typename EvaluableOut>
+    EvaluableType detectType(const ExpressionComponent<BlockEvaluable<EvaluableT, EvaluableOut>>&) {
+        return EvaluableType::Block;
     }
 
 }

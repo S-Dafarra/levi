@@ -145,10 +145,27 @@ class levi::ExpressionComponent {
     template<typename EvaluableOut, typename EvaluableRhs>
     levi::ExpressionComponent<EvaluableOut> return_rhs(levi::bool_value<false>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const;
 
+    class EvaluableInfo{
+    public:
+        levi::EvaluableType type;
+        levi::BlockType block;
+        typename EvaluableT::value_type exponent;
+        levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>> lhs, rhs;
+
+        template <typename OtherInfo>
+        void copy(const OtherInfo& other);
+    };
+
     /**
-     * @brief Saves the actual type of the evaluable
+     * @brief Saves the infos about the pointed the evaluable
      */
-    levi::EvaluableType m_type;
+    EvaluableInfo* m_info;
+
+    template <typename OtherInfo>
+    void copyInfo(const OtherInfo* other);
+
+    template<class... Args, typename = typename std::enable_if<std::is_constructible<EvaluableT, Args...>::value>::type>
+    ExpressionComponent(const EvaluableInfo& info, Args&&... args);
 
 public:
 
@@ -244,7 +261,7 @@ public:
      * @brief Get the expression type
      * @return The expression type
      */
-    const levi::EvaluableType& type() const;
+    levi::EvaluableType type() const;
 
     /**
      * @brief Evaluate the pointed evaluable.

@@ -143,6 +143,13 @@ namespace levi {
         Scalar value;
     };
 
+    struct BlockType {
+        Eigen::Index rows = -1;
+        Eigen::Index cols = -1;
+        Eigen::Index startRow = -1;
+        Eigen::Index startCol = -1;
+    };
+
     template<typename Scalar>
     using Triplet = TripletStruct<Scalar>;
 }
