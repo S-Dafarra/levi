@@ -170,6 +170,9 @@ namespace levi {
     template <typename CompositeEvaluable, typename TopEvaluable, typename BottomEvaluable>
     class VertcatEvaluable;
 
+    template<typename EvaluableT>
+    class SqueezeEvaluable;
+
     template<size_t startIndex, typename... Evaluables>
     class DependenciesSet;
 

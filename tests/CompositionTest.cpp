@@ -21,10 +21,13 @@ int main() {
 
     auto subtraction  = A - a;
 
-
     b = B;
 
     Expression c = a + b;
+
+    auto squeeze = c.squeeze("squeezeTest");
+    assert(squeeze.evaluate() == c.evaluate());
+
     c = c * a;
     std::cerr << c.name() << ": " <<std::endl << c.evaluate() <<std::endl;
 
@@ -54,6 +57,8 @@ int main() {
     assert(d.evaluate() == c.evaluate());
 
     d = 1.0 * d + c;
+
+    assert(d.squeeze("squeezeTest").evaluate() == d.evaluate());
 
     Eigen::VectorXd x_value(3);
     x_value.setRandom();

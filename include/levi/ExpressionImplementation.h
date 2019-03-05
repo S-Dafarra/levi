@@ -11,6 +11,7 @@
 #include <levi/OperatorsEvaluables.h>
 #include <levi/AccessorEvaluables.h>
 #include <levi/AdvancedConstructors.h>
+#include <levi/SqueezeEvaluable.h>
 #include <levi/Variable.h>
 
 template<typename EvaluableT>
@@ -657,6 +658,14 @@ levi::ExpressionComponent<levi::EvaluableVariable<typename EvaluableT::col_type>
     assert(m_evaluable && "The expression is empty.");
 
     return levi::ExpressionComponent<levi::VariableFromExpressionEvaluable<EvaluableT>>(*this, 0);
+}
+
+template<class EvaluableT>
+levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>>
+levi::ExpressionComponent<EvaluableT>::squeeze(const std::string& name) const {
+    assert(m_evaluable && "Cannot squeeze this expression. It is empty.");
+
+    return levi::ExpressionComponent<levi::SqueezeEvaluable<EvaluableT>>(*this, name);
 }
 
 template<typename EvaluableT>
