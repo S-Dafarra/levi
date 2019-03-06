@@ -67,6 +67,9 @@ class levi::ExpressionComponent {
     template <typename OtherEvaluable>
     friend class levi::SqueezeEvaluable;
 
+    template <typename OtherEvaluable>
+    friend class levi::CastEvaluable;
+
     /**
      * @brief Shared pointer to the evaluable.
      */
@@ -169,6 +172,8 @@ class levi::ExpressionComponent {
 
     template<class... Args, typename = typename std::enable_if<std::is_constructible<EvaluableT, Args...>::value>::type>
     ExpressionComponent(const EvaluableInfo& info, Args&&... args);
+
+    const typename EvaluableT::EvaluableInfo &info() const;
 
 public:
 

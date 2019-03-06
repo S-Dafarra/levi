@@ -78,7 +78,11 @@ public:
     RowEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index row)
         : levi::UnaryOperator<typename EvaluableT::row_type, EvaluableT>(expression, 1, expression.cols(), "(" + expression.name() + ")(" + std::to_string(row) + ",:)")
         , m_row(row)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Row;
+        this->m_info->lhs = expression;
+        this->m_info->block.startRow = row;
+    }
 
     virtual ~RowEvaluable() final;
 
@@ -126,6 +130,9 @@ public:
     {
         levi::unused(row);
         assert(row == 0);
+        this->m_info->type = levi::EvaluableType::Row;
+        this->m_info->lhs = expression;
+        this->m_info->block.startRow = row;
     }
 
     virtual ~RowEvaluable() final;
@@ -162,7 +169,11 @@ public:
     ColEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index col)
         : levi::UnaryOperator<typename EvaluableT::col_type, EvaluableT>(expression, expression.rows(), 1, "(" + expression.name() + ")(:," + std::to_string(col) + ")")
         , m_col(col)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Column;
+        this->m_info->lhs = expression;
+        this->m_info->block.startCol = col;
+    }
 
     virtual ~ColEvaluable() final;
 
@@ -211,6 +222,9 @@ public:
     {
         levi::unused(col);
         assert(col == 0);
+        this->m_info->type = levi::EvaluableType::Column;
+        this->m_info->lhs = expression;
+        this->m_info->block.startCol = col;
     }
 
     virtual ~ColEvaluable() final;
@@ -249,7 +263,12 @@ public:
         : levi::UnaryOperator<typename EvaluableT::value_type, EvaluableT>(expression, "[" + expression.name() + "](" + std::to_string(row) + ", " + std::to_string(col) + ")")
         , m_row(row)
         , m_col(col)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Element;
+        this->m_info->lhs = expression;
+        this->m_info->block.startRow = row;
+        this->m_info->block.startCol = col;
+    }
 
     virtual ~ElementEvaluable() final;
 
@@ -288,6 +307,10 @@ public:
     {
         levi::unused(row, col);
         assert(row == 0 && col == 0);
+        this->m_info->type = levi::EvaluableType::Element;
+        this->m_info->lhs = expression;
+        this->m_info->block.startRow = row;
+        this->m_info->block.startCol = col;
     }
 
     virtual ~ElementEvaluable() final;
@@ -340,6 +363,12 @@ public:
         , m_startCol(startCol)
     {
         assert(((startRow + numberOfRows) <= expression.rows()) && ((startCol + numberOfCols) <= expression.cols()));
+        this->m_info->type = levi::EvaluableType::Block;
+        this->m_info->lhs = expression;
+        this->m_info->block.startRow = startRow;
+        this->m_info->block.startCol = startCol;
+        this->m_info->block.rows = numberOfRows;
+        this->m_info->block.cols = numberOfCols;
     }
 
     virtual ~BlockEvaluable() final;
@@ -391,6 +420,12 @@ public:
     {
         levi::unused(startRow, startCol, numberOfRows, numberOfCols);
         assert(startRow == 0 && startCol == 0 && numberOfRows == 1 && numberOfCols == 1);
+        this->m_info->type = levi::EvaluableType::Block;
+        this->m_info->lhs = expression;
+        this->m_info->block.startRow = startRow;
+        this->m_info->block.startCol = startCol;
+        this->m_info->block.rows = numberOfRows;
+        this->m_info->block.cols = numberOfCols;
     }
 
     virtual ~BlockEvaluable() final;
@@ -444,7 +479,9 @@ public:
 
     CastEvaluable(const levi::ExpressionComponent<RightEvaluable>& rhs)
         : levi::UnaryOperator<typename LeftEvaluable::matrix_type, RightEvaluable>(rhs, rhs.rows(), rhs.cols(), rhs.name())
-    { }
+    {
+        this->m_info->copy(rhs.info());
+    }
 
     virtual ~CastEvaluable() final;
 

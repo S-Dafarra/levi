@@ -272,6 +272,13 @@ levi::EvaluableType levi::ExpressionComponent<EvaluableT>::type() const {
 }
 
 template <class EvaluableT>
+const typename EvaluableT::EvaluableInfo& levi::ExpressionComponent<EvaluableT>::info() const {
+    assert(m_evaluable && "Cannot get infos from this expression.");
+    return m_evaluable->info();
+}
+
+
+template <class EvaluableT>
 const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::evaluate(bool checkDependencies) {
     assert(m_evaluable && "This expression is empty.");
     return m_evaluable->evaluateID(m_callerID, checkDependencies);

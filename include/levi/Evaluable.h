@@ -9,6 +9,7 @@
 
 #include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
+#include <levi/TypeDetector.h>
 #include <levi/VariableBase.h>
 
 /**
@@ -66,6 +67,28 @@ public:
      */
     typedef Evaluable<Eigen::Matrix<value_type, rows_at_compile_time, Eigen::Dynamic>> derivative_evaluable;
 
+    class EvaluableInfo{
+
+        friend class Evaluable;
+
+        EvaluableInfo() { }
+
+    public:
+        levi::EvaluableType type;
+        levi::BlockType block;
+        value_type exponent;
+        levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic>>> lhs, rhs;
+
+        template <typename OtherInfo>
+        void copy(const OtherInfo& other) {
+            type = other.type;
+            block = other.block;
+            exponent = other.exponent;
+            lhs = other.lhs;
+            rhs = other.rhs;
+        }
+    };
+
 protected:
 
     /**
@@ -105,6 +128,11 @@ protected:
      */
     DerivativeMap m_derivativeBuffer;
 
+    /**
+     * @brief Contains basic infos about the evaluable (useful to expand the evaluation tree)
+     */
+    EvaluableInfo* m_info;
+
 public:
 
     Evaluable() = delete;
@@ -118,7 +146,10 @@ public:
     Evaluable(const std::string& name)
         : m_name(name)
         , m_alreadyComputed(false)
-    { }
+        , m_info(new EvaluableInfo)
+    {
+        m_info->type = levi::EvaluableType::Generic;
+    }
 
     /**
      * @brief Constructor
@@ -130,8 +161,10 @@ public:
         : m_name(name)
         , m_evaluationBuffer(rows, cols)
         , m_alreadyComputed(false)
+        , m_info(new EvaluableInfo)
     {
         m_evaluationBuffer.setZero();
+        m_info->type = levi::EvaluableType::Generic;
     }
 
     /**
@@ -143,7 +176,10 @@ public:
         : m_name(name)
         , m_evaluationBuffer(initialValue)
         , m_alreadyComputed(false)
-    { }
+        , m_info(new EvaluableInfo)
+    {
+        m_info->type = levi::EvaluableType::Generic;
+    }
 
     template <typename OtherMatrix>
     Evaluable(const Evaluable<OtherMatrix>& other) = delete;
@@ -175,6 +211,10 @@ public:
      */
     std::string name() const {
         return m_name;
+    }
+
+    const EvaluableInfo& info() const {
+        return *m_info;
     }
 
     virtual levi::ExpressionComponent<levi::Evaluable<row_type>> row(Eigen::Index row) {
@@ -343,7 +383,13 @@ public:
 
 };
 template<typename Matrix>
-levi::Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>::~Evaluable() { }
+levi::Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>::~Evaluable()
+{
+    if (m_info) {
+        delete m_info;
+        m_info = nullptr;
+    }
+}
 
 /**
  * @brief Evaluable class (for scalar type)
@@ -387,6 +433,27 @@ public:
      */
     typedef Evaluable<Eigen::Matrix<value_type, 1, Eigen::Dynamic>> derivative_evaluable;
 
+    class EvaluableInfo{
+
+        friend class Evaluable;
+
+        EvaluableInfo() { }
+
+    public:
+        levi::EvaluableType type;
+        levi::BlockType block;
+        value_type exponent;
+        levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic>>> lhs, rhs;
+
+        template <typename OtherInfo>
+        void copy(const OtherInfo& other) {
+            type = other.type;
+            block = other.block;
+            exponent = other.exponent;
+            lhs = other.lhs;
+            rhs = other.rhs;
+        }
+    };
 
 protected:
 
@@ -427,6 +494,8 @@ protected:
      */
     DerivativeMap m_derivativeBuffer;
 
+    EvaluableInfo *m_info;
+
 public:
 
     Evaluable() = delete;
@@ -440,7 +509,10 @@ public:
     Evaluable(const std::string& name)
         : m_name(name)
         , m_alreadyComputed(false)
-    { }
+        , m_info(new EvaluableInfo)
+    {
+        m_info->type = levi::EvaluableType::Generic;
+    }
 
     /**
      * @brief Constructor (for compatibility with the matrix version)
@@ -451,10 +523,12 @@ public:
     Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : m_name(name)
         , m_alreadyComputed(false)
+        , m_info(new EvaluableInfo)
     {
         levi::unused(rows, cols);
         assert(rows == 1 && cols == 1);
         m_evaluationBuffer = 0;
+        m_info->type = levi::EvaluableType::Generic;
     }
 
     /**
@@ -466,7 +540,10 @@ public:
         : m_name(name)
         , m_evaluationBuffer(initialValue)
         , m_alreadyComputed(false)
-    { }
+        , m_info(new EvaluableInfo)
+    {
+        m_info->type = levi::EvaluableType::Generic;
+    }
 
     /**
      * @brief Constructor
@@ -476,7 +553,10 @@ public:
         : m_name(std::to_string(initialValue))
         , m_evaluationBuffer(initialValue)
         , m_alreadyComputed(false)
-    { }
+        , m_info(new EvaluableInfo)
+    {
+        m_info->type = levi::EvaluableType::Generic;
+    }
 
     template <typename OtherMatrix, typename OtherDerivativeEvaluable>
     Evaluable(const Evaluable<OtherMatrix, OtherDerivativeEvaluable>& other) = delete;
@@ -508,6 +588,10 @@ public:
      */
     std::string name() const {
         return m_name;
+    }
+
+    const EvaluableInfo& info() const {
+        return *m_info;
     }
 
     virtual levi::ExpressionComponent<levi::Evaluable<row_type>> row(Eigen::Index row) {
@@ -665,6 +749,12 @@ public:
 
 };
 template <typename Scalar>
-levi::Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>::~Evaluable() { }
+levi::Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>::~Evaluable()
+{
+    if (m_info) {
+        delete m_info;
+        m_info = nullptr;
+    }
+}
 
 #endif // LEVI_EVALUABLE_H

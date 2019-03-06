@@ -162,7 +162,11 @@ public:
 
     SumEvaluable(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs)
         : levi::BinaryOperator<sum_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), lhs.cols(), "(" + lhs.name() + " + " + rhs.name() + ")")
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Sum;
+        this->m_info->lhs = lhs;
+        this->m_info->rhs = rhs;
+    }
 
     virtual ~SumEvaluable() final;
 
@@ -240,7 +244,11 @@ public:
 
     SubtractionEvaluable(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs)
         : levi::BinaryOperator<sum_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), lhs.cols(), "(" + lhs.name() + " - " + rhs.name() + ")")
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Subtraction;
+        this->m_info->lhs = lhs;
+        this->m_info->rhs = rhs;
+    }
 
     virtual ~SubtractionEvaluable() final;
 
@@ -311,7 +319,10 @@ public:
 
     SignInvertedEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
         : levi::UnaryOperator<typename EvaluableT::matrix_type, EvaluableT>(expression, expression.rows(), expression.cols(), "-" + expression.name())
-    { }
+    {
+        this->m_info->lhs = expression;
+        this->m_info->type = levi::EvaluableType::InvertedSign;
+    }
 
     virtual ~SignInvertedEvaluable() final;
 
@@ -587,7 +598,11 @@ public:
         : levi::BinaryOperator<product_type, LeftEvaluable, RightEvaluable>(lhs, rhs, (lhs.rows() == 1 && lhs.cols() == 1 && rhs.rows() != 1)? rhs.rows() : lhs.rows(),
                                         (rhs.rows() == 1 && rhs.cols() == 1 && lhs.cols() != 1)? lhs.cols() : rhs.cols(),
                                         lhs.name() + " * " + rhs.name())
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Product;
+        this->m_info->lhs = lhs;
+        this->m_info->rhs = rhs;
+    }
 
     virtual ~ProductEvaluable() final;
 
@@ -649,6 +664,9 @@ public:
         , m_exponent(exponent)
     {
         assert(this->m_expression.rows() == 1 && this->m_expression.cols() == 1);
+        this->m_info->type = levi::EvaluableType::Pow;
+        this->m_info->exponent = exponent;
+        this->m_info->lhs = expression;
     }
 
     virtual ~PowEvaluable() final;
@@ -704,6 +722,9 @@ public:
         : levi::BinaryOperator<product_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(), rhs.cols(), lhs.name() + "/(" + rhs.name() + ")")
     {
         assert(rhs.rows() == 1 && rhs.cols() == 1);
+        this->m_info->type = levi::EvaluableType::Division;
+        this->m_info->lhs = lhs;
+        this->m_info->rhs = rhs;
     }
 
     virtual ~DivisionEvaluable() final;
@@ -829,7 +850,10 @@ public:
 
     TransposeEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
         : levi::UnaryOperator<typename levi::transpose_type<EvaluableT>::type, EvaluableT>(expression, expression.cols(), expression.rows(), expression.name() + "^T")
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Transpose;
+        this->m_info->lhs = expression;
+    }
 
     virtual ~TransposeEvaluable() final;
 
