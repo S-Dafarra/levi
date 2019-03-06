@@ -9,7 +9,6 @@
 
 #include <levi/HelpersForwardDeclarations.h>
 #include <levi/ForwardDeclarations.h>
-#include <levi/TypeDetector.h>
 
 namespace levi {
 
@@ -151,27 +150,15 @@ class levi::ExpressionComponent {
     template<typename EvaluableOut, typename EvaluableRhs>
     levi::ExpressionComponent<EvaluableOut> return_rhs(levi::bool_value<false>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const;
 
-    class EvaluableInfo{
-    public:
-        levi::EvaluableType type;
-        levi::BlockType block;
-        typename EvaluableT::value_type exponent;
-        levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>> lhs, rhs;
-
-        template <typename OtherInfo>
-        void copy(const OtherInfo& other);
-    };
+    /**
+     * @brief Check if the current evaluable is null
+     */
+    bool m_isNull;
 
     /**
-     * @brief Saves the infos about the pointed the evaluable
+     * @brief Check if the current evaluable is a squared identity
      */
-    EvaluableInfo* m_info;
-
-    template <typename OtherInfo>
-    void copyInfo(const OtherInfo* other);
-
-    template<class... Args, typename = typename std::enable_if<std::is_constructible<EvaluableT, Args...>::value>::type>
-    ExpressionComponent(const EvaluableInfo& info, Args&&... args);
+    bool m_isIdentity;
 
     const typename EvaluableT::EvaluableInfo &info() const;
 
@@ -264,12 +251,6 @@ public:
      * @return True if null
      */
     bool isNull() const;
-
-    /**
-     * @brief Get the expression type
-     * @return The expression type
-     */
-    levi::EvaluableType type() const;
 
     /**
      * @brief Evaluate the pointed evaluable.

@@ -41,14 +41,13 @@ private:
 
         SqueezedComponent(const levi::ExpressionComponent<levi::Evaluable<SqueezedMatrix>>& expression)
             : partialExpression(expression)
-              , type(expression.type())
+              , type(expression.info().type)
         {
             buffer.resize(expression.rows(), expression.cols());
 
             if (type != Type::Generic) {
-                assert(expression.m_info);
-                block = expression.m_info->block;
-                exponent = expression.m_info->exponent;
+                block = expression.info().block;
+                exponent = expression.info().exponent;
             }
 
             if (type == Type::Null) {
@@ -75,7 +74,7 @@ private:
 
         levi::EvaluableType type;
 
-        type = node.type();
+        type = node.info().type;
 
         m_expandedExpression.emplace_back(node);
 
@@ -98,18 +97,16 @@ private:
         }
 
         if (type == Type::Sum || type == Type::Subtraction || type == Type::Product || type == Type::Division) {
-            assert(node.m_info);
-            size_t lhsIndex = expandTree(node.m_info->lhs);
+            size_t lhsIndex = expandTree(node.info().lhs);
             m_expandedExpression[currentIndex].lhsIndex = lhsIndex;
-            size_t rhsIndex = expandTree(node.m_info->rhs);
+            size_t rhsIndex = expandTree(node.info().rhs);
             m_expandedExpression[currentIndex].rhsIndex = rhsIndex;
             return currentIndex;
         }
 
         if (type == Type::InvertedSign || type == Type::Pow || type == Type::Transpose || type == Type::Row ||
             type == Type::Column || type == Type::Element || type == Type::Block) {
-            assert(node.m_info);
-            size_t lhsIndex = expandTree(node.m_info->lhs);
+            size_t lhsIndex = expandTree(node.info().lhs);
             m_expandedExpression[currentIndex].lhsIndex = lhsIndex;
             return currentIndex;
         }
