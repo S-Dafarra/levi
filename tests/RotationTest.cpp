@@ -124,8 +124,10 @@ int main() {
     std::cout << "Elapsed time ms (evaluate first derivative): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 
     auto squeezedDerivative = rotatedVectorDerivative.squeeze("squeezedDerivative");
+    Eigen::MatrixXd squeezedDerivativeValue(rotatedVectorDerivative.rows(), rotatedVectorDerivative.cols());
+
     begin = std::chrono::steady_clock::now();
-    Eigen::MatrixXd squeezedDerivativeValue = squeezedDerivative.evaluate();
+    squeezedDerivativeValue = squeezedDerivative.evaluate();
     end= std::chrono::steady_clock::now();
     std::cout << "Elapsed time ms (squeezed first derivative): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
     assert((squeezedDerivativeValue - derivativeValue).cwiseAbs().maxCoeff() < 1e-10);
@@ -171,6 +173,15 @@ int main() {
         Expression rotatedVectorDoubleDerivative = rotatedVectorDerivative.getColumnDerivative(j, quaternion);
         end= std::chrono::steady_clock::now();
         std::cout << "Elapsed time ms (compute second derivative, column " << j<<"): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+
+        auto squeezedSecondDerivative = rotatedVectorDoubleDerivative.squeeze("doubleSqueezedDerivative");
+
+        Eigen::MatrixXd squeezedOutput(rotatedVectorDoubleDerivative.rows(), rotatedVectorDoubleDerivative.cols());
+
+        begin = std::chrono::steady_clock::now();
+        squeezedOutput = squeezedSecondDerivative.evaluate();
+        end= std::chrono::steady_clock::now();
+        std::cout << "Elapsed time ms (evaluate (squeeze) second derivative, column " << j<<"): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 
 
         Eigen::MatrixXd doubleDerivativeValue(rotatedVectorDoubleDerivative.rows(), rotatedVectorDoubleDerivative.cols());

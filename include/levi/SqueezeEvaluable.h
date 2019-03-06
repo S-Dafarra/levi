@@ -141,40 +141,37 @@ public:
             type = i->type;
 
             if (type == Type::Sum) {
-                i->buffer = m_expandedExpression[i->lhsIndex].buffer + m_expandedExpression[i->rhsIndex].buffer; //this is why I need to evaluate the expanded expression in reverse order
+                i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer + m_expandedExpression[i->rhsIndex].buffer); //this is why I need to evaluate the expanded expression in reverse order
             } else if (type == Type::Subtraction) {
-                i->buffer = m_expandedExpression[i->lhsIndex].buffer - m_expandedExpression[i->rhsIndex].buffer;
+                i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer - m_expandedExpression[i->rhsIndex].buffer);
             } else if (type == Type::Product) {
 
-                const SqueezedMatrix& lhs = m_expandedExpression[i->lhsIndex].buffer;
-                const SqueezedMatrix& rhs = m_expandedExpression[i->rhsIndex].buffer;
-
-                if (lhs.cols() != rhs.rows()) {
-                    if (lhs.rows() == 1 && lhs.cols() == 1) {
-                        i->buffer = lhs(0,0) * rhs;
+                if (m_expandedExpression[i->lhsIndex].buffer.cols() != m_expandedExpression[i->rhsIndex].buffer.rows()) {
+                    if (m_expandedExpression[i->lhsIndex].buffer.rows() == 1 && m_expandedExpression[i->lhsIndex].buffer.cols() == 1) {
+                        i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer(0,0) * m_expandedExpression[i->rhsIndex].buffer);
                     } else {
-                        i->buffer = lhs * rhs(0,0);
+                        i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer * m_expandedExpression[i->rhsIndex].buffer(0,0));
                     }
                 } else {
-                    i->buffer = lhs * rhs;
+                    i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer * m_expandedExpression[i->rhsIndex].buffer);
                 }
 
             } else if (type == Type::Division) {
-                i->buffer = m_expandedExpression[i->lhsIndex].buffer / m_expandedExpression[i->rhsIndex].buffer(0,0);
+                i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer / m_expandedExpression[i->rhsIndex].buffer(0,0));
             } else if (type == Type::InvertedSign) {
-                i->buffer = -m_expandedExpression[i->lhsIndex].buffer;
+                i->buffer.lazyAssign(-m_expandedExpression[i->lhsIndex].buffer);
             } else if (type == Type::Pow) {
                 i->buffer(0,0) = std::pow(m_expandedExpression[i->lhsIndex].buffer(0,0), i->exponent);
             } else if (type == Type::Transpose) {
-                i->buffer = m_expandedExpression[i->lhsIndex].buffer.transpose();
+                i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer.transpose());
             } else if (type == Type::Row) {
-                i->buffer = m_expandedExpression[i->lhsIndex].buffer.row(i->block.startRow);
+                i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer.row(i->block.startRow));
             } else if (type == Type::Column) {
-                i->buffer = m_expandedExpression[i->lhsIndex].buffer.col(i->block.startCol);
+                i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer.col(i->block.startCol));
             } else if (type == Type::Element) {
                 i->buffer(0,0) = m_expandedExpression[i->lhsIndex].buffer(i->block.startRow, i->block.startCol);
             } else if (type == Type::Block) {
-                i->buffer = m_expandedExpression[i->lhsIndex].buffer.block(i->block.startRow, i->block.startCol, i->block.rows, i->block.cols);
+                i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer.block(i->block.startRow, i->block.startCol, i->block.rows, i->block.cols));
             }
         }
 

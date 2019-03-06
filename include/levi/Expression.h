@@ -66,7 +66,7 @@ class levi::ExpressionComponent {
     template <typename OtherEvaluable>
     friend class levi::SqueezeEvaluable;
 
-    template <typename OtherEvaluable>
+    template <class LeftEvaluable, class RightEvaluable>
     friend class levi::CastEvaluable;
 
     /**
