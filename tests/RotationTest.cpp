@@ -128,7 +128,7 @@ int main() {
     Eigen::MatrixXd squeezedDerivativeValue = squeezedDerivative.evaluate();
     end= std::chrono::steady_clock::now();
     std::cout << "Elapsed time ms (squeezed first derivative): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
-    assert((firstOrderTaylor - perturbedOutput).cwiseAbs().maxCoeff() < 1e-20);
+    assert((squeezedDerivativeValue - derivativeValue).cwiseAbs().maxCoeff() < 1e-10);
 
 
 //    std::cerr << rotatedVectorDerivative.name() << std::endl;
