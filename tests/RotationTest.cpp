@@ -82,6 +82,16 @@ int main() {
     end= std::chrono::steady_clock::now();
     std::cout << "Elapsed time ms (evaluate): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 
+    auto squeezed = rotation.squeeze("SqueezedRotation");
+
+    begin = std::chrono::steady_clock::now();
+    testSpeed = squeezed.evaluate();
+    end= std::chrono::steady_clock::now();
+    std::cout << "Elapsed time ms (squeezed): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+
+    assert(squeezed.evaluate() == rotation.evaluate());
+
+
     //-------------------------Validation of first derivative
 
     double perturbationValue = 1e-3;
@@ -112,6 +122,14 @@ int main() {
     derivativeValue = rotatedVectorDerivative.evaluate();
     end= std::chrono::steady_clock::now();
     std::cout << "Elapsed time ms (evaluate first derivative): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+
+    auto squeezedDerivative = rotatedVectorDerivative.squeeze("squeezedDerivative");
+    begin = std::chrono::steady_clock::now();
+    Eigen::MatrixXd squeezedDerivativeValue = squeezedDerivative.evaluate();
+    end= std::chrono::steady_clock::now();
+    std::cout << "Elapsed time ms (squeezed first derivative): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+    assert((firstOrderTaylor - perturbedOutput).cwiseAbs().maxCoeff() < 1e-20);
+
 
 //    std::cerr << rotatedVectorDerivative.name() << std::endl;
 

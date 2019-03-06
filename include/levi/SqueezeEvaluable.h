@@ -134,7 +134,7 @@ public:
     virtual const SqueezedMatrix& evaluate() final {
 
         for (size_t generic : m_generics) {
-            m_expandedExpression[generic].buffer = m_expandedExpression[generic].partialExpression.evaluate(); //first evaluate generics
+            m_expandedExpression[generic].buffer = m_expandedExpression[generic].partialExpression.evaluate(false); //first evaluate generics
         }
 
         levi::EvaluableType type;
@@ -167,7 +167,7 @@ public:
             } else if (type == Type::InvertedSign) {
                 i->buffer = -m_expandedExpression[i->lhsIndex].buffer;
             } else if (type == Type::Pow) {
-                i->buffer(0,0) = std::pow(m_expandedExpression[i->lhsIndex].buffer(0,0), m_expandedExpression[i->lhsIndex].exponent);
+                i->buffer(0,0) = std::pow(m_expandedExpression[i->lhsIndex].buffer(0,0), i->exponent);
             } else if (type == Type::Transpose) {
                 i->buffer = m_expandedExpression[i->lhsIndex].buffer.transpose();
             } else if (type == Type::Row) {
@@ -180,7 +180,10 @@ public:
                 i->buffer = m_expandedExpression[i->lhsIndex].buffer.block(i->block.startRow, i->block.startCol, i->block.rows, i->block.cols);
             }
         }
-        return m_expandedExpression[0].buffer;
+
+        this->m_evaluationBuffer = m_expandedExpression[0].buffer;
+
+        return this->m_evaluationBuffer;
     }
 
     virtual bool isNew(size_t callerID) final {
