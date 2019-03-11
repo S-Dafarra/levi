@@ -108,6 +108,18 @@ levi::ExpressionComponent<EvaluableOut> levi::ExpressionComponent<EvaluableT>::r
     return levi::ExpressionComponent<EvaluableOut>();
 }
 
+template <class EvaluableT>
+template<typename EvaluableRhs>
+levi::ExpressionComponent<levi::ProductOutputEvaluable<EvaluableT, EvaluableRhs>> levi::ExpressionComponent<EvaluableT>::commute_factors(levi::bool_value<true>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const {
+    return levi::ExpressionComponent<levi::ProductEvaluable<levi::Evaluable<typename EvaluableRhs::value_type>, EvaluableT>>(rhs(0,0), *this);
+}
+
+template <class EvaluableT>
+template<typename EvaluableRhs>
+levi::ExpressionComponent<levi::ProductOutputEvaluable<EvaluableT, EvaluableRhs>> levi::ExpressionComponent<EvaluableT>::commute_factors(levi::bool_value<false>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const {
+    assert(false && "Trying to commute evaluables that cannot be commuted.");
+    return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
+}
 
 template <class EvaluableT>
 levi::ExpressionComponent<EvaluableT>::ExpressionComponent()
@@ -330,7 +342,121 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
                                                          (return_evaluable::cols_at_compile_time * EvaluableRhs::cols_at_compile_time < 0)))>(), rhs);
     }
 
-    return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
+    auto lhs = *this;
+
+    using rhsOperand = typename EvaluableRhs::EvaluableInfo::operands_evaluable;
+    using lhsOperand = typename EvaluableT::EvaluableInfo::operands_evaluable;
+
+    bool isLhsScalar = (lhs.rows() == 1) && (lhs.cols() == 1);
+    bool isRhsScalar = (rhs.rows() == 1) && (rhs.cols() == 1);
+    bool isLhsProduct = lhs.info().type == levi::EvaluableType::Product;
+    bool isRhsProduct = rhs.info().type == levi::EvaluableType::Product;
+    levi::ExpressionComponent<lhsOperand> lhs_lhs = lhs.info().lhs;
+    levi::ExpressionComponent<lhsOperand> lhs_rhs = lhs.info().rhs;
+    levi::ExpressionComponent<rhsOperand> rhs_lhs = rhs.info().lhs;
+    levi::ExpressionComponent<rhsOperand> rhs_rhs = rhs.info().rhs;
+    bool isLhsLhsScalar;
+    bool isRhsLhsScalar;
+
+    if (lhs_lhs.isValidExpression()) {
+        isLhsLhsScalar = (lhs_lhs.rows() == 1) && (lhs_lhs.cols() == 1);
+    } else {
+        isLhsLhsScalar = false;
+    }
+
+    if (rhs_lhs.isValidExpression()) {
+        isRhsLhsScalar = (rhs_lhs.rows() == 1) && (rhs_lhs.cols() == 1);
+    } else {
+        isRhsLhsScalar = false;
+    }
+
+
+    if (isLhsScalar) {
+        if (isRhsScalar) {
+            return levi::ExpressionComponent<levi::ProductEvaluable<levi::Evaluable<typename EvaluableT::value_type>, levi::Evaluable<typename EvaluableRhs::value_type>>>(lhs(0,0), rhs(0,0));
+        } else {
+            if (isRhsProduct) {
+                if (isRhsLhsScalar) {
+                    // scalar1 * (scalar2 * rhs)
+                    using newLhsType = levi::ProductOutputEvaluable<levi::Evaluable<typename EvaluableT::value_type>, levi::Evaluable<typename rhsOperand::value_type>>;
+                    return levi::ExpressionComponent<levi::ProductEvaluable<newLhsType, rhsOperand>>(lhs(0,0) * rhs_lhs(0,0), rhs_rhs);
+                } else {
+                    // scalar * (lhs * rhs)
+                    using newLhsType = levi::ProductOutputEvaluable<levi::Evaluable<typename EvaluableT::value_type>, rhsOperand>;
+                    return levi::ExpressionComponent<levi::ProductEvaluable<newLhsType, rhsOperand>>(lhs(0,0) * rhs_lhs, rhs_rhs);
+                }
+            } else {
+                //scalar * matrix
+                return levi::ExpressionComponent<levi::ProductEvaluable<levi::Evaluable<typename EvaluableT::value_type>, EvaluableRhs>>(lhs(0, 0), rhs);
+            }
+        }
+    } else {
+        if (isLhsProduct) {
+            if (isRhsScalar) {
+                if (isLhsLhsScalar) {
+                    //(scalar1 * rhs) * scalar
+                    using newLhsType = levi::ProductOutputEvaluable<levi::Evaluable<typename lhsOperand::value_type>, levi::Evaluable<typename EvaluableRhs::value_type>>;
+                    return levi::ExpressionComponent<levi::ProductEvaluable<newLhsType, lhsOperand>>(lhs_lhs(0,0) * rhs(0,0), lhs_rhs);
+                } else {
+                    //(lhs * rhs) * scalar
+                    using newLhsType = levi::ProductOutputEvaluable<lhsOperand, levi::Evaluable<typename EvaluableRhs::value_type>>;
+                    return levi::ExpressionComponent<levi::ProductEvaluable<newLhsType, lhsOperand>>(rhs(0,0) * lhs_lhs, lhs_rhs);
+                }
+            } else {
+                if (isRhsProduct) {
+                    if (isLhsLhsScalar) {
+                        if (isRhsLhsScalar) {
+                            //(scalar1 * rhs1) * (scalar2 * rhs2)
+                            using newLhsType = levi::ProductOutputEvaluable<levi::Evaluable<typename lhsOperand::value_type>, levi::Evaluable<typename rhsOperand::value_type>>;
+                            using newRhsType = levi::ProductOutputEvaluable<lhsOperand, rhsOperand>;
+                            return levi::ExpressionComponent<levi::ProductEvaluable<newLhsType, newRhsType>>(lhs_lhs(0,0) * rhs_lhs(0,0), lhs_rhs*rhs_rhs);
+                        } else {
+                            //(scalar * rhs1) * (lhs2 * rhs2)
+                            using newRhsType = levi::ProductOutputEvaluable<lhsOperand, EvaluableRhs>;
+                            return levi::ExpressionComponent<levi::ProductEvaluable<levi::Evaluable<typename lhsOperand::value_type>, newRhsType>>(lhs_lhs(0, 0), lhs_rhs * rhs);
+                        }
+                    } else {
+                        if (isRhsLhsScalar) {
+                            //(lhs1 * rhs1) * (scalar * rhs2)
+                            using newRhsType = levi::ProductOutputEvaluable<EvaluableT, rhsOperand>;
+                            return levi::ExpressionComponent<levi::ProductEvaluable<levi::Evaluable<typename rhsOperand::value_type>, newRhsType>>(rhs_lhs(0, 0), lhs * rhs_rhs);
+                        } else {
+                            //(lhs1 * rhs1) * (lhs2 * rhs2)
+                            return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(lhs, rhs);
+                        }
+                    }
+                } else {
+                    if (isLhsLhsScalar) {
+                        //(scalar * rhs) * matrix
+                        using newRhsType = levi::ProductOutputEvaluable<lhsOperand, EvaluableRhs>;
+                        return levi::ExpressionComponent<levi::ProductEvaluable<levi::Evaluable<typename lhsOperand::value_type>, newRhsType>>(lhs_lhs(0,0), lhs_rhs * rhs);
+                    } else {
+                        //(lsh * rhs) * matrix
+                        return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(lhs, rhs);
+                    }
+                }
+            }
+        } else {
+            if (isRhsScalar) {
+                //matrix * scalar -> keep the scalar on the left hand side
+                return commute_factors(levi::bool_value<levi::are_commutable<EvaluableT, EvaluableRhs>::value>(), rhs);
+            } else {
+                if (isRhsProduct) {
+                    if (isRhsLhsScalar) {
+                        //matrix * (scalar * rhs)
+                        using newRhsType = levi::ProductOutputEvaluable<EvaluableT, rhsOperand>;
+                        return levi::ExpressionComponent<levi::ProductEvaluable<levi::Evaluable<typename rhsOperand::value_type>, newRhsType>>(rhs_lhs(0,0), lhs * rhs_rhs);
+                    } else {
+                        //matrix * (lhs * rhs)
+                        return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(lhs, rhs);
+                    }
+                } else {
+                    //matrix * matrix
+                    return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(lhs, rhs);
+                }
+            }
+        }
+    }
 }
 
 template <class EvaluableT>

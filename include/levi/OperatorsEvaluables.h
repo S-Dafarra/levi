@@ -108,7 +108,7 @@ struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, l
  */
 template<typename Scalar_lhs, int lhsRows, int lhsCols, int lhsOptions, int lhsMaxRows, int lhsMaxCols, typename Scalar_rhs, int rhsRows, int rhsCols, int rhsOptions, int rhsMaxRows, int rhsMaxCols>
 struct levi::matrix_product_return<Eigen::Matrix<Scalar_lhs, lhsRows, lhsCols, lhsOptions, lhsMaxRows, lhsMaxCols>, Eigen::Matrix<Scalar_rhs, rhsRows, rhsCols, rhsOptions, rhsMaxRows, rhsMaxCols>,
-                                   typename std::enable_if<rhsRows == 1 && rhsCols == 1 && lhsRows == 1 && rhsRows == 1>::type> {
+                                   typename std::enable_if<rhsRows == 1 && rhsCols == 1 && lhsRows == 1 && lhsCols == 1>::type> {
     typedef Eigen::Matrix<typename levi::scalar_product_return<Scalar_lhs, Scalar_rhs>::type, 1, 1> type;
 };
 

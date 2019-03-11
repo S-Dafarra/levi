@@ -188,6 +188,8 @@ int main() {
 
 //        std::cerr << rotatedVectorDoubleDerivative.name() << std::endl;
 
+        quaternion = quaternionValue;
+
         begin = std::chrono::steady_clock::now();
         doubleDerivativeValue = rotatedVectorDoubleDerivative.evaluate();
         end= std::chrono::steady_clock::now();

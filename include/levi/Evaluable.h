@@ -74,10 +74,11 @@ public:
         EvaluableInfo() { }
 
     public:
+        typedef levi::Evaluable<Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic>> operands_evaluable;
         levi::EvaluableType type;
         levi::BlockType block;
         value_type exponent;
-        levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic>>> lhs, rhs;
+        levi::ExpressionComponent<operands_evaluable> lhs, rhs;
 
         template <typename OtherInfo>
         void copy(const OtherInfo& other) {
@@ -440,10 +441,12 @@ public:
         EvaluableInfo() { }
 
     public:
+        typedef levi::Evaluable<Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic>> operands_evaluable;
+
         levi::EvaluableType type;
         levi::BlockType block;
         value_type exponent;
-        levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<value_type, Eigen::Dynamic, Eigen::Dynamic>>> lhs, rhs;
+        levi::ExpressionComponent<operands_evaluable> lhs, rhs;
 
         template <typename OtherInfo>
         void copy(const OtherInfo& other) {

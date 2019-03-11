@@ -49,6 +49,18 @@ namespace levi {
     ExpressionComponent<typename levi::ConstructorByCols<EvaluableT>::composite_evaluable>
     ComposeByCols(const std::vector<levi::ExpressionComponent<EvaluableT>>& cols, const std::string& name);
 
+    template <typename LhsT, typename RhsT>
+    using ProductOutputEvaluable = levi::Evaluable<typename levi::matrix_product_return<typename LhsT::matrix_type, typename RhsT::matrix_type>::type>;
+
+    template <typename EvaluableLhs, typename EvaluableRhs, typename Enabler = void>
+    struct are_commutable : std::false_type {};
+
+    template <typename EvaluableLhs, typename EvaluableRhs>
+    struct are_commutable<EvaluableLhs, EvaluableRhs, typename std::enable_if<levi::is_valid_product<EvaluableRhs::rows_at_compile_time,
+                                                                                                     EvaluableRhs::cols_at_compile_time,
+                                                                                                     EvaluableLhs::rows_at_compile_time,
+                                                                                                     EvaluableLhs::cols_at_compile_time>::value>::type> : std::true_type {};
+
 }
 
 /**
@@ -149,6 +161,16 @@ class levi::ExpressionComponent {
 
     template<typename EvaluableOut, typename EvaluableRhs>
     levi::ExpressionComponent<EvaluableOut> return_rhs(levi::bool_value<false>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const;
+
+    template<bool value, typename EvaluableRhs>
+    levi::ExpressionComponent<levi::ProductOutputEvaluable<EvaluableT, EvaluableRhs>> commute_factors(levi::bool_value<value>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const;
+
+    template<typename EvaluableRhs>
+    levi::ExpressionComponent<levi::ProductOutputEvaluable<EvaluableT, EvaluableRhs>> commute_factors(levi::bool_value<true>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const;
+
+    template<typename EvaluableRhs>
+    levi::ExpressionComponent<levi::ProductOutputEvaluable<EvaluableT, EvaluableRhs>> commute_factors(levi::bool_value<false>, const levi::ExpressionComponent<EvaluableRhs>& rhs) const;
+
 
     /**
      * @brief Check if the current evaluable is null

@@ -471,8 +471,20 @@ class levi::CastEvaluable : public levi::UnaryOperator<typename LeftEvaluable::m
         this->m_evaluationBuffer(0,0) = this->m_expression.evaluate(false);
     }
 
-    void eval(levi::bool_value<false>, levi::bool_value<false>) {
+    template <bool ImpossibleAssignement>
+    void evalMatrix(levi::bool_value<ImpossibleAssignement>());
+
+    void evalMatrix(levi::bool_value<true>) {
+        assert(false && "You tried to assign Evaluables of different sizes.");
+    }
+
+    void evalMatrix(levi::bool_value<false>) {
         this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate(false));
+    }
+
+    void eval(levi::bool_value<false>, levi::bool_value<false>) {
+        evalMatrix(levi::bool_value<((LeftEvaluable::rows_at_compile_time * RightEvaluable::rows_at_compile_time > 0) && (LeftEvaluable::rows_at_compile_time != RightEvaluable::rows_at_compile_time)) ||
+                   ((LeftEvaluable::cols_at_compile_time * RightEvaluable::cols_at_compile_time > 0) && (LeftEvaluable::cols_at_compile_time != RightEvaluable::cols_at_compile_time))>());
     }
 
 public:
