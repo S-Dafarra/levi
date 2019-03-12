@@ -301,6 +301,11 @@ public:
     ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, Matrix>::type>> operator+(const Matrix& rhs) const;
 
     /**
+     * @brief Operator +
+     */
+    ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> operator+() const;
+
+    /**
      * @brief Operator -
      *
      * @return An expression which points to an evaluable performing the subtraction.
@@ -360,6 +365,22 @@ public:
      */
     template <typename Scalar>
     ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<typename EvaluableT::matrix_type, Scalar>::type>> operator/(const Scalar& rhs) const;
+
+    /**
+     * @brief Operator ==
+     *
+     * Checks if the pointed evaluables are the same.
+     */
+    template <typename EvaluableRhs>
+    bool operator==(const levi::ExpressionComponent<EvaluableRhs>& other) const;
+
+    /**
+     * @brief Operator !=
+     *
+     * Checks if the pointed evaluables are different.
+     */
+    template <typename EvaluableRhs>
+    bool operator!=(const levi::ExpressionComponent<EvaluableRhs>& other) const;
 
     /**
      * @brief Computes the power of the current evaluable

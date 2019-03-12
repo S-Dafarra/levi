@@ -79,6 +79,7 @@ public:
         levi::BlockType block;
         value_type exponent;
         levi::ExpressionComponent<operands_evaluable> lhs, rhs;
+        size_t hash;
 
         template <typename OtherInfo>
         void copy(const OtherInfo& other) {
@@ -87,6 +88,7 @@ public:
             exponent = other.exponent;
             lhs = other.lhs;
             rhs = other.rhs;
+            hash = other.hash;
         }
     };
 
@@ -150,6 +152,7 @@ public:
         , m_info(new EvaluableInfo)
     {
         m_info->type = levi::EvaluableType::Generic;
+        m_info->hash = reinterpret_cast<size_t>(this);
     }
 
     /**
@@ -166,6 +169,7 @@ public:
     {
         m_evaluationBuffer.setZero();
         m_info->type = levi::EvaluableType::Generic;
+        m_info->hash = reinterpret_cast<size_t>(this);
     }
 
     /**
@@ -180,6 +184,7 @@ public:
         , m_info(new EvaluableInfo)
     {
         m_info->type = levi::EvaluableType::Generic;
+        m_info->hash = reinterpret_cast<size_t>(this);
     }
 
     template <typename OtherMatrix>
@@ -447,6 +452,7 @@ public:
         levi::BlockType block;
         value_type exponent;
         levi::ExpressionComponent<operands_evaluable> lhs, rhs;
+        size_t hash;
 
         template <typename OtherInfo>
         void copy(const OtherInfo& other) {
@@ -455,6 +461,7 @@ public:
             exponent = other.exponent;
             lhs = other.lhs;
             rhs = other.rhs;
+            hash = other.hash;
         }
     };
 
@@ -515,6 +522,7 @@ public:
         , m_info(new EvaluableInfo)
     {
         m_info->type = levi::EvaluableType::Generic;
+        m_info->hash = reinterpret_cast<size_t>(this);
     }
 
     /**
@@ -532,6 +540,7 @@ public:
         assert(rows == 1 && cols == 1);
         m_evaluationBuffer = 0;
         m_info->type = levi::EvaluableType::Generic;
+        m_info->hash = reinterpret_cast<size_t>(this);
     }
 
     /**
@@ -546,6 +555,7 @@ public:
         , m_info(new EvaluableInfo)
     {
         m_info->type = levi::EvaluableType::Generic;
+        m_info->hash = reinterpret_cast<size_t>(this);
     }
 
     /**
@@ -559,6 +569,7 @@ public:
         , m_info(new EvaluableInfo)
     {
         m_info->type = levi::EvaluableType::Generic;
+        m_info->hash = reinterpret_cast<size_t>(this);
     }
 
     template <typename OtherMatrix, typename OtherDerivativeEvaluable>

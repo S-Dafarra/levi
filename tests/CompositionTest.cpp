@@ -114,7 +114,8 @@ int main() {
     assert(zSquared.getColumnDerivative(0, z).getColumnDerivative(0, z).evaluate()(0,0) == 2.0);
 
     FixedSizeExpression<3,3> fixedExpr;
-    fixedExpr = v;
+    fixedExpr = +v * Identity(1,1);
+    assert(fixedExpr == v);
 
     Null zero(3,3);
     Expression testZero = zero;

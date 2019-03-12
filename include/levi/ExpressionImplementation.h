@@ -273,6 +273,12 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
 }
 
 template <class EvaluableT>
+levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> levi::ExpressionComponent<EvaluableT>::operator+() const {
+    return *this;
+}
+
+
+template <class EvaluableT>
 template<class EvaluableRhs>
 levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>> levi::ExpressionComponent<EvaluableT>::operator-(const levi::ExpressionComponent<EvaluableRhs>& rhs) const {
     assert(rows() == rhs.rows());
@@ -492,6 +498,24 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
     levi::ExpressionComponent<levi::ConstantEvaluable<Scalar>> constant(rhs);
 
     return operator/(constant);
+}
+
+template <class EvaluableT>
+template <typename EvaluableRhs>
+bool levi::ExpressionComponent<EvaluableT>::operator==(const levi::ExpressionComponent<EvaluableRhs>& other) const {
+    assert(m_evaluable && "This expression is empty.");
+    assert(other.isValidExpression() && "The other expression is empty.");
+
+    return info().hash == other.info().hash;
+}
+
+template <class EvaluableT>
+template <typename EvaluableRhs>
+bool levi::ExpressionComponent<EvaluableT>::operator!=(const levi::ExpressionComponent<EvaluableRhs>& other) const {
+    assert(m_evaluable && "This expression is empty.");
+    assert(other.isValidExpression() && "The other expression is empty.");
+
+    return info().hash != other.info().hash;
 }
 
 template<class EvaluableT>
