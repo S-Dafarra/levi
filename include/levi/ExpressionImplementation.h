@@ -333,7 +333,7 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
         return castedLhs + rhs.info().lhs;
     }
 
-    levi::AddendsExpander<EvaluableT> expander(*this, rhs, -1.0);
+    levi::AddendsExpander<EvaluableT> expander(*this, rhs, -1);
 
     if (expander.lhs().isValidExpression()) {
         if (expander.rhs().isValidExpression()) {

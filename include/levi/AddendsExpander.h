@@ -30,7 +30,7 @@ class levi::AddendsExpander {
 
     AddendExpression m_newLhs, m_newRhs;
 
-    void expandAddends(const AddendExpression& addend, double sign = +1) {
+    void expandAddends(const AddendExpression& addend, int sign = +1) {
         assert(addend.isValidExpression());
         Type type;
         type = addend.info().type;
@@ -110,7 +110,7 @@ class levi::AddendsExpander {
 
 public:
 
-    AddendsExpander(const AddendExpression& lhs, const AddendExpression& rhs, double rhsSign = +1) {
+    AddendsExpander(const AddendExpression& lhs, const AddendExpression& rhs, int rhsSign = +1) {
         expandAddends(lhs);
         expandAddends(rhs, rhsSign);
 
