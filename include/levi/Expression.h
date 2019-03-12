@@ -81,6 +81,9 @@ class levi::ExpressionComponent {
     template <class LeftEvaluable, class RightEvaluable>
     friend class levi::CastEvaluable;
 
+    template<typename OtherEvaluable>
+    friend class levi::AddendsExpander;
+
     /**
      * @brief Shared pointer to the evaluable.
      */

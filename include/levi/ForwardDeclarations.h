@@ -197,6 +197,9 @@ namespace levi {
     template<typename... Evaluables>
     DependenciesSet<0, Evaluables...> make_dependencies_set(const ExpressionComponent<Evaluables>& ...dependencies);
 
+    template<typename EvaluableT>
+    class AddendsExpander;
+
 
     /** Useful typedefs
      **/

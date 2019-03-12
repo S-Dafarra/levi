@@ -13,6 +13,7 @@
 #include <levi/AdvancedConstructors.h>
 #include <levi/SqueezeEvaluable.h>
 #include <levi/Variable.h>
+#include <levi/AddendsExpander.h>
 
 template<bool value, typename T>
 static levi::ExpressionComponent<levi::ConstantEvaluable<T>> levi::build_constant(levi::bool_value<value>, const T& ) { }
@@ -261,6 +262,20 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
         return *this;
     }
 
+    if ((m_isIdentity && rhs.m_isIdentity) || (operator==(rhs))) {
+        return 2.0 * rhs;
+    }
+
+    levi::AddendsExpander<EvaluableT> expander(*this, rhs);
+
+    if (expander.lhs().isValidExpression()) {
+        if (expander.rhs().isValidExpression()) {
+            return levi::ExpressionComponent<levi::SumEvaluable<typename EvaluableT::EvaluableInfo::operands_evaluable, typename EvaluableT::EvaluableInfo::operands_evaluable>>(expander.lhs(), expander.rhs());
+        } else {
+            return expander.lhs();
+        }
+    }
+
     return levi::ExpressionComponent<levi::SumEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
 }
 
@@ -294,6 +309,20 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
         return *this;
     }
 
+    if ((m_isIdentity && rhs.m_isIdentity) || (operator==(rhs))) {
+        return levi::ExpressionComponent<levi::NullEvaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>>(rows(), cols());
+    }
+
+    levi::AddendsExpander<EvaluableT> expander(*this, rhs, -1.0);
+
+    if (expander.lhs().isValidExpression()) {
+        if (expander.rhs().isValidExpression()) {
+            return levi::ExpressionComponent<levi::SumEvaluable<typename EvaluableT::EvaluableInfo::operands_evaluable, typename EvaluableT::EvaluableInfo::operands_evaluable>>(expander.lhs(), expander.rhs());
+        } else {
+            return expander.lhs();
+        }
+    }
+
     return levi::ExpressionComponent<levi::SubtractionEvaluable<EvaluableT, EvaluableRhs>>(*this, rhs);
 }
 
@@ -313,6 +342,10 @@ levi::ExpressionComponent<levi::Evaluable<typename EvaluableT::matrix_type>> lev
 
     if (m_isNull) {
         return *this;
+    }
+
+    if (info().type == levi::EvaluableType::InvertedSign) {
+        return info().lhs;
     }
 
     newExpression = levi::ExpressionComponent<levi::SignInvertedEvaluable<EvaluableT>>(*this, 0);
