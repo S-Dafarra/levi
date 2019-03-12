@@ -266,6 +266,16 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
         return 2.0 * rhs;
     }
 
+    if (info().type == levi::EvaluableType::InvertedSign) {
+        levi::ExpressionComponent<typename EvaluableT::EvaluableInfo::operands_evaluable> castedRhs = rhs;
+        return castedRhs - (info().lhs);
+    }
+
+    if (rhs.info().type == levi::EvaluableType::InvertedSign) {
+        levi::ExpressionComponent<typename EvaluableT::EvaluableInfo::operands_evaluable> castedLhs = *this;
+        return castedLhs - rhs.info().lhs;
+    }
+
     levi::AddendsExpander<EvaluableT> expander(*this, rhs);
 
     if (expander.lhs().isValidExpression()) {
@@ -311,6 +321,16 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_sum_return<typen
 
     if ((m_isIdentity && rhs.m_isIdentity) || (operator==(rhs))) {
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::matrix_sum_return<typename EvaluableT::matrix_type, typename EvaluableRhs::matrix_type>::type>>(rows(), cols());
+    }
+
+    if (info().type == levi::EvaluableType::InvertedSign) {
+        levi::ExpressionComponent<typename EvaluableT::EvaluableInfo::operands_evaluable> castedRhs = rhs;
+        return -(info().lhs + castedRhs);
+    }
+
+    if (rhs.info().type == levi::EvaluableType::InvertedSign) {
+        levi::ExpressionComponent<typename EvaluableT::EvaluableInfo::operands_evaluable> castedLhs = *this;
+        return castedLhs + rhs.info().lhs;
     }
 
     levi::AddendsExpander<EvaluableT> expander(*this, rhs, -1.0);
@@ -382,6 +402,16 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
     }
 
     auto lhs = *this;
+
+    if (info().type == levi::EvaluableType::InvertedSign) {
+        levi::ExpressionComponent<typename EvaluableT::EvaluableInfo::operands_evaluable> castedRhs = rhs;
+        return -(info().lhs * rhs);
+    }
+
+    if (rhs.info().type == levi::EvaluableType::InvertedSign) {
+        levi::ExpressionComponent<typename EvaluableT::EvaluableInfo::operands_evaluable> castedLhs = lhs;
+        return -(castedLhs * rhs.info().lhs);
+    }
 
     using rhsOperand = typename EvaluableRhs::EvaluableInfo::operands_evaluable;
     using lhsOperand = typename EvaluableT::EvaluableInfo::operands_evaluable;
