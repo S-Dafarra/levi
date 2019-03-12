@@ -139,11 +139,7 @@ namespace levi {
     struct transpose_type<EvaluableT, typename std::enable_if<std::is_arithmetic<typename EvaluableT::matrix_type>::value>::type>;
 
     template<typename Scalar>
-    struct TripletStruct{
-        Eigen::Index row;
-        Eigen::Index col;
-        Scalar value;
-    };
+    struct TripletStruct;
 
     struct BlockType {
         Eigen::Index rows = -1;

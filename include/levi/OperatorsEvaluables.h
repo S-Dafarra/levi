@@ -772,14 +772,15 @@ class levi::SkewEvaluable : public levi::UnaryOperator<Eigen::Matrix<typename Ev
     levi::ExpressionComponent<levi::TwoElementsMatrix<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> m_col0, m_col1, m_col2;
 
     typedef typename EvaluableT::value_type Scalar;
+    typedef levi::ExpressionComponent<levi::IdentityEvaluable<Scalar>> ScalarIdentity;
 
 public:
 
     SkewEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
         : levi::UnaryOperator<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>, EvaluableT>(expression, "skew(" + expression.name() + ")")
-          , m_col0(3, 3, levi::Triplet<Scalar>({1, 2, 1.0}), levi::Triplet<Scalar>({2, 1, -1.0}), "LeviCivita_ij0")
-          , m_col1(3, 3, levi::Triplet<Scalar>({0, 2, -1.0}), levi::Triplet<Scalar>({2, 0, 1.0}), "LeviCivita_ij1")
-          , m_col2(3, 3, levi::Triplet<Scalar>({0, 1, 1.0}), levi::Triplet<Scalar>({1, 0, -1.0}), "LeviCivita_ij2")
+          , m_col0(3, 3, levi::Triplet<Scalar>({1, 2, ScalarIdentity()}), levi::Triplet<Scalar>({2, 1, -ScalarIdentity()}), "LeviCivita_ij0")
+          , m_col1(3, 3, levi::Triplet<Scalar>({0, 2, -ScalarIdentity()}), levi::Triplet<Scalar>({2, 0, ScalarIdentity()}), "LeviCivita_ij1")
+          , m_col2(3, 3, levi::Triplet<Scalar>({0, 1, ScalarIdentity()}), levi::Triplet<Scalar>({1, 0, -ScalarIdentity()}), "LeviCivita_ij2")
     {
         assert((expression.rows() == 3) && (expression.cols() == 1));
     }
