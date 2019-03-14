@@ -43,14 +43,14 @@ build_script:
   - cd build
   - cmake ..
   - cmake --build . --config Release --target INSTALL
-  - ps: echo "-------------------- BEGIN cppfs INSTALLATION --------------------"
-  - ps: cd c:\dev
-  - ps: git clone https://github.com/cginternals/cppfs.git
-  - ps: cd cppfs
-  - ps: md build
-  - ps: cd build
-  - ps: cmake -DCMAKE_INSTALL_PREFIX="C:\dev/cppfs/build/install" ..
-  - ps: cmake --build . --config Release --target INSTALL
+  - echo "-------------------- BEGIN cppfs INSTALLATION --------------------"
+  - cd c:\dev
+  - git clone https://github.com/cginternals/cppfs.git
+  - cd cppfs
+  - md build
+  - cd build
+  - cmake -DCMAKE_INSTALL_PREFIX="C:\dev/cppfs/build/install" ..
+  - cmake --build . --config Release --target INSTALL
   - ps: echo "-------------------- BEGIN LEVI INSTALLATION --------------------"
   - ps: cd c:\dev\levi
   - ps: md build
