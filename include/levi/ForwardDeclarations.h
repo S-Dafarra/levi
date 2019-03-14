@@ -200,6 +200,9 @@ namespace levi {
     template<typename EvaluableT>
     class AddendsExpander;
 
+    template<typename GenericsMatrix, typename OutputMatrix>
+    class CompiledEvaluable;
+
 
     /** Useful typedefs
      **/

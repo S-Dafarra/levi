@@ -10,6 +10,7 @@ clone_folder: c:\dev\levi
 
 environment:
   Eigen3_DIR:          C:/Program Files (x86)/Eigen3/lib/cmake/eigen3/
+  cppfs_DIR:           C:\dev/cppfs/build/install
   matrix:
     #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       #CMAKE_GENERATOR: "Visual Studio 14 2015"
@@ -42,6 +43,14 @@ build_script:
   - cd build
   - cmake ..
   - cmake --build . --config Release --target INSTALL
+  - ps: echo "-------------------- BEGIN cppfs INSTALLATION --------------------"
+  - ps: cd c:\dev
+  - ps: git clone https://github.com/cginternals/cppfs.git
+  - ps: cd cppfs
+  - ps: md build
+  - ps: cd build
+  - ps: cmake -DCMAKE_INSTALL_PREFIX="C:\dev/cppfs/build/install" ..
+  - ps: cmake --build . --config Release --target INSTALL
   - ps: echo "-------------------- BEGIN LEVI INSTALLATION --------------------"
   - ps: cd c:\dev\levi
   - ps: md build
