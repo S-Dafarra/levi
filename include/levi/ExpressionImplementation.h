@@ -765,6 +765,10 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::transpose_type<Evaluabl
 {
     assert(m_evaluable && "Cannot compute the transpose from this expression.");
 
+    if (rows() == 1 && cols() == 1) {
+        return *this;
+    }
+
     return levi::ExpressionComponent<levi::TransposeEvaluable<EvaluableT>>(*this, 0);
 }
 
