@@ -56,7 +56,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define _CRT_NONSTDC_NO_DEPRECATE
 #endif
-#include <windows.h>
+#include <Windows.h>
 #include <direct.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -2012,7 +2012,9 @@ namespace zz
 #if ZUPPLY_OS_WINDOWS
             char* buffer = new char[filename.size()];
             wcstombs(buffer,utf8_to_wstring(filename).c_str(),filename.size());
-            stream.open(buffer, openmode);
+            std::string temp(buffer, filename.size());
+            stream.open(temp.c_str(), openmode);
+            free(buffer);
 #else
             stream.open(filename, openmode);
 #endif
@@ -2023,7 +2025,9 @@ namespace zz
 #if ZUPPLY_OS_WINDOWS
             char* buffer = new char[filename.size()];
             wcstombs(buffer,utf8_to_wstring(filename).c_str(),filename.size());
-            stream.open(buffer, openmode);
+            std::string temp(buffer, filename.size());
+            stream.open(temp.c_str(), openmode);
+            free(buffer);
 #else
             stream.open(filename, openmode);
 #endif

@@ -14,7 +14,8 @@ endif()
 
 option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(LEVI_CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${LEVI_CMAKE_MODULE_PATH})
 
 # Enable C++14
 set(CMAKE_CXX_EXTENSIONS OFF)
