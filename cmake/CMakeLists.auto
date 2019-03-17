@@ -42,6 +42,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 find_package(Eigen3 REQUIRED)
+find_package(shlibpp REQUIRED)
 
 set(LIBRARY_TARGET_NAME ${PROJECT_NAME})
 
@@ -50,4 +51,5 @@ set (LEVI_SOURCE_DIR @LEVI_SOURCE_DIR@)
 add_library(${LIBRARY_TARGET_NAME} SHARED source.h source.cpp)
 target_include_directories(${LIBRARY_TARGET_NAME} PRIVATE ${EIGEN3_INCLUDE_DIR})
 target_include_directories(${LIBRARY_TARGET_NAME} PUBLIC $<BUILD_INTERFACE:${LEVI_SOURCE_DIR}/include>)
+target_link_libraries(${LIBRARY_TARGET_NAME} PRIVATE shlibpp::shlibpp)
 
