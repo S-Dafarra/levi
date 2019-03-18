@@ -13,6 +13,11 @@
 template<typename GenericsMatrix, typename OutputMatrix>
 class levi::CompiledEvaluable {
 public:
+
+    CompiledEvaluable() {}
+
+    virtual ~CompiledEvaluable() { }
+
     virtual void evaluate(const std::vector<GenericsMatrix>& generics, OutputMatrix& output) = 0;
 };
 
