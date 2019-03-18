@@ -59,5 +59,6 @@ add_levi_test(AdvancedConstructors)
 add_levi_test(Cache)
 add_levi_test(Dependencies)
 add_levi_test(Rotation)
+add_levi_test(CompiledRotation)
 
 

@@ -76,7 +76,10 @@ class levi::ExpressionComponent {
     friend class ExpressionComponent;
 
     template <typename OtherEvaluable>
-    friend class levi::SqueezeEvaluable;
+    friend class levi::TreeExpander;
+
+    template <typename OtherEvaluable>
+    friend class levi::TreeComponent;
 
     template <class LeftEvaluable, class RightEvaluable>
     friend class levi::CastEvaluable;
@@ -515,6 +518,12 @@ public:
      * @return A new expression containing the condensed version of the current expression
      */
     ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>> squeeze(const std::string &name) const;
+
+    /**
+     * @brief Generates a new expression condensing all the nodes in one. This expression canno be derived.
+     * @return A new expression containing the condensed version of the current expression
+     */
+    ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>> compile(const std::string &name) const;
 
     /**
      * @brief Retrieve the column derivative with respect to the specified variable
