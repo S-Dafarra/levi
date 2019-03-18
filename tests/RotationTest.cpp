@@ -174,7 +174,7 @@ int main() {
         end= std::chrono::steady_clock::now();
         std::cout << "Elapsed time ms (compute second derivative, column " << j<<"): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 
-        auto squeezedSecondDerivative = rotatedVectorDoubleDerivative.squeeze("doubleSqueezedDerivative");
+        auto squeezedSecondDerivative = rotatedVectorDoubleDerivative.squeeze("doubleSqueezedDerivative" + std::to_string(j));
 
         Eigen::MatrixXd squeezedOutput(rotatedVectorDoubleDerivative.rows(), rotatedVectorDoubleDerivative.cols());
 

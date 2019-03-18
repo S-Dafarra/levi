@@ -58,7 +58,7 @@ int main() {
 
     d = 1.0 * d + c;
 
-    assert(d.squeeze("squeezeTest").evaluate() == d.evaluate());
+    assert(d.squeeze("squeezeTest2").evaluate() == d.evaluate());
 
     Eigen::VectorXd x_value(3);
     x_value.setRandom();

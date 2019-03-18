@@ -18,7 +18,7 @@ public:
 
     virtual ~CompiledEvaluable() { }
 
-    virtual void evaluate(const std::vector<GenericsMatrix>& generics, OutputMatrix& output) = 0;
+    virtual void evaluate(const std::vector<GenericsMatrix>& generics, OutputMatrix output) = 0;
 };
 
 #endif // LEVI_COMPILEDEVALUABLE_H
