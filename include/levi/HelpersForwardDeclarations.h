@@ -146,6 +146,10 @@ namespace levi {
         Eigen::Index cols = -1;
         Eigen::Index startRow = -1;
         Eigen::Index startCol = -1;
+
+        bool operator==(const BlockType& other) const {
+            return (rows == other.rows) && (cols == other.cols) && (startRow == other.startRow) && (startCol == other.startCol);
+        }
     };
 
     template<typename Scalar>

@@ -570,7 +570,39 @@ bool levi::ExpressionComponent<EvaluableT>::operator==(const levi::ExpressionCom
     assert(m_evaluable && "This expression is empty.");
     assert(other.isValidExpression() && "The other expression is empty.");
 
-    return info().hash == other.info().hash;
+    if (info().hash == other.info().hash) {
+        return true;
+    } else if (info().type == other.info().type ) {
+        using Type = levi::EvaluableType;
+        Type type = info().type;
+
+        if (type == Type::Sum) {
+            return ((info().lhs == other.info().lhs) && (info().rhs == other.info().rhs)) || ((info().lhs == other.info().rhs) && (info().rhs == other.info().lhs));
+        } else if (type == Type::Subtraction) {
+            return (info().lhs == other.info().lhs) && (info().rhs == other.info().rhs);
+        } else if (type == Type::Product) {
+            return (info().lhs == other.info().lhs) && (info().rhs == other.info().rhs);
+        } else if (type == Type::Division) {
+            return (info().lhs == other.info().lhs) && (info().rhs == other.info().rhs);
+        } else if (type == Type::InvertedSign) {
+            return info().lhs == other.info().lhs;
+        } else if (type == Type::Pow) {
+            return (info().lhs == other.info().lhs) && (info().exponent == other.info().exponent);
+        } else if (type == Type::Transpose) {
+            return info().lhs == other.info().lhs;
+        } else if (type == Type::Row) {
+            return (info().lhs == other.info().lhs) && (info().block.startRow == other.info().block.startRow);
+        } else if (type == Type::Column) {
+            return (info().lhs == other.info().lhs) && (info().block.startCol == other.info().block.startCol);
+        } else if (type == Type::Element) {
+            return (info().lhs == other.info().lhs) && (info().block.startRow == other.info().block.startRow) && (info().block.startCol == other.info().block.startCol);
+        } else if (type == Type::Block) {
+            return (info().lhs == other.info().lhs) && (info().block == other.info().block);
+        }
+    }
+
+
+    return false;
 }
 
 template <class EvaluableT>
