@@ -102,15 +102,21 @@ private:
         bool isAlreadyCompressed = false;
     };
 
+    struct CommonSubExp {
+        std::string name;
+        std::string expression;
+        std::string declaration;
+        bool active = true;
+    };
+
     std::vector<LiteralComponent> m_literalSubExpressions;
     levi::TreeExpander<EvaluableT> m_tree;
     levi::ExpressionComponent<EvaluableT> m_fullExpression;
     std::map<std::string, std::string> m_helpersVariables;
     std::ostringstream m_helpersDeclarations;
-    std::ostringstream m_commonExpressions;
+    std::vector<CommonSubExp> m_commonExpressions;
+    std::ostringstream m_commonDeclarations;
     std::ostringstream m_finalExpression;
-    size_t m_commonsSize = 0;
-
 
     using SqueezedMatrixRef = Eigen::Ref<SqueezedMatrix>;
     using base_type = levi::CompiledEvaluable<SqueezedMatrixRef, SqueezedMatrixRef>;
@@ -214,15 +220,15 @@ private:
         }
     }
 
-    std::string getCommonSubExpression(size_t index) {
+    std::string getCommonSubExpression(int index) {
 
         if (m_literalSubExpressions[index].isAlreadyCompressed) {
             return m_literalSubExpressions[index].literal;
         }
 
-        std::vector<size_t> commons;
+        std::vector<int> commons;
 
-        for (size_t i = index + 1; i < m_literalSubExpressions.size(); ++i) {
+        for (int i = index - 1; i >= 0; --i) {
 
             if (!m_literalSubExpressions[i].isAlreadyCompressed) {
                 if (m_literalSubExpressions[index].literal == m_literalSubExpressions[i].literal) {
@@ -232,27 +238,97 @@ private:
         }
 
         if (commons.size()) {
-            std::string commonName = "m_common" + std::to_string(m_commonsSize);
-            m_commonExpressions << "    Eigen::Matrix<" << type_name<typename EvaluableT::value_type>() << ", "
-                                << std::to_string(m_tree.expandedExpression[index].buffer.rows()) << ", "
-                                << std::to_string(m_tree.expandedExpression[index].buffer.cols()) << "> "
-                                << commonName << " = " << m_literalSubExpressions[index].literal << ";" << std::endl;
+            CommonSubExp newCommon;
+            newCommon.name = "m_common" + std::to_string(m_commonExpressions.size()) + "_";
+            newCommon.expression = m_literalSubExpressions[index].literal;
+            std::ostringstream decl;
+            decl << "    Eigen::Matrix<" << type_name<typename EvaluableT::value_type>() << ", "
+                 << std::to_string(m_tree.expandedExpression[index].buffer.rows()) << ", "
+                 << std::to_string(m_tree.expandedExpression[index].buffer.cols()) << "> "
+                 << newCommon.name << " = ";
+            newCommon.declaration = decl.str();
 
-            for (size_t& i : commons) {
-                m_literalSubExpressions[i].literal = commonName;
+            for (int& i : commons) {
+                m_literalSubExpressions[i].literal = newCommon.name;
                 m_literalSubExpressions[i].isAlreadyCompressed = true;
             }
 
-            m_commonsSize++;
+            m_commonExpressions.push_back(newCommon);
 
             m_literalSubExpressions[index].isAlreadyCompressed = true;
 
-            return commonName;
+            return newCommon.name;
         }
 
         return m_literalSubExpressions[index].literal;
     }
 
+    void cleanCommonSubExpressions() {
+
+        std::string& final = m_literalSubExpressions[0].literal;
+
+        for (int i = m_commonExpressions.size() - 2; i >= 0; --i) { //the last subexpression added should be for sure present in the final expression
+
+            bool isInFinal = final.find(m_commonExpressions[i].name) != std::string::npos;
+
+            std::vector<std::pair<int, size_t>> inclusions;
+
+            for (int other = i + 1; other < m_commonExpressions.size(); ++other) {
+                size_t offset = m_commonExpressions[other].expression.find(m_commonExpressions[i].expression);
+                if (offset != std::string::npos) {
+                    inclusions.emplace_back(other, offset);
+                }
+            }
+
+            if (isInFinal) {
+                for (auto& other: inclusions) {
+                    m_commonExpressions[other.first].expression.replace(other.second, m_commonExpressions[i].expression.size(), m_commonExpressions[i].name);
+                }
+            } else {
+                if (inclusions.size() > 1) {
+                    for (auto& other: inclusions) {
+                        m_commonExpressions[other.first].expression.replace(other.second, m_commonExpressions[i].expression.size(), m_commonExpressions[i].name);
+                    }
+                } else {
+                    m_commonExpressions[i].active = false;
+                }
+            }
+        }
+
+        for (auto& common :m_commonExpressions) {
+            if (common.active) {
+                m_commonDeclarations << common.declaration << common.expression << ";" << std::endl;
+            }
+        }
+
+    }
+
+
+    void splitFinalExpression() {
+        size_t offset = 0;
+        size_t currentindex = 0;
+        int lastStopCharachter = -1;
+
+        std::string& final = m_literalSubExpressions[0].literal;
+
+        while (currentindex < final.size()) {
+
+            if (final[currentindex] == '+' || final[currentindex] == '-' || final[currentindex] == '*') {
+                lastStopCharachter = currentindex;
+            }
+
+            if (lastStopCharachter > 0 && (currentindex - offset) > 150) {
+                m_finalExpression << final.substr(offset, (static_cast<size_t>(lastStopCharachter) - offset + 1)) << std::endl << "       ";
+                offset = static_cast<size_t>(lastStopCharachter) + 1;
+                lastStopCharachter = -1;
+            }
+
+            ++currentindex;
+
+        }
+
+        m_finalExpression << final.substr(offset, currentindex - offset);
+    }
 
 
     void getLiteralExpression() {
@@ -282,42 +358,23 @@ private:
             }
 
             if (literalSubExpr.isScalar) {
-                literalSubExpr.literal = getScalarVariable(literalSubExpr.literal);
+                literalSubExpr.literal = getScalarVariable(literalSubExpr.literal); //the expression is saved in a scalar variable evaluated at the beginning
                 literalSubExpr.isAlreadyCompressed = true;
             }
         }
 
-        for (size_t i = 0; i < m_literalSubExpressions.size(); ++i) {
-            m_literalSubExpressions[i].literal = getCommonSubExpression(i);
+        for(int i = m_tree.expandedExpression.size() - 1; i >= 0; --i) {
+            m_literalSubExpressions[i].literal = getCommonSubExpression(i); //check if some subexpressions are duplicated
         }
 
         for(int i = m_tree.expandedExpression.size() - 1; i >= 0; --i) {
-            expandElement(i);
+            expandElement(i); //some inner elements may have been modified when extracting the common subexpressions. Here we reconstruct the total expression
         }
 
-        size_t offset = 0;
-        size_t currentindex = 0;
-        int lastStopCharachter = -1;
+        cleanCommonSubExpressions(); //remove common subexpressions tht turned out to be useless;
 
-        std::string& final = m_literalSubExpressions[0].literal;
+        splitFinalExpression(); //add some newlines where needed
 
-        while (currentindex < final.size()) {
-
-            if (final[currentindex] == '+' || final[currentindex] == '-' || final[currentindex] == '*') {
-                lastStopCharachter = currentindex;
-            }
-
-            if (lastStopCharachter > 0 && (currentindex - offset) > 150) {
-                m_finalExpression << final.substr(offset, (static_cast<size_t>(lastStopCharachter) - offset + 1)) << std::endl << "       ";
-                offset = static_cast<size_t>(lastStopCharachter) + 1;
-                lastStopCharachter = -1;
-            }
-
-            ++currentindex;
-
-        }
-
-        m_finalExpression << final.substr(offset, currentindex - offset);
     }
 
 public:
@@ -386,7 +443,7 @@ public:
         cpp << "void " << cleanName << "::evaluate(const std::vector<" << type_name<SqueezedMatrixRef>() << ">& generics, "
             << type_name<SqueezedMatrixRef>() << " output) {" << std::endl;
         cpp << m_helpersDeclarations.str() << std::endl;
-        cpp << m_commonExpressions.str() << std::endl;
+        cpp << m_commonDeclarations.str() << std::endl;
         if (this->rows() == 1 && this->cols() == 1) {
             cpp << "    output(0, 0) = ";
         } else {
