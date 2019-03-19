@@ -99,6 +99,7 @@ private:
     struct LiteralComponent {
         std::string literal;
         bool isScalar;
+        bool isAlreadyCompressed = false;
     };
 
     std::vector<LiteralComponent> m_literalSubExpressions;
@@ -106,12 +107,95 @@ private:
     levi::ExpressionComponent<EvaluableT> m_fullExpression;
     std::map<std::string, std::string> m_helpersVariables;
     std::ostringstream m_helpersDeclarations;
+    std::ostringstream m_commonExpressions;
+    std::ostringstream m_finalExpression;
+    size_t m_commonsSize = 0;
+
 
     using SqueezedMatrixRef = Eigen::Ref<SqueezedMatrix>;
     using base_type = levi::CompiledEvaluable<SqueezedMatrixRef, SqueezedMatrixRef>;
     base_type* m_compiledEvaluable;
     shlibpp::SharedLibraryClassFactory<base_type> m_compiledEvaluableFactory;
     std::vector<SqueezedMatrixRef> m_genericsRefs;
+
+    void expandElement(int i) {
+        Type type;
+
+        levi::TreeComponent<EvaluableT>& subExpr = m_tree.expandedExpression[static_cast<size_t>(i)];
+        LiteralComponent& literalSubExpr = m_literalSubExpressions[static_cast<size_t>(i)];
+        const LiteralComponent& lhs = m_literalSubExpressions[subExpr.lhsIndex];
+        const LiteralComponent& rhs = m_literalSubExpressions[subExpr.rhsIndex];
+
+        if (literalSubExpr.isAlreadyCompressed) {
+            return;
+        }
+
+        type = subExpr.type;
+
+        if (type == Type::Sum) {
+
+            literalSubExpr.literal = "(" + lhs.literal + " + " + rhs.literal + ")";
+
+            literalSubExpr.isScalar = (lhs.isScalar && rhs.isScalar);
+
+        } else if (type == Type::Subtraction) {
+
+            literalSubExpr.literal = "(" + lhs.literal + " - " + rhs.literal + ")";
+            literalSubExpr.isScalar = (lhs.isScalar && rhs.isScalar);
+
+        } else if (type == Type::Product) {
+
+            literalSubExpr.literal = lhs.literal + " * " + rhs.literal;
+            literalSubExpr.isScalar = (lhs.isScalar && rhs.isScalar);
+
+        } else if (type == Type::Division) {
+
+            literalSubExpr.literal = lhs.literal + " / " + rhs.literal;
+            literalSubExpr.isScalar = lhs.isScalar;
+
+        } else if (type == Type::InvertedSign) {
+
+            literalSubExpr.literal = "-" + lhs.literal;
+            literalSubExpr.isScalar = lhs.isScalar;
+
+        } else if (type == Type::Pow) {
+
+            literalSubExpr.literal = "std::pow(" + lhs.literal +", " + std::to_string(subExpr.exponent) + ")";
+            literalSubExpr.isScalar = true;
+
+        } else if (type == Type::Transpose) {
+
+            assert(!lhs.isScalar);
+            literalSubExpr.literal = "(" + lhs.literal + ").transpose()";
+            literalSubExpr.isScalar = false;
+
+        } else if (type == Type::Row) {
+
+            assert(!lhs.isScalar);
+            literalSubExpr.literal = "(" + lhs.literal + ").row(" + std::to_string(subExpr.block.startRow) + ")";
+            literalSubExpr.isScalar = false;
+
+        } else if (type == Type::Column) {
+
+            assert(!lhs.isScalar);
+            literalSubExpr.literal = "(" + lhs.literal + ").col(" + std::to_string(subExpr.block.startCol) + ")";
+            literalSubExpr.isScalar = false;
+
+        } else if (type == Type::Element) {
+
+            assert(!lhs.isScalar);
+            literalSubExpr.literal = "(" + lhs.literal + ")(" + std::to_string(subExpr.block.startRow) + ", " + std::to_string(subExpr.block.startCol) + ")";
+            literalSubExpr.isScalar = true;
+
+        } else if (type == Type::Block) {
+
+            assert(!lhs.isScalar);
+            literalSubExpr.literal = "(" + lhs.literal + ").block<" + std::to_string(subExpr.block.rows) + ", " + std::to_string(subExpr.block.cols) + ">(" + std::to_string(subExpr.block.startRow) + ", " + std::to_string(subExpr.block.startCol) + ")";
+            literalSubExpr.isScalar = false;
+
+        }
+    }
+
 
     std::string getScalarVariable(const std::string& originalExpression) {
         std::map<std::string, std::string>::iterator element = m_helpersVariables.find(originalExpression);
@@ -130,8 +214,48 @@ private:
         }
     }
 
+    std::string getCommonSubExpression(size_t index) {
+
+        if (m_literalSubExpressions[index].isAlreadyCompressed) {
+            return m_literalSubExpressions[index].literal;
+        }
+
+        std::vector<size_t> commons;
+
+        for (size_t i = index + 1; i < m_literalSubExpressions.size(); ++i) {
+
+            if (!m_literalSubExpressions[i].isAlreadyCompressed) {
+                if (m_literalSubExpressions[index].literal == m_literalSubExpressions[i].literal) {
+                    commons.push_back(i);
+                }
+            }
+        }
+
+        if (commons.size()) {
+            std::string commonName = "m_common" + std::to_string(m_commonsSize);
+            m_commonExpressions << "    Eigen::Matrix<" << type_name<typename EvaluableT::value_type>() << ", "
+                                << std::to_string(m_tree.expandedExpression[index].buffer.rows()) << ", "
+                                << std::to_string(m_tree.expandedExpression[index].buffer.cols()) << "> "
+                                << commonName << " = " << m_literalSubExpressions[index].literal << ";" << std::endl;
+
+            for (size_t& i : commons) {
+                m_literalSubExpressions[i].literal = commonName;
+                m_literalSubExpressions[i].isAlreadyCompressed = true;
+            }
+
+            m_commonsSize++;
+
+            m_literalSubExpressions[index].isAlreadyCompressed = true;
+
+            return commonName;
+        }
+
+        return m_literalSubExpressions[index].literal;
+    }
+
+
+
     void getLiteralExpression() {
-        Type type;
         m_literalSubExpressions.resize(m_tree.expandedExpression.size());
         m_helpersVariables.clear();
 
@@ -147,93 +271,10 @@ private:
 
         for(int i = m_tree.expandedExpression.size() - 1; i >= 0; --i) {
 
+            expandElement(i);
+
             levi::TreeComponent<EvaluableT>& subExpr = m_tree.expandedExpression[static_cast<size_t>(i)];
             LiteralComponent& literalSubExpr = m_literalSubExpressions[static_cast<size_t>(i)];
-            const LiteralComponent& lhs = m_literalSubExpressions[subExpr.lhsIndex];
-            const LiteralComponent& rhs = m_literalSubExpressions[subExpr.rhsIndex];
-
-            type = subExpr.type;
-
-            if (type == Type::Sum) {
-
-                if (lhs.literal.size() + rhs.literal.size() > 150) {
-                    std::ostringstream ss;
-                    ss << "(" + lhs.literal + " +" << std::endl << "        " << rhs.literal << ")";
-                    literalSubExpr.literal = ss.str();
-                } else {
-                    literalSubExpr.literal = "(" + lhs.literal + " + " + rhs.literal + ")";
-                }
-
-                literalSubExpr.isScalar = (lhs.isScalar && rhs.isScalar);
-
-            } else if (type == Type::Subtraction) {
-
-                if (lhs.literal.size() + rhs.literal.size() > 150) {
-                    std::ostringstream ss;
-                    ss << "(" << lhs.literal << " -" << std::endl << "        " << rhs.literal << ")";
-                    literalSubExpr.literal = ss.str();
-                } else {
-                    literalSubExpr.literal = "(" + lhs.literal + " - " + rhs.literal + ")";
-                }
-                literalSubExpr.isScalar = (lhs.isScalar && rhs.isScalar);
-
-            } else if (type == Type::Product) {
-
-                if (lhs.literal.size() + rhs.literal.size() > 150) {
-                    std::ostringstream ss;
-                    ss << "(" << lhs.literal << " *" << std::endl << "        " << rhs.literal << ")";
-                    literalSubExpr.literal = ss.str();
-                } else {
-                    literalSubExpr.literal = lhs.literal + " * " + rhs.literal;
-                }
-                literalSubExpr.isScalar = (lhs.isScalar && rhs.isScalar);
-
-            } else if (type == Type::Division) {
-
-                literalSubExpr.literal = lhs.literal + " / " + rhs.literal;
-                literalSubExpr.isScalar = lhs.isScalar;
-
-            } else if (type == Type::InvertedSign) {
-
-                literalSubExpr.literal = "-" + lhs.literal;
-                literalSubExpr.isScalar = lhs.isScalar;
-
-            } else if (type == Type::Pow) {
-
-                literalSubExpr.literal = "std::pow(" + lhs.literal +", " + std::to_string(subExpr.exponent) + ")";
-                literalSubExpr.isScalar = true;
-
-            } else if (type == Type::Transpose) {
-
-                assert(!lhs.isScalar);
-                literalSubExpr.literal = "(" + lhs.literal + ").transpose()";
-                literalSubExpr.isScalar = false;
-
-            } else if (type == Type::Row) {
-
-                assert(!lhs.isScalar);
-                literalSubExpr.literal = "(" + lhs.literal + ").row(" + std::to_string(subExpr.block.startRow) + ")";
-                literalSubExpr.isScalar = false;
-
-            } else if (type == Type::Column) {
-
-                assert(!lhs.isScalar);
-                literalSubExpr.literal = "(" + lhs.literal + ").col(" + std::to_string(subExpr.block.startCol) + ")";
-                literalSubExpr.isScalar = false;
-
-            } else if (type == Type::Element) {
-
-                assert(!lhs.isScalar);
-                literalSubExpr.literal = "(" + lhs.literal + ")(" + std::to_string(subExpr.block.startRow) + ", " + std::to_string(subExpr.block.startCol) + ")";
-                literalSubExpr.isScalar = true;
-
-            } else if (type == Type::Block) {
-
-                assert(!lhs.isScalar);
-                literalSubExpr.literal = "(" + lhs.literal + ").block<" + std::to_string(subExpr.block.rows) + ", " + std::to_string(subExpr.block.cols) + ">(" + std::to_string(subExpr.block.startRow) + ", " + std::to_string(subExpr.block.startCol) + ")";
-                literalSubExpr.isScalar = false;
-
-            }
 
             if (!literalSubExpr.isScalar && (subExpr.buffer.rows() == 1) && (subExpr.buffer.cols() == 1)) { //the subexpression is an Eigen object but of dimension 1x1
                 literalSubExpr.literal = "(" + literalSubExpr.literal + ")(0,0)";
@@ -242,8 +283,41 @@ private:
 
             if (literalSubExpr.isScalar) {
                 literalSubExpr.literal = getScalarVariable(literalSubExpr.literal);
+                literalSubExpr.isAlreadyCompressed = true;
             }
         }
+
+        for (size_t i = 0; i < m_literalSubExpressions.size(); ++i) {
+            m_literalSubExpressions[i].literal = getCommonSubExpression(i);
+        }
+
+        for(int i = m_tree.expandedExpression.size() - 1; i >= 0; --i) {
+            expandElement(i);
+        }
+
+        size_t offset = 0;
+        size_t currentindex = 0;
+        int lastStopCharachter = -1;
+
+        std::string& final = m_literalSubExpressions[0].literal;
+
+        while (currentindex < final.size()) {
+
+            if (final[currentindex] == '+' || final[currentindex] == '-' || final[currentindex] == '*') {
+                lastStopCharachter = currentindex;
+            }
+
+            if (lastStopCharachter > 0 && (currentindex - offset) > 150) {
+                m_finalExpression << final.substr(offset, (static_cast<size_t>(lastStopCharachter) - offset + 1)) << std::endl << "       ";
+                offset = static_cast<size_t>(lastStopCharachter) + 1;
+                lastStopCharachter = -1;
+            }
+
+            ++currentindex;
+
+        }
+
+        m_finalExpression << final.substr(offset, currentindex - offset);
     }
 
 public:
@@ -312,12 +386,13 @@ public:
         cpp << "void " << cleanName << "::evaluate(const std::vector<" << type_name<SqueezedMatrixRef>() << ">& generics, "
             << type_name<SqueezedMatrixRef>() << " output) {" << std::endl;
         cpp << m_helpersDeclarations.str() << std::endl;
+        cpp << m_commonExpressions.str() << std::endl;
         if (this->rows() == 1 && this->cols() == 1) {
             cpp << "    output(0, 0) = ";
         } else {
             cpp << "    output = ";
         }
-        cpp << m_literalSubExpressions[0].literal << ";" << std::endl << "}" << std::endl;
+        cpp << m_finalExpression.str() << ";" << std::endl << "}" << std::endl;
         cpp.close();
 
         std::string buildDir = workingDir + "/build";
