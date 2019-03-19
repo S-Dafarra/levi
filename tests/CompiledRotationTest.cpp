@@ -98,7 +98,7 @@ int main() {
     x = vector;
 
     begin = std::chrono::steady_clock::now();
-    Expression rotatedVectorDerivative = rotatedVector.getColumnDerivative(0, normalizedQuaternion.asVariable()) * normalizedQuaternion.getColumnDerivative(0, quaternion);
+    Expression rotatedVectorDerivative = rotatedVector.getColumnDerivative(0, quaternion);
     end= std::chrono::steady_clock::now();
     std::cout << "Elapsed time ms (compute first derivative): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 

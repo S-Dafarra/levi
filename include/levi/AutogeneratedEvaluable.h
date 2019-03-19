@@ -104,6 +104,8 @@ private:
     std::vector<LiteralComponent> m_literalSubExpressions;
     levi::TreeExpander<EvaluableT> m_tree;
     levi::ExpressionComponent<EvaluableT> m_fullExpression;
+    std::map<std::string, std::string> m_helpersVariables;
+    std::ostringstream m_helpersDeclarations;
 
     using SqueezedMatrixRef = Eigen::Ref<SqueezedMatrix>;
     using base_type = levi::CompiledEvaluable<SqueezedMatrixRef, SqueezedMatrixRef>;
@@ -111,9 +113,27 @@ private:
     shlibpp::SharedLibraryClassFactory<base_type> m_compiledEvaluableFactory;
     std::vector<SqueezedMatrixRef> m_genericsRefs;
 
+    std::string getScalarVariable(const std::string& originalExpression) {
+        std::map<std::string, std::string>::iterator element = m_helpersVariables.find(originalExpression);
+
+        if (element != m_helpersVariables.end()) {
+            return (element->second);
+        } else {
+            std::pair<std::string, std::string> newElement;
+            newElement.first = originalExpression;
+            newElement.second = "m_helper" + std::to_string(m_helpersVariables.size());
+            m_helpersDeclarations << "    " << type_name<typename EvaluableT::value_type>() << " " << newElement.second
+                                  << " = " << newElement.first << ";" << std::endl;
+            auto result = m_helpersVariables.insert(newElement);
+            assert(result.second);
+            return (result.first->second);
+        }
+    }
+
     void getLiteralExpression() {
         Type type;
         m_literalSubExpressions.resize(m_tree.expandedExpression.size());
+        m_helpersVariables.clear();
 
         for (size_t generic = 0; generic < m_tree.generics.size(); ++generic) {
             if (m_tree.expandedExpression[m_tree.generics[generic]].buffer.rows() == 1 && m_tree.expandedExpression[m_tree.generics[generic]].buffer.cols() == 1) {
@@ -219,6 +239,10 @@ private:
                 literalSubExpr.literal = "(" + literalSubExpr.literal + ")(0,0)";
                 literalSubExpr.isScalar = true;
             }
+
+            if (literalSubExpr.isScalar) {
+                literalSubExpr.literal = getScalarVariable(literalSubExpr.literal);
+            }
         }
     }
 
@@ -287,6 +311,7 @@ public:
         cpp << "SHLIBPP_DEFINE_SHARED_SUBCLASS(" << cleanName << "Factory, "  << cleanName <<", base_type);"  << std::endl << std::endl;
         cpp << "void " << cleanName << "::evaluate(const std::vector<" << type_name<SqueezedMatrixRef>() << ">& generics, "
             << type_name<SqueezedMatrixRef>() << " output) {" << std::endl;
+        cpp << m_helpersDeclarations.str() << std::endl;
         if (this->rows() == 1 && this->cols() == 1) {
             cpp << "    output(0, 0) = ";
         } else {
