@@ -12,13 +12,24 @@
 #include <levi/Expression.h>
 #include <levi/TypeDetector.h>
 
+namespace levi {
+
+    template<typename EvaluableT>
+    size_t expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>>& node,
+                      std::vector<levi::TreeComponent<EvaluableT>>& expandedExpression,
+                      std::vector<size_t>& generics);
+
+}
+
 template<typename EvaluableT>
 class levi::TreeComponent {
 
     using Type = levi::EvaluableType;
-    typedef Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic> SqueezedMatrix;
 
 public:
+
+    typedef Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic> SqueezedMatrix;
+
     levi::ExpressionComponent<levi::Evaluable<SqueezedMatrix>> partialExpression;
 
     Type type;
@@ -57,81 +68,56 @@ public:
 };
 
 template<typename EvaluableT>
-class levi::TreeExpander {
-
-public:
-
-    typedef Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic> SqueezedMatrix;
-
-    std::vector<levi::TreeComponent<EvaluableT>> expandedExpression;
-    std::vector<size_t> generics;
-
-private:
+size_t levi::expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>>& node,
+                        std::vector<levi::TreeComponent<EvaluableT>>& expandedExpression,
+                        std::vector<size_t>& generics) {
 
     using Type = levi::EvaluableType;
 
-    levi::ExpressionComponent<EvaluableT> m_fullExpression;
+    //Returns the position in which the node has been saved
+    assert(node.isValidExpression());
 
-    size_t expandTree(const levi::ExpressionComponent<levi::Evaluable<SqueezedMatrix>>& node) {
+    levi::EvaluableType type;
 
-        //Returns the position in which the node has been saved
-        assert(node.isValidExpression());
+    type = node.info().type;
 
-        levi::EvaluableType type;
+    expandedExpression.emplace_back(node);
 
-        type = node.info().type;
+    size_t currentIndex = currentIndex = expandedExpression.size() - 1;
 
-        expandedExpression.emplace_back(node);
-
-        size_t currentIndex = currentIndex = expandedExpression.size() - 1;
-
-        if (type == Type::Generic) {
-            for (size_t generic : generics) {
-                if (expandedExpression[generic].partialExpression == expandedExpression[currentIndex].partialExpression) {
-                    // This is the case where the same Generic has been added before.
-                    expandedExpression.pop_back();
-                    return generic;
-                }
+    if (type == Type::Generic) {
+        for (size_t generic : generics) {
+            if (expandedExpression[generic].partialExpression == expandedExpression[currentIndex].partialExpression) {
+                // This is the case where the same Generic has been added before.
+                expandedExpression.pop_back();
+                return generic;
             }
-            generics.push_back(currentIndex);
-            return currentIndex;
         }
-
-        if (type == Type::Null || type == Type::Identity) {
-            return currentIndex;
-        }
-
-        if (type == Type::Sum || type == Type::Subtraction || type == Type::Product || type == Type::Division) {
-            size_t lhsIndex = expandTree(node.info().lhs);
-            expandedExpression[currentIndex].lhsIndex = lhsIndex;
-            size_t rhsIndex = expandTree(node.info().rhs);
-            expandedExpression[currentIndex].rhsIndex = rhsIndex;
-            return currentIndex;
-        }
-
-        if (type == Type::InvertedSign || type == Type::Pow || type == Type::Transpose || type == Type::Row ||
-            type == Type::Column || type == Type::Element || type == Type::Block) {
-            size_t lhsIndex = expandTree(node.info().lhs);
-            expandedExpression[currentIndex].lhsIndex = lhsIndex;
-            return currentIndex;
-        }
-
-        assert(false && "Case not considered.");
-        return expandedExpression.size();
+        generics.push_back(currentIndex);
+        return currentIndex;
     }
 
-public:
-
-    TreeExpander(const levi::ExpressionComponent<EvaluableT>& fullExpression)
-        : m_fullExpression(fullExpression)
-    {
-        expandedExpression.clear();
-        generics.clear();
-        expandTree(fullExpression);
+    if (type == Type::Null || type == Type::Identity) {
+        return currentIndex;
     }
 
-    ~TreeExpander() { };
+    if (type == Type::Sum || type == Type::Subtraction || type == Type::Product || type == Type::Division) {
+        size_t lhsIndex = expandTree(node.info().lhs, expandedExpression, generics);
+        expandedExpression[currentIndex].lhsIndex = lhsIndex;
+        size_t rhsIndex = expandTree(node.info().rhs, expandedExpression, generics);
+        expandedExpression[currentIndex].rhsIndex = rhsIndex;
+        return currentIndex;
+    }
 
-};
+    if (type == Type::InvertedSign || type == Type::Pow || type == Type::Transpose || type == Type::Row ||
+        type == Type::Column || type == Type::Element || type == Type::Block) {
+        size_t lhsIndex = expandTree(node.info().lhs, expandedExpression, generics);
+        expandedExpression[currentIndex].lhsIndex = lhsIndex;
+        return currentIndex;
+    }
+
+    assert(false && "Case not considered.");
+    return expandedExpression.size();
+}
 
 #endif // LEVI_TREEEXPANDER_H

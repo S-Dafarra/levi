@@ -75,18 +75,6 @@ class levi::ExpressionComponent {
     template <class OtherEvaluable>
     friend class ExpressionComponent;
 
-    template <typename OtherEvaluable>
-    friend class levi::TreeExpander;
-
-    template <typename OtherEvaluable>
-    friend class levi::TreeComponent;
-
-    template <class LeftEvaluable, class RightEvaluable>
-    friend class levi::CastEvaluable;
-
-    template<typename OtherEvaluable>
-    friend class levi::AddendsExpander;
-
     /**
      * @brief Shared pointer to the evaluable.
      */
@@ -188,8 +176,6 @@ class levi::ExpressionComponent {
      */
     bool m_isIdentity;
 
-    const typename EvaluableT::EvaluableInfo &info() const;
-
 public:
 
     /**
@@ -240,6 +226,8 @@ public:
      * @return a weak pointer to the evaluable
      */
     std::weak_ptr<EvaluableT> evaluable() const ;
+
+    const typename EvaluableT::EvaluableInfo &info() const;
 
     /**
      * @brief Name of the expression
