@@ -138,6 +138,7 @@ int main() {
 
     //-------------------------Validation of second derivative
 
+    std::vector<levi::CompiledElement<Eigen::Matrix<double, 3, 4>>> expressions(4);
     for (Eigen::Index j = 0 ; j < rotatedVectorDerivative.cols(); ++j) {
 
         x = vector;
@@ -171,6 +172,8 @@ int main() {
         squeezedOutput = squeezedSecondDerivative.evaluate();
         end= std::chrono::steady_clock::now();
         std::cout << "Elapsed time ms (evaluate (squeeze) second derivative, column " << j<<"): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+        assert((squeezedOutput - doubleDerivativeValue).cwiseAbs().maxCoeff() < 1e-10);
+
 
 
         auto compiledSecondDerivative = rotatedVectorDoubleDerivative.compile("doubleSqueezedDerivative" + std::to_string(j));
@@ -184,8 +187,39 @@ int main() {
         compiledOutput = compiledSecondDerivative.evaluate();
         end= std::chrono::steady_clock::now();
         std::cout << "Elapsed time ms (evaluate (compile) second derivative, column " << j<<"): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+        assert((compiledOutput - doubleDerivativeValue).cwiseAbs().maxCoeff() < 1e-10);
 
 
+        expressions[static_cast<size_t>(j)].first = "Col" + std::to_string(j);
+        expressions[static_cast<size_t>(j)].second = rotatedVectorDoubleDerivative;
+    }
+
+    auto multiExpr = levi::CompileMultipleExpressions(expressions, "RotatedVectorHessian");
+    auto output = multiExpr->evaluate();
+
+    x = vector;
+    quaternion = quaternionValue;
+
+    begin = std::chrono::steady_clock::now();
+    output = multiExpr->evaluate();
+    end= std::chrono::steady_clock::now();
+    std::cout << "Elapsed time ms (evaluate (compile) second derivative, multiple): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+
+    Eigen::MatrixXd doubleDerivativeValue(3, 4);
+
+    x = vector;
+    quaternion = quaternionValue;
+
+    begin = std::chrono::steady_clock::now();
+    for (auto& expression: expressions) {
+        doubleDerivativeValue = expression.second.evaluate();
+    }
+    end= std::chrono::steady_clock::now();
+    std::cout << "Elapsed time ms (evaluate second derivatives, serial): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+
+    for (auto& expression: expressions) {
+        doubleDerivativeValue = expression.second.evaluate();
+        assert((output[expression.first] - doubleDerivativeValue).cwiseAbs().maxCoeff() < 1e-10);
     }
 
     return 0;

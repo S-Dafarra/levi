@@ -61,6 +61,11 @@ namespace levi {
                                                                                                      EvaluableLhs::rows_at_compile_time,
                                                                                                      EvaluableLhs::cols_at_compile_time>::value>::type> : std::true_type {};
 
+    template <typename Matrix>
+    using CompiledElement = std::pair<std::string, levi::ExpressionComponent<levi::Evaluable<Matrix>>>;
+
+    template <typename Matrix>
+    std::unique_ptr<levi::MultipleCompiledExpressions<levi::Evaluable<Matrix>>> CompileMultipleExpressions(const std::vector<CompiledElement<Matrix>>& elements, const std::string& name);
 }
 
 /**

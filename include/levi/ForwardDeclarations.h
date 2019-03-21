@@ -179,6 +179,12 @@ namespace levi {
     template<typename EvaluableT>
     class TreeComponent;
 
+    template<typename EvaluableT>
+    class MultipleExpressionsEvaluator;
+
+    template<typename EvaluableT>
+    class MultipleCompiledExpressions;
+
     template<size_t startIndex, typename... Evaluables>
     class DependenciesSet;
 
