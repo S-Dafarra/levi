@@ -138,7 +138,7 @@ int main() {
 
     //-------------------------Validation of second derivative
 
-    std::vector<levi::CompiledElement<Eigen::Matrix<double, 3, 4>>> expressions(4);
+    MultipleExpressionsMap<Eigen::Matrix<double, 3, 4>> expressions;
     for (Eigen::Index j = 0 ; j < rotatedVectorDerivative.cols(); ++j) {
 
         x = vector;
@@ -190,8 +190,7 @@ int main() {
         assert((compiledOutput - doubleDerivativeValue).cwiseAbs().maxCoeff() < 1e-10);
 
 
-        expressions[static_cast<size_t>(j)].first = "Col" + std::to_string(j);
-        expressions[static_cast<size_t>(j)].second = rotatedVectorDoubleDerivative;
+        expressions["Col" + std::to_string(j)] = rotatedVectorDoubleDerivative;
     }
 
     auto multiExpr = levi::CompileMultipleExpressions(expressions, "RotatedVectorHessian");

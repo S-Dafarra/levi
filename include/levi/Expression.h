@@ -65,7 +65,13 @@ namespace levi {
     using CompiledElement = std::pair<std::string, levi::ExpressionComponent<levi::Evaluable<Matrix>>>;
 
     template <typename Matrix>
-    std::unique_ptr<levi::MultipleCompiledExpressions<levi::Evaluable<Matrix>>> CompileMultipleExpressions(const std::vector<CompiledElement<Matrix>>& elements, const std::string& name);
+    using MultipleExpressionsMap = std::unordered_map<std::string, levi::ExpressionComponent<levi::Evaluable<Matrix>>>;
+
+    template <typename Matrix>
+    using MultipleExpressionsOutputPointer = std::unique_ptr<levi::MultipleCompiledExpressions<levi::Evaluable<Matrix>>>;
+
+    template <typename Matrix>
+    MultipleExpressionsOutputPointer<Matrix> CompileMultipleExpressions(const MultipleExpressionsMap<Matrix>& elements, const std::string& name);
 }
 
 /**

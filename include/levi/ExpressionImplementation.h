@@ -49,7 +49,7 @@ levi::ComposeByCols(const std::vector<levi::ExpressionComponent<EvaluableT>>& co
 }
 
 template <typename Matrix>
-std::unique_ptr<levi::MultipleCompiledExpressions<levi::Evaluable<Matrix>>> levi::CompileMultipleExpressions(const std::vector<levi::CompiledElement<Matrix>>& elements, const std::string& name) {
+levi::MultipleExpressionsOutputPointer<Matrix> levi::CompileMultipleExpressions(const levi::MultipleExpressionsMap<Matrix> &elements, const std::string& name) {
     return std::make_unique<levi::MultipleCompiledExpressions<levi::Evaluable<Matrix>>>(elements, name);
 }
 
