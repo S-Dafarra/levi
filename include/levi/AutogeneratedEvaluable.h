@@ -274,9 +274,11 @@ private:
             std::vector<std::pair<int, size_t>> inclusions;
 
             for (int other = i + 1; other < m_commonExpressions.size(); ++other) {
-                size_t offset = m_commonExpressions[other].expression.find(m_commonExpressions[i].expression);
-                if (offset != std::string::npos) {
-                    inclusions.emplace_back(other, offset);
+                if (m_commonExpressions[other].active) {
+                    size_t offset = m_commonExpressions[other].expression.find(m_commonExpressions[i].expression);
+                    if (offset != std::string::npos) {
+                        inclusions.emplace_back(other, offset);
+                    }
                 }
             }
 
