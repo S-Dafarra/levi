@@ -64,11 +64,22 @@ namespace levi {
     template <typename Matrix>
     using CompiledElement = std::pair<std::string, levi::ExpressionComponent<levi::Evaluable<Matrix>>>;
 
+    typedef CompiledElement<LEVI_DEFAULT_MATRIX_TYPE> DefaultCompiledElement;
+
     template <typename Matrix>
     using MultipleExpressionsMap = std::unordered_map<std::string, levi::ExpressionComponent<levi::Evaluable<Matrix>>>;
 
+    typedef MultipleExpressionsMap<LEVI_DEFAULT_MATRIX_TYPE> DefaultMultipleExpressionsMap;
+
     template <typename Matrix>
     using MultipleExpressionsOutputPointer = std::unique_ptr<levi::MultipleCompiledExpressions<levi::Evaluable<Matrix>>>;
+
+    typedef MultipleExpressionsOutputPointer<LEVI_DEFAULT_MATRIX_TYPE> DefaultMultipleExpressionsOutputPointer;
+
+    template <typename Matrix>
+    using MultipleExpressionsOutputMap = typename levi::MultipleCompiledExpressions<levi::Evaluable<Matrix>>::OutputType;
+
+    typedef std::unordered_map<std::string, LEVI_DEFAULT_MATRIX_TYPE> DefaultMultipleExpressionsOutputMap;
 
     template <typename Matrix>
     MultipleExpressionsOutputPointer<Matrix> CompileMultipleExpressions(const MultipleExpressionsMap<Matrix>& elements, const std::string& name);
