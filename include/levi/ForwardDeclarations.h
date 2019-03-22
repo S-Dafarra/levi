@@ -185,6 +185,9 @@ namespace levi {
     template<typename EvaluableT>
     class MultipleCompiledExpressions;
 
+    template<typename EvaluableT>
+    class MultipleSqueezedExpressions;
+
     template<size_t startIndex, typename... Evaluables>
     class DependenciesSet;
 

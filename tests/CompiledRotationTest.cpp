@@ -196,6 +196,9 @@ int main() {
     auto multiExpr = levi::CompileMultipleExpressions(expressions, "RotatedVectorHessian");
     auto output = multiExpr->evaluate();
 
+    auto multiSqueezed = levi::SqueezeMultipleExpressions(expressions);
+    auto outputMultiSqueeze = multiSqueezed->evaluate();
+
     x = vector;
     quaternion = quaternionValue;
 
@@ -203,6 +206,14 @@ int main() {
     output = multiExpr->evaluate();
     end= std::chrono::steady_clock::now();
     std::cout << "Elapsed time ms (evaluate (compile) second derivative, multiple): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
+
+    x = vector;
+    quaternion = quaternionValue;
+
+    begin = std::chrono::steady_clock::now();
+    outputMultiSqueeze = multiSqueezed->evaluate();
+    end= std::chrono::steady_clock::now();
+    std::cout << "Elapsed time ms (evaluate (squeezed) second derivative, multiple): " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()/1000.0) <<std::endl;
 
     Eigen::MatrixXd doubleDerivativeValue(3, 4);
 
@@ -219,6 +230,7 @@ int main() {
     for (auto& expression: expressions) {
         doubleDerivativeValue = expression.second.evaluate();
         assert((output[expression.first] - doubleDerivativeValue).cwiseAbs().maxCoeff() < 1e-10);
+        assert((outputMultiSqueeze[expression.first] - doubleDerivativeValue).cwiseAbs().maxCoeff() < 1e-10);
     }
 
     return 0;

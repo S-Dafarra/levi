@@ -72,17 +72,25 @@ namespace levi {
     typedef MultipleExpressionsMap<LEVI_DEFAULT_MATRIX_TYPE> DefaultMultipleExpressionsMap;
 
     template <typename Matrix>
-    using MultipleExpressionsOutputPointer = std::unique_ptr<levi::MultipleCompiledExpressions<levi::Evaluable<Matrix>>>;
+    using MultipleCompiledOutputPointer = std::unique_ptr<levi::MultipleCompiledExpressions<levi::Evaluable<Matrix>>>;
 
-    typedef MultipleExpressionsOutputPointer<LEVI_DEFAULT_MATRIX_TYPE> DefaultMultipleExpressionsOutputPointer;
+    typedef MultipleCompiledOutputPointer<LEVI_DEFAULT_MATRIX_TYPE> DefaultMultipleCompiledOutputPointer;
 
     template <typename Matrix>
-    using MultipleExpressionsOutputMap = typename levi::MultipleCompiledExpressions<levi::Evaluable<Matrix>>::OutputType;
+    using MultipleSqueezedOutputPointer = std::unique_ptr<levi::MultipleSqueezedExpressions<levi::Evaluable<Matrix>>>;
+
+    typedef MultipleSqueezedOutputPointer<LEVI_DEFAULT_MATRIX_TYPE> DefaultMultipleSqueezedOutputPointer;
+
+    template <typename Matrix>
+    using MultipleExpressionsOutputMap = std::unordered_map<std::string, Matrix>;
 
     typedef std::unordered_map<std::string, LEVI_DEFAULT_MATRIX_TYPE> DefaultMultipleExpressionsOutputMap;
 
     template <typename Matrix>
-    MultipleExpressionsOutputPointer<Matrix> CompileMultipleExpressions(const MultipleExpressionsMap<Matrix>& elements, const std::string& name);
+    MultipleCompiledOutputPointer<Matrix> CompileMultipleExpressions(const MultipleExpressionsMap<Matrix>& elements, const std::string& name);
+
+    template <typename Matrix>
+    MultipleSqueezedOutputPointer<Matrix> SqueezeMultipleExpressions(const MultipleExpressionsMap<Matrix>& elements);
 }
 
 /**
