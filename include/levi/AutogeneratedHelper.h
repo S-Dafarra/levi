@@ -142,6 +142,8 @@ private:
     std::vector<CommonSubExp> m_commonExpressions;
     std::ostringstream m_commonDeclarations;
     std::vector<std::ostringstream> m_finalExpressions;
+    std::string m_genericsName, m_helpersName, m_commonsName;
+    std::unordered_map<std::string, std::vector<int>> m_commonsMap;
 
     std::vector<SqueezedMatrixRef> m_genericsRefs;
 
@@ -264,7 +266,7 @@ private:
         } else {
             std::pair<std::string, std::string> newElement;
             newElement.first = originalExpression;
-            newElement.second = "m_helper" + std::to_string(m_helpersVariables.size());
+            newElement.second = m_helpersName + std::to_string(m_helpersVariables.size());
             m_helpersDeclarations << "    " << type_name<typename EvaluableT::value_type>() << " " << newElement.second
                                   << " = " << newElement.first << ";" << std::endl;
             auto result = m_helpersVariables.insert(newElement);
@@ -273,47 +275,35 @@ private:
         }
     }
 
-    std::string getCommonSubExpression(int index) {
+    void getCommonSubExpression() {
 
-        if (m_literalSubExpressions[index].isAlreadyCompressed || m_literalSubExpressions[index].isSimple) {
-            return m_literalSubExpressions[index].literal;
-        }
+        for(int index = m_expandedExpression.size() - 1; index >= 0; --index) {
 
-        std::vector<int> commons;
+            if (m_literalSubExpressions[index].isAlreadyCompressed || m_literalSubExpressions[index].isSimple) {
+                continue;
+            }
 
-        for (int i = index - 1; i >= 0; --i) {
+            std::vector<int>& commons = m_commonsMap[m_literalSubExpressions[index].literal];
 
-            if (!m_literalSubExpressions[i].isAlreadyCompressed && !m_literalSubExpressions[i].isSimple) {
-                if (m_literalSubExpressions[index].literal == m_literalSubExpressions[i].literal) {
-                    commons.push_back(i);
+            if (commons.size() > 1) {
+                CommonSubExp newCommon;
+                newCommon.name = m_commonsName + std::to_string(m_commonExpressions.size()) + "_";
+                newCommon.expression = m_literalSubExpressions[index].literal;
+                std::ostringstream decl;
+                decl << "    Eigen::Matrix<" << type_name<typename EvaluableT::value_type>() << ", "
+                     << std::to_string(m_expandedExpression[index].buffer.rows()) << ", "
+                     << std::to_string(m_expandedExpression[index].buffer.cols()) << "> "
+                     << newCommon.name << " = ";
+                newCommon.declaration = decl.str();
+
+                for (int& i : commons) {
+                    m_literalSubExpressions[i].literal = newCommon.name;
+                    m_literalSubExpressions[i].isAlreadyCompressed = true;
                 }
+
+                m_commonExpressions.push_back(newCommon);
             }
         }
-
-        if (commons.size()) {
-            CommonSubExp newCommon;
-            newCommon.name = "m_common" + std::to_string(m_commonExpressions.size()) + "_";
-            newCommon.expression = m_literalSubExpressions[index].literal;
-            std::ostringstream decl;
-            decl << "    Eigen::Matrix<" << type_name<typename EvaluableT::value_type>() << ", "
-                 << std::to_string(m_expandedExpression[index].buffer.rows()) << ", "
-                 << std::to_string(m_expandedExpression[index].buffer.cols()) << "> "
-                 << newCommon.name << " = ";
-            newCommon.declaration = decl.str();
-
-            for (int& i : commons) {
-                m_literalSubExpressions[i].literal = newCommon.name;
-                m_literalSubExpressions[i].isAlreadyCompressed = true;
-            }
-
-            m_commonExpressions.push_back(newCommon);
-
-            m_literalSubExpressions[index].isAlreadyCompressed = true;
-
-            return newCommon.name;
-        }
-
-        return m_literalSubExpressions[index].literal;
     }
 
     void cleanCommonSubExpressions() {
@@ -395,10 +385,11 @@ private:
 
         for (size_t generic = 0; generic < m_generics.size(); ++generic) {
             if (m_expandedExpression[m_generics[generic]].buffer.rows() == 1 && m_expandedExpression[m_generics[generic]].buffer.cols() == 1) {
-                m_literalSubExpressions[m_generics[generic]].literal = "generics[" + std::to_string(generic) + "](0,0)";
+                m_literalSubExpressions[m_generics[generic]].literal = m_genericsName + "[" + std::to_string(generic) + "](0,0)";
                 m_literalSubExpressions[m_generics[generic]].isScalar = true;
+                m_literalSubExpressions[m_generics[generic]].isSimple = true;
             } else {
-                m_literalSubExpressions[m_generics[generic]].literal = "generics[" + std::to_string(generic) + "]";
+                m_literalSubExpressions[m_generics[generic]].literal = m_genericsName + "[" + std::to_string(generic) + "]";
                 m_literalSubExpressions[m_generics[generic]].isScalar = false;
             }
         }
@@ -417,17 +408,17 @@ private:
                 literalSubExpr.isScalar = true;
             }
 
-            if (literalSubExpr.isScalar && subExpr.type != Type::Element) {
+            if (literalSubExpr.isScalar && subExpr.type != Type::Element && subExpr.type != Type::Generic) {
                 literalSubExpr.literal = getScalarVariable(literalSubExpr.literal); //the expression is saved in a scalar variable evaluated at the beginning
                 literalSubExpr.isAlreadyCompressed = true;
             }
+
+            m_commonsMap[literalSubExpr.literal].push_back(i);
         }
 
         std::cout << "Getting common subexpressions.." << std::endl;
 
-        for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
-            m_literalSubExpressions[i].literal = getCommonSubExpression(i); //check if some subexpressions are duplicated
-        }
+        getCommonSubExpression(); //check if some subexpressions are duplicated
 
         std::cout << "Second tree expansion.." << std::endl;
 
@@ -454,10 +445,22 @@ public:
 
     AutogeneratedHelper(const std::vector<levi::ExpressionComponent<EvaluableT>>& fullExpressions, const std::string& name)
     {
+        m_genericsName = "generics";
+        m_helpersName = "m_helper";
+        m_commonsName = "m_common";
+
         setExpressions(fullExpressions, name);
     }
 
+    void setVariablesName(const std::string& genericsName = "generics", const std::string& helpersName = "m_helper",
+                          const std::string& commonsName = "m_common") {
+        m_genericsName = genericsName;
+        m_helpersName = helpersName;
+        m_commonsName = commonsName;
+    }
+
     void setExpressions(const std::vector<levi::ExpressionComponent<EvaluableT>>& fullExpressions, const std::string& name) {
+
         for (const auto& expressions : fullExpressions) {
             std::cout << "Expanding expression.." << std::endl;
             m_finalExpressionIndices.emplace_back(levi::expandTree(expressions, m_expandedExpression, m_generics));

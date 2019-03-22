@@ -46,6 +46,8 @@ public:
             m_resultsRef.emplace_back(m_results[element.first]);
         }
 
+        m_helper.setVariablesName("g", "h", "c");
+
         m_helper.setExpressions(expressions, name);
 
         std::string cleanName = m_helper.name();
@@ -58,13 +60,13 @@ public:
         header << "#include<levi/CompiledEvaluable.h>" << std::endl << std::endl;
         header << "class " << cleanName << ": public " << type_name<base_type>() << " {" <<std::endl;
         header << "public:" << std::endl;
-        header << "    virtual void evaluate(const std::vector<" << type_name<SqueezedMatrixRef>() << ">& generics, std::vector<"
+        header << "    virtual void evaluate(const std::vector<" << type_name<SqueezedMatrixRef>() << ">& g, std::vector<"
                << type_name<SqueezedMatrixRef>() << ">& output) final;" << std::endl;
         header << "};" << std::endl;
         header << "#endif //LEVI_COMPILED"<< cleanName << "_H" << std::endl;
 
         std::ostringstream cpp;
-        cpp << "void " << cleanName << "::evaluate(const std::vector<" << type_name<SqueezedMatrixRef>() << ">& generics, std::vector<"
+        cpp << "void " << cleanName << "::evaluate(const std::vector<" << type_name<SqueezedMatrixRef>() << ">& g, std::vector<"
             << type_name<SqueezedMatrixRef>() << ">& output) {" << std::endl;
         cpp << m_helper.getHelpersDeclaration().str() << std::endl;
         cpp << m_helper.getCommonsDeclaration().str() << std::endl;
