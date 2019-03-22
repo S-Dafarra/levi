@@ -137,7 +137,7 @@ private:
     std::vector<levi::TreeComponent<EvaluableT>> m_expandedExpression;
     std::vector<size_t> m_generics;
     std::vector<size_t> m_finalExpressionIndices;
-    std::map<std::string, std::string> m_helpersVariables;
+    std::unordered_map<std::string, std::string> m_helpersVariables;
     std::ostringstream m_helpersDeclarations;
     std::vector<CommonSubExp> m_commonExpressions;
     std::ostringstream m_commonDeclarations;
@@ -212,18 +212,29 @@ private:
         } else if (type == Type::Row) {
 
             assert(!lhs.isScalar);
-            literalSubExpr.literal = "(" + lhs.literal + ").row(" + std::to_string(subExpr.block.startRow) + ")";
-            literalSubExpr.isScalar = false;
-            literalSubExpr.isSimple = true;
-
-
+            if ((subExpr.buffer.rows() == 1) && (subExpr.buffer.cols() == 1)) {
+                literalSubExpr.literal = "(" + lhs.literal + ")(" + std::to_string(subExpr.block.startRow) + ", 0)";
+                subExpr.type = Type::Element;
+                literalSubExpr.isScalar = true;
+                literalSubExpr.isSimple = true;
+            } else {
+                literalSubExpr.literal = "(" + lhs.literal + ").row(" + std::to_string(subExpr.block.startRow) + ")";
+                literalSubExpr.isScalar = false;
+                literalSubExpr.isSimple = true;
+            }
         } else if (type == Type::Column) {
 
             assert(!lhs.isScalar);
-            literalSubExpr.literal = "(" + lhs.literal + ").col(" + std::to_string(subExpr.block.startCol) + ")";
-            literalSubExpr.isScalar = false;
-            literalSubExpr.isSimple = true;
-
+            if ((subExpr.buffer.rows() == 1) && (subExpr.buffer.cols() == 1)) {
+                literalSubExpr.literal = "(" + lhs.literal + ")(0, " + std::to_string(subExpr.block.startCol) + ")";
+                subExpr.type = Type::Element;
+                literalSubExpr.isScalar = true;
+                literalSubExpr.isSimple = true;
+            } else {
+                literalSubExpr.literal = "(" + lhs.literal + ").col(" + std::to_string(subExpr.block.startCol) + ")";
+                literalSubExpr.isScalar = false;
+                literalSubExpr.isSimple = true;
+            }
 
         } else if (type == Type::Element) {
 
@@ -246,7 +257,7 @@ private:
 
 
     std::string getScalarVariable(const std::string& originalExpression) {
-        std::map<std::string, std::string>::iterator element = m_helpersVariables.find(originalExpression);
+        std::unordered_map<std::string, std::string>::iterator element = m_helpersVariables.find(originalExpression);
 
         if (element != m_helpersVariables.end()) {
             return (element->second);
@@ -379,6 +390,9 @@ private:
         m_literalSubExpressions.resize(m_expandedExpression.size());
         m_helpersVariables.clear();
 
+        std::cout << "Expanding generics.." << std::endl;
+
+
         for (size_t generic = 0; generic < m_generics.size(); ++generic) {
             if (m_expandedExpression[m_generics[generic]].buffer.rows() == 1 && m_expandedExpression[m_generics[generic]].buffer.cols() == 1) {
                 m_literalSubExpressions[m_generics[generic]].literal = "generics[" + std::to_string(generic) + "](0,0)";
@@ -388,6 +402,8 @@ private:
                 m_literalSubExpressions[m_generics[generic]].isScalar = false;
             }
         }
+
+        std::cout << "First tree expansion.." << std::endl;
 
         for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
 
@@ -401,23 +417,32 @@ private:
                 literalSubExpr.isScalar = true;
             }
 
-            if (literalSubExpr.isScalar) {
+            if (literalSubExpr.isScalar && subExpr.type != Type::Element) {
                 literalSubExpr.literal = getScalarVariable(literalSubExpr.literal); //the expression is saved in a scalar variable evaluated at the beginning
                 literalSubExpr.isAlreadyCompressed = true;
             }
         }
 
+        std::cout << "Getting common subexpressions.." << std::endl;
+
         for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
             m_literalSubExpressions[i].literal = getCommonSubExpression(i); //check if some subexpressions are duplicated
         }
+
+        std::cout << "Second tree expansion.." << std::endl;
 
         for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
             expandElement(i); //some inner elements may have been modified when extracting the common subexpressions. Here we reconstruct the total expression
         }
 
+        std::cout << "Cleaning common subexpressions.." << std::endl;
+
         cleanCommonSubExpressions(); //remove common subexpressions that turned out to be useless;
 
         for (size_t final = 0; final < m_finalExpressionIndices.size(); ++final) {
+
+            std::cout << "Adding new lines.." << std::endl;
+
             splitExpression(m_literalSubExpressions[m_finalExpressionIndices[final]].literal, m_finalExpressions[final]); //add some newlines where needed
         }
 
@@ -434,6 +459,7 @@ public:
 
     void setExpressions(const std::vector<levi::ExpressionComponent<EvaluableT>>& fullExpressions, const std::string& name) {
         for (const auto& expressions : fullExpressions) {
+            std::cout << "Expanding expression.." << std::endl;
             m_finalExpressionIndices.emplace_back(levi::expandTree(expressions, m_expandedExpression, m_generics));
         }
         m_finalExpressions.resize(m_finalExpressionIndices.size());
@@ -480,6 +506,9 @@ public:
                  const std::string& className) {
 
         if (!m_workingDirectory.size()) {
+
+            std::cout << "Creating directory " << zz::os::current_working_directory() + "/" + m_cleanName << std::endl;
+
             bool dirCreated = setWorkingDirectory(zz::os::current_working_directory() + "/" + m_cleanName);
             assert(dirCreated);
         }
@@ -488,9 +517,15 @@ public:
 
         std::string CMakeSource = leviListDir + "/CMakeLists.auto";
         std::string CMakeDest = m_workingDirectory + "/CMakeLists.txt";
+
+        std::cout << "Copying CMakeLists.." << std::endl;
+
         zz::os::copyfile(CMakeSource, CMakeDest);
 
         std::string headerName = m_workingDirectory + "/source.h";
+
+        std::cout << "Adding header.." << std::endl;
+
         std::fstream header(headerName.c_str(), std::ios::out | std::ios::trunc);
 
         assert(header.is_open());
@@ -498,6 +533,8 @@ public:
         header.close();
 
         std::string cppName = m_workingDirectory + "/source.cpp";
+
+        std::cout << "Adding cpp.." << std::endl;
 
         std::fstream cpp(cppName.c_str(), std::ios::out | std::ios::trunc);
         assert(cpp.is_open());
@@ -523,10 +560,14 @@ public:
 #endif
         }
 
+        std::cout << "Configuring Cmake.." << std::endl;
+
         std::string buildCommand = "cmake -B" + buildDir + " -H" + m_workingDirectory;
 
         int ret = std::system(buildCommand.c_str());
         assert(ret == EXIT_SUCCESS && "The cmake configuration failed");
+
+        std::cout << "Building.." << std::endl;
 
         buildCommand = "cmake --build " + buildDir + " --config Release";
 
@@ -552,6 +593,8 @@ public:
         shlibFactory.extendSearchPath(buildDir + "\\lib\\Release");
         shlibFactory.extendSearchPath(buildDir + "/lib");
 
+        std::cout << "Opening new library.." << std::endl;
+
         bool isLibOpen = shlibFactory.open((m_cleanName + "Lib").c_str(), (className + "Factory").c_str());
 
         assert(isLibOpen && shlibFactory.isValid() && "Unable to open compiled shared library.");
@@ -559,6 +602,8 @@ public:
         baseClassFactory.m_compiledEvaluable = shlibFactory.create();
 
         assert(baseClassFactory.m_compiledEvaluable != nullptr && "The compiled instance is not valid.");
+
+        std::cout << "Automatic generation completed!" << std::endl;
     }
 
     const std::vector<SqueezedMatrixRef>& evaluateGenerics(bool checkDependencies) {
