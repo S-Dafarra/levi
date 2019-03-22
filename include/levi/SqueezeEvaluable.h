@@ -35,7 +35,7 @@ public:
         : levi::Evaluable<SqueezedMatrix> (fullExpression.rows(), fullExpression.cols(), name)
           , m_fullExpression(fullExpression)
     {
-        levi::expandTree(fullExpression, m_expandedExpression, m_generics);
+        levi::expandTree(fullExpression, true, m_expandedExpression, m_generics);
     }
 
     ~SqueezeEvaluable();
@@ -58,8 +58,8 @@ public:
                 i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer - m_expandedExpression[i->rhsIndex].buffer);
             } else if (type == Type::Product) {
 
-                if (m_expandedExpression[i->lhsIndex].buffer.cols() != m_expandedExpression[i->rhsIndex].buffer.rows()) {
-                    if (m_expandedExpression[i->lhsIndex].buffer.rows() == 1 && m_expandedExpression[i->lhsIndex].buffer.cols() == 1) {
+                if (m_expandedExpression[i->lhsIndex].cols() != m_expandedExpression[i->rhsIndex].rows()) {
+                    if (m_expandedExpression[i->lhsIndex].rows() == 1 && m_expandedExpression[i->lhsIndex].cols() == 1) {
                         i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer(0,0) * m_expandedExpression[i->rhsIndex].buffer);
                     } else {
                         i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer * m_expandedExpression[i->rhsIndex].buffer(0,0));

@@ -16,6 +16,7 @@ namespace levi {
 
     template<typename EvaluableT>
     size_t expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>>& node,
+                      bool resize,
                       std::vector<levi::TreeComponent<EvaluableT>>& expandedExpression,
                       std::vector<size_t>& generics);
 
@@ -25,6 +26,9 @@ template<typename EvaluableT>
 class levi::TreeComponent {
 
     using Type = levi::EvaluableType;
+
+    Eigen::Index m_rows;
+    Eigen::Index m_cols;
 
 public:
 
@@ -43,32 +47,45 @@ public:
     typename EvaluableT::value_type exponent;
 
 
-    TreeComponent(const levi::ExpressionComponent<levi::Evaluable<SqueezedMatrix>>& expression)
+    TreeComponent(const levi::ExpressionComponent<levi::Evaluable<SqueezedMatrix>>& expression, bool resize)
         : partialExpression(expression)
           , type(expression.info().type)
+          , m_rows(expression.rows())
+          , m_cols(expression.cols())
           , lhsIndex(0)
           , rhsIndex(0)
     {
-        buffer.resize(expression.rows(), expression.cols());
+        if (resize || type == Type::Generic) {
+            buffer.resize(expression.rows(), expression.cols());
+
+            if (type == Type::Null) {
+                buffer.setZero();
+            }
+
+            if (type == Type::Identity) {
+                buffer.setIdentity();
+            }
+        }
 
         if (type != Type::Generic) {
             block = expression.info().block;
             exponent = expression.info().exponent;
         }
+    }
 
-        if (type == Type::Null) {
-            buffer.setZero();
-        }
+    Eigen::Index rows() const {
+        return m_rows;
+    }
 
-        if (type == Type::Identity) {
-            buffer.setIdentity();
-        }
+    Eigen::Index cols() const {
+        return m_cols;
     }
 
 };
 
 template<typename EvaluableT>
 size_t levi::expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>>& node,
+                        bool resize,
                         std::vector<levi::TreeComponent<EvaluableT>>& expandedExpression,
                         std::vector<size_t>& generics) {
 
@@ -81,7 +98,7 @@ size_t levi::expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::M
 
     type = node.info().type;
 
-    expandedExpression.emplace_back(node);
+    expandedExpression.emplace_back(node, resize);
 
     size_t currentIndex = currentIndex = expandedExpression.size() - 1;
 
@@ -102,16 +119,16 @@ size_t levi::expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::M
     }
 
     if (type == Type::Sum || type == Type::Subtraction || type == Type::Product || type == Type::Division) {
-        size_t lhsIndex = expandTree(node.info().lhs, expandedExpression, generics);
+        size_t lhsIndex = expandTree(node.info().lhs, resize, expandedExpression, generics);
         expandedExpression[currentIndex].lhsIndex = lhsIndex;
-        size_t rhsIndex = expandTree(node.info().rhs, expandedExpression, generics);
+        size_t rhsIndex = expandTree(node.info().rhs, resize, expandedExpression, generics);
         expandedExpression[currentIndex].rhsIndex = rhsIndex;
         return currentIndex;
     }
 
     if (type == Type::InvertedSign || type == Type::Pow || type == Type::Transpose || type == Type::Row ||
         type == Type::Column || type == Type::Element || type == Type::Block) {
-        size_t lhsIndex = expandTree(node.info().lhs, expandedExpression, generics);
+        size_t lhsIndex = expandTree(node.info().lhs, resize, expandedExpression, generics);
         expandedExpression[currentIndex].lhsIndex = lhsIndex;
         return currentIndex;
     }

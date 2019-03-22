@@ -214,7 +214,7 @@ private:
         } else if (type == Type::Row) {
 
             assert(!lhs.isScalar);
-            if ((subExpr.buffer.rows() == 1) && (subExpr.buffer.cols() == 1)) {
+            if ((subExpr.rows() == 1) && (subExpr.cols() == 1)) {
                 literalSubExpr.literal = "(" + lhs.literal + ")(" + std::to_string(subExpr.block.startRow) + ", 0)";
                 subExpr.type = Type::Element;
                 literalSubExpr.isScalar = true;
@@ -227,7 +227,7 @@ private:
         } else if (type == Type::Column) {
 
             assert(!lhs.isScalar);
-            if ((subExpr.buffer.rows() == 1) && (subExpr.buffer.cols() == 1)) {
+            if ((subExpr.rows() == 1) && (subExpr.cols() == 1)) {
                 literalSubExpr.literal = "(" + lhs.literal + ")(0, " + std::to_string(subExpr.block.startCol) + ")";
                 subExpr.type = Type::Element;
                 literalSubExpr.isScalar = true;
@@ -291,8 +291,8 @@ private:
                 newCommon.expression = m_literalSubExpressions[index].literal;
                 std::ostringstream decl;
                 decl << "    Eigen::Matrix<" << type_name<typename EvaluableT::value_type>() << ", "
-                     << std::to_string(m_expandedExpression[index].buffer.rows()) << ", "
-                     << std::to_string(m_expandedExpression[index].buffer.cols()) << "> "
+                     << std::to_string(m_expandedExpression[index].rows()) << ", "
+                     << std::to_string(m_expandedExpression[index].cols()) << "> "
                      << newCommon.name << " = ";
                 newCommon.declaration = decl.str();
 
@@ -384,7 +384,7 @@ private:
 
 
         for (size_t generic = 0; generic < m_generics.size(); ++generic) {
-            if (m_expandedExpression[m_generics[generic]].buffer.rows() == 1 && m_expandedExpression[m_generics[generic]].buffer.cols() == 1) {
+            if (m_expandedExpression[m_generics[generic]].rows() == 1 && m_expandedExpression[m_generics[generic]].cols() == 1) {
                 m_literalSubExpressions[m_generics[generic]].literal = m_genericsName + "[" + std::to_string(generic) + "](0,0)";
                 m_literalSubExpressions[m_generics[generic]].isScalar = true;
                 m_literalSubExpressions[m_generics[generic]].isSimple = true;
@@ -403,7 +403,7 @@ private:
             levi::TreeComponent<EvaluableT>& subExpr = m_expandedExpression[static_cast<size_t>(i)];
             LiteralComponent& literalSubExpr = m_literalSubExpressions[static_cast<size_t>(i)];
 
-            if (!literalSubExpr.isScalar && (subExpr.buffer.rows() == 1) && (subExpr.buffer.cols() == 1)) { //the subexpression is an Eigen object but of dimension 1x1
+            if (!literalSubExpr.isScalar && (subExpr.rows() == 1) && (subExpr.cols() == 1)) { //the subexpression is an Eigen object but of dimension 1x1
                 literalSubExpr.literal = "(" + literalSubExpr.literal + ")(0,0)";
                 literalSubExpr.isScalar = true;
             }
@@ -463,7 +463,7 @@ public:
 
         for (const auto& expressions : fullExpressions) {
             std::cout << "Expanding expression.." << std::endl;
-            m_finalExpressionIndices.emplace_back(levi::expandTree(expressions, m_expandedExpression, m_generics));
+            m_finalExpressionIndices.emplace_back(levi::expandTree(expressions, false, m_expandedExpression, m_generics));
         }
         m_finalExpressions.resize(m_finalExpressionIndices.size());
         getLiteralExpression();

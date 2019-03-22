@@ -39,7 +39,7 @@ public:
 
         for (auto& element: elements) {
             m_indicesToNameMap[m_finalExpressionIndices.size()] = element.first;
-            m_finalExpressionIndices.emplace_back(levi::expandTree(element.second, m_expandedExpression, m_generics));
+            m_finalExpressionIndices.emplace_back(levi::expandTree(element.second, true, m_expandedExpression, m_generics));
             m_results[element.first] = SqueezedMatrix::Zero(element.second.rows(), element.second.cols());
         }
     }
@@ -64,8 +64,8 @@ public:
                 i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer - m_expandedExpression[i->rhsIndex].buffer);
             } else if (type == Type::Product) {
 
-                if (m_expandedExpression[i->lhsIndex].buffer.cols() != m_expandedExpression[i->rhsIndex].buffer.rows()) {
-                    if (m_expandedExpression[i->lhsIndex].buffer.rows() == 1 && m_expandedExpression[i->lhsIndex].buffer.cols() == 1) {
+                if (m_expandedExpression[i->lhsIndex].cols() != m_expandedExpression[i->rhsIndex].rows()) {
+                    if (m_expandedExpression[i->lhsIndex].rows() == 1 && m_expandedExpression[i->lhsIndex].cols() == 1) {
                         i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer(0,0) * m_expandedExpression[i->rhsIndex].buffer);
                     } else {
                         i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer * m_expandedExpression[i->rhsIndex].buffer(0,0));
