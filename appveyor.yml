@@ -10,7 +10,7 @@ clone_folder: c:\dev\levi
 
 environment:
   Eigen3_DIR:          C:/Program Files (x86)/Eigen3/lib/cmake/eigen3/
-  cppfs_DIR:           C:\dev/cppfs/build/install
+  shlibpp_DIR:           C:\dev/blockfactory/build/install
   matrix:
     #- APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       #CMAKE_GENERATOR: "Visual Studio 14 2015"
@@ -43,13 +43,13 @@ build_script:
   - cd build
   - cmake ..
   - cmake --build . --config Release --target INSTALL
-  - echo "-------------------- BEGIN cppfs INSTALLATION --------------------"
+  - echo "-------------------- BEGIN BLOCK FACTORY INSTALLATION --------------------"
   - cd c:\dev
-  - git clone https://github.com/cginternals/cppfs.git
-  - cd cppfs
+  - git clone https://github.com/robotology/blockfactory.git
+  - cd blockfactory
   - md build
   - cd build
-  - cmake -DCMAKE_INSTALL_PREFIX="C:\dev/cppfs/build/install" ..
+  - cmake -DCMAKE_INSTALL_PREFIX="C:\dev/blockfactory/build/install" ..
   - cmake --build . --config Release --target INSTALL
   - ps: echo "-------------------- BEGIN LEVI INSTALLATION --------------------"
   - ps: cd c:\dev\levi
