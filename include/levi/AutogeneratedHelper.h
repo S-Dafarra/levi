@@ -137,7 +137,8 @@ private:
     std::vector<levi::TreeComponent<EvaluableT>> m_expandedExpression;
     std::vector<size_t> m_generics;
     std::vector<size_t> m_finalExpressionIndices;
-    std::unordered_map<std::string, std::string> m_helpersVariables;
+    std::unordered_map<std::string, std::vector<int>> m_helpersMap;
+    std::vector<CommonSubExp> m_helpers;
     std::ostringstream m_helpersDeclarations;
     std::vector<CommonSubExp> m_commonExpressions;
     std::ostringstream m_commonDeclarations;
@@ -215,6 +216,7 @@ private:
 
             assert(!lhs.isScalar);
             if ((subExpr.rows() == 1) && (subExpr.cols() == 1)) {
+                subExpr.block.startCol = 0;
                 literalSubExpr.literal = "(" + lhs.literal + ")(" + std::to_string(subExpr.block.startRow) + ", 0)";
                 subExpr.type = Type::Element;
                 literalSubExpr.isScalar = true;
@@ -228,6 +230,7 @@ private:
 
             assert(!lhs.isScalar);
             if ((subExpr.rows() == 1) && (subExpr.cols() == 1)) {
+                subExpr.block.startRow = 0;
                 literalSubExpr.literal = "(" + lhs.literal + ")(0, " + std::to_string(subExpr.block.startCol) + ")";
                 subExpr.type = Type::Element;
                 literalSubExpr.isScalar = true;
@@ -255,23 +258,40 @@ private:
 
 
         }
+
+        if (!literalSubExpr.isScalar && (subExpr.rows() == 1) && (subExpr.cols() == 1)) { //the subexpression is an Eigen object but of dimension 1x1
+            literalSubExpr.literal = "(" + literalSubExpr.literal + ")(0,0)";
+            literalSubExpr.isScalar = true;
+        }
     }
 
 
-    std::string getScalarVariable(const std::string& originalExpression) {
-        std::unordered_map<std::string, std::string>::iterator element = m_helpersVariables.find(originalExpression);
+    void getScalarVariables() {
 
-        if (element != m_helpersVariables.end()) {
-            return (element->second);
-        } else {
-            std::pair<std::string, std::string> newElement;
-            newElement.first = originalExpression;
-            newElement.second = m_helpersName + std::to_string(m_helpersVariables.size());
-            m_helpersDeclarations << "    " << type_name<typename EvaluableT::value_type>() << " " << newElement.second
-                                  << " = " << newElement.first << ";" << std::endl;
-            auto result = m_helpersVariables.insert(newElement);
-            assert(result.second);
-            return (result.first->second);
+        for(int index = m_expandedExpression.size() - 1; index >= 0; --index) {
+
+            if (!m_literalSubExpressions[index].isScalar || m_literalSubExpressions[index].isAlreadyCompressed ||
+                m_literalSubExpressions[index].isSimple) {
+                continue;
+            }
+
+            std::vector<int>& helpers = m_helpersMap[m_literalSubExpressions[index].literal];
+
+            if (helpers.size() > 1) {
+                CommonSubExp newHelper;
+                newHelper.name = m_helpersName + std::to_string(m_helpers.size()) + "_";
+                newHelper.expression = m_literalSubExpressions[index].literal;
+                std::ostringstream decl;
+                decl << "    " << type_name<typename EvaluableT::value_type>() << " " << newHelper.name << " = ";
+                newHelper.declaration = decl.str();
+
+                for (int& i : helpers) {
+                    m_literalSubExpressions[i].literal = newHelper.name;
+                    m_literalSubExpressions[i].isAlreadyCompressed = true;
+                }
+
+                m_helpers.push_back(newHelper);
+            }
         }
     }
 
@@ -306,6 +326,53 @@ private:
         }
     }
 
+    void cleanHelpers() {
+
+        for (int i = m_helpers.size() - 1; i >= 0; --i) {
+
+            bool isInFinal = false;
+            for (const size_t& finals : m_finalExpressionIndices) {
+                std::string& final = m_literalSubExpressions[finals].literal;
+                isInFinal = isInFinal || final.find(m_helpers[i].name) != std::string::npos;
+            }
+
+            std::vector<std::pair<int, size_t>> inclusions;
+
+            for (int other = i + 1; other < m_helpers.size(); ++other) { //Check if the current helper was present in a subexpression previously checked
+                if (m_helpers[other].active && (m_helpers[other].expression.size() > m_helpers[i].expression.size())) {
+                    size_t offset = m_helpers[other].expression.find(m_helpers[i].expression);
+                    if (offset != std::string::npos) {
+                        inclusions.emplace_back(other, offset);
+                    }
+                }
+            }
+
+            if (isInFinal) {
+                for (auto& other: inclusions) {
+                    m_helpers[other.first].expression.replace(other.second, m_helpers[i].expression.size(), m_helpers[i].name);
+                }
+            } else {
+                if (inclusions.size() > 1) {
+                    for (auto& other: inclusions) {
+                        m_helpers[other.first].expression.replace(other.second, m_helpers[i].expression.size(), m_helpers[i].name);
+                    }
+                } else {
+                    for (int deactivatedHelper : m_helpersMap[m_helpers[i].expression]) {
+                        m_literalSubExpressions[deactivatedHelper].literal = m_helpers[i].expression; //restore the original expression in the deleted helper
+                    }
+                    m_helpers[i].active = false;
+                }
+            }
+        }
+
+        for (auto& helper :m_helpers) {
+            if (helper.active) {
+                m_helpersDeclarations << helper.declaration << helper.expression << ";" << std::endl;
+            }
+        }
+
+    }
+
     void cleanCommonSubExpressions() {
 
         for (int i = m_commonExpressions.size() - 1; i >= 0; --i) {
@@ -319,7 +386,7 @@ private:
             std::vector<std::pair<int, size_t>> inclusions;
 
             for (int other = i + 1; other < m_commonExpressions.size(); ++other) { //Check if the current subexpression was present in a subexpression previously checked
-                if (m_commonExpressions[other].active) {
+                if (m_commonExpressions[other].active && (m_commonExpressions[other].expression.size() > m_commonExpressions[i].expression.size())) {
                     size_t offset = m_commonExpressions[other].expression.find(m_commonExpressions[i].expression);
                     if (offset != std::string::npos) {
                         inclusions.emplace_back(other, offset);
@@ -378,7 +445,7 @@ private:
 
     void getLiteralExpression() {
         m_literalSubExpressions.resize(m_expandedExpression.size());
-        m_helpersVariables.clear();
+        m_helpersMap.clear();
 
         std::cout << "Expanding generics.." << std::endl;
 
@@ -400,18 +467,32 @@ private:
 
             expandElement(i);
 
+            LiteralComponent& literalSubExpr = m_literalSubExpressions[static_cast<size_t>(i)];
+
+            m_helpersMap[literalSubExpr.literal].push_back(i);
+        }
+
+        std::cout << "Getting helpers.." << std::endl;
+
+        getScalarVariables();
+
+        std::cout << "Second tree expansion.." << std::endl;
+
+        for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
+            expandElement(i); //some inner elements may have been modified when extracting the helpers. Here we reconstruct the total expression
+        }
+
+        std::cout << "Cleaning helpers.." << std::endl;
+
+        cleanHelpers(); //remove helpers that turned out to be useless;
+
+        std::cout << "Third tree expansion.." << std::endl;
+
+        for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
             levi::TreeComponent<EvaluableT>& subExpr = m_expandedExpression[static_cast<size_t>(i)];
             LiteralComponent& literalSubExpr = m_literalSubExpressions[static_cast<size_t>(i)];
 
-            if (!literalSubExpr.isScalar && (subExpr.rows() == 1) && (subExpr.cols() == 1)) { //the subexpression is an Eigen object but of dimension 1x1
-                literalSubExpr.literal = "(" + literalSubExpr.literal + ")(0,0)";
-                literalSubExpr.isScalar = true;
-            }
-
-            if (literalSubExpr.isScalar && subExpr.type != Type::Element && subExpr.type != Type::Generic) {
-                literalSubExpr.literal = getScalarVariable(literalSubExpr.literal); //the expression is saved in a scalar variable evaluated at the beginning
-                literalSubExpr.isAlreadyCompressed = true;
-            }
+            expandElement(i); //some inner elements may have been modified when extracting the helpers. Here we reconstruct the total expression
 
             m_commonsMap[literalSubExpr.literal].push_back(i);
         }
@@ -420,7 +501,7 @@ private:
 
         getCommonSubExpression(); //check if some subexpressions are duplicated
 
-        std::cout << "Second tree expansion.." << std::endl;
+        std::cout << "Fourth tree expansion.." << std::endl;
 
         for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
             expandElement(i); //some inner elements may have been modified when extracting the common subexpressions. Here we reconstruct the total expression
@@ -563,11 +644,27 @@ public:
 #endif
         }
 
+        std::cout << "Check Ninja availability" << std::endl;
+
+        std::string check_ninja = "ninja --version";
+        int ret = std::system(check_ninja.c_str());
+        bool ninjaAvailable = ret == EXIT_SUCCESS;
+
+        if (ninjaAvailable) {
+            std::cout << "Ninja available" << std::endl;
+        } else {
+            std::cout << "Ninja not available" << std::endl;
+        }
+
         std::cout << "Configuring Cmake.." << std::endl;
 
         std::string buildCommand = "cmake -B" + buildDir + " -H" + m_workingDirectory;
 
-        int ret = std::system(buildCommand.c_str());
+        if (ninjaAvailable) {
+            buildCommand = buildCommand + " -G Ninja";
+        }
+
+        ret = std::system(buildCommand.c_str());
         assert(ret == EXIT_SUCCESS && "The cmake configuration failed");
 
         std::cout << "Building.." << std::endl;
