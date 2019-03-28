@@ -31,15 +31,21 @@ public:
 
     ConstantEvaluable(std::string name)
         : levi::Evaluable<Matrix>(name)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Constant;
+    }
 
     ConstantEvaluable(const Matrix& constant, std::string name)
         : levi::Evaluable<Matrix>(constant, name)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Constant;
+    }
 
     ConstantEvaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : levi::Evaluable<Matrix>(rows, cols, name)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Constant;
+    }
 
     virtual ~ConstantEvaluable() final;
 
@@ -77,7 +83,9 @@ public:
 
     ConstantEvaluable(const Scalar& constant)
         : levi::Evaluable<Scalar>(constant)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Constant;
+    }
 
     virtual ~ConstantEvaluable() final;
 
@@ -118,18 +126,21 @@ public:
         : levi::Evaluable<Matrix>("0")
     {
         this->m_evaluationBuffer.setZero();
+        this->m_info->type = levi::EvaluableType::Null;
     }
 
     NullEvaluable(Eigen::Index rows, Eigen::Index cols)
         : levi::Evaluable<Matrix>(rows, cols, "0")
     {
         this->m_evaluationBuffer.setZero();
+        this->m_info->type = levi::EvaluableType::Null;
     }
 
     NullEvaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : levi::Evaluable<Matrix>(rows, cols, name)
     {
         this->m_evaluationBuffer.setZero();
+        this->m_info->type = levi::EvaluableType::Null;
     }
 
     virtual ~NullEvaluable() final;
@@ -185,11 +196,14 @@ public:
 
     NullEvaluable()
         : levi::Evaluable<Scalar>(0)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Null;
+    }
 
     NullEvaluable(Eigen::Index rows, Eigen::Index cols)
         : levi::Evaluable<Scalar>(0)
     {
+        this->m_info->type = levi::EvaluableType::Null;
         levi::unused(rows, cols);
         assert(rows == 1 && cols == 1 && "You asked for a null evaluable of type double. It must have only one row and one column.");
     }
@@ -227,18 +241,21 @@ public:
     IdentityEvaluable()
         : levi::Evaluable<Matrix>("I")
     {
+        this->m_info->type = levi::EvaluableType::Identity;
         this->m_evaluationBuffer.setIdentity();
     }
 
     IdentityEvaluable(Eigen::Index rows, Eigen::Index cols)
         : levi::Evaluable<Matrix>(rows, cols, "I")
     {
+        this->m_info->type = levi::EvaluableType::Identity;
         this->m_evaluationBuffer.setIdentity();
     }
 
     IdentityEvaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : levi::Evaluable<Matrix>(rows, cols, name)
     {
+        this->m_info->type = levi::EvaluableType::Identity;
         this->m_evaluationBuffer.setIdentity();
     }
 
@@ -301,7 +318,9 @@ public:
 
     IdentityEvaluable()
         : levi::Evaluable<Scalar>(1)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Identity;
+    }
 
     virtual ~IdentityEvaluable() final;
 
@@ -332,6 +351,8 @@ public:
         : levi::Evaluable<Matrix>(rows, cols, name)
           , m_element(element)
     {
+        this->m_info->type = levi::EvaluableType::Constant;
+
         this->m_evaluationBuffer.setZero();
         auto valueCopy = element.value;
         assert(valueCopy.isValidExpression() && "The specified element is invalid");
@@ -400,6 +421,8 @@ public:
           , m_firstElement(firstElement)
           , m_secondElement(secondElement)
     {
+        this->m_info->type = levi::EvaluableType::Constant;
+
         this->m_evaluationBuffer.setZero();
         auto firstValueCopy = firstElement.value;
         assert(firstValueCopy.isValidExpression() && "The first element is invalid");

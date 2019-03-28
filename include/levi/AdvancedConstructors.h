@@ -292,7 +292,11 @@ public:
                      const levi::ExpressionComponent<RightEvaluable>& rhs, const std::string& name)
         : levi::BinaryOperator<typename CompositeEvaluable::matrix_type, LeftEvaluable, RightEvaluable>(lhs, rhs, lhs.rows(),
                                                                                                         lhs.cols() + rhs.cols(), name)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Horzcat;
+        this->m_info->lhs = lhs;
+        this->m_info->rhs = rhs;
+    }
 
     virtual ~HorzcatEvaluable() final;
 
@@ -346,7 +350,11 @@ public:
                      const levi::ExpressionComponent<BottomEvaluable>& bottom, const std::string& name)
         : levi::BinaryOperator<typename CompositeEvaluable::matrix_type, TopEvaluable, BottomEvaluable>(top, bottom, top.rows() + bottom.rows(),
                                                                                                         top.cols(), name)
-    { }
+    {
+        this->m_info->type = levi::EvaluableType::Vertcat;
+        this->m_info->lhs = top;
+        this->m_info->rhs = bottom;
+    }
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename CompositeEvaluable::row_type>> row(Eigen::Index row) final {
 

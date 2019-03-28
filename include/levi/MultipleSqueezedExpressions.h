@@ -90,6 +90,12 @@ public:
                 i->buffer(0,0) = m_expandedExpression[i->lhsIndex].buffer(i->block.startRow, i->block.startCol);
             } else if (type == Type::Block) {
                 i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer.block(i->block.startRow, i->block.startCol, i->block.rows, i->block.cols));
+            } else if (type == Type::Horzcat) {
+                i->buffer.leftCols(m_expandedExpression[i->lhsIndex].cols()) = m_expandedExpression[i->lhsIndex].buffer;
+                i->buffer.rightCols(m_expandedExpression[i->rhsIndex].cols()) = m_expandedExpression[i->rhsIndex].buffer;
+            } else if (type == Type::Vertcat) {
+                i->buffer.topRows(m_expandedExpression[i->lhsIndex].rows()) = m_expandedExpression[i->lhsIndex].buffer;
+                i->buffer.bottomRows(m_expandedExpression[i->rhsIndex].rows()) = m_expandedExpression[i->rhsIndex].buffer;
             }
         }
 

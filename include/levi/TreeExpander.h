@@ -16,7 +16,7 @@ namespace levi {
 
     template<typename EvaluableT>
     size_t expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>>& node,
-                      bool resize,
+                      bool expandForSqueeze,
                       std::vector<levi::TreeComponent<EvaluableT>>& expandedExpression,
                       std::vector<size_t>& generics);
 
@@ -47,7 +47,7 @@ public:
     typename EvaluableT::value_type exponent;
 
 
-    TreeComponent(const levi::ExpressionComponent<levi::Evaluable<SqueezedMatrix>>& expression, bool resize)
+    TreeComponent(const levi::ExpressionComponent<levi::Evaluable<SqueezedMatrix>>& expression, bool expandForSqueeze)
         : partialExpression(expression)
           , type(expression.info().type)
           , m_rows(expression.rows())
@@ -55,7 +55,11 @@ public:
           , lhsIndex(0)
           , rhsIndex(0)
     {
-        if (resize || type == Type::Generic) {
+        if (!expandForSqueeze && (type == Type::Null || type == Type::Identity || type == Type::Constant || type == Type::Horzcat || type == Type::Vertcat)) {
+            type = Type::Generic; //This is supposed to be a temporary fix for evaluables not yet supported by autogeneration
+        }
+
+        if (expandForSqueeze || type == Type::Generic) {
             buffer.resize(expression.rows(), expression.cols());
 
             if (type == Type::Null) {
@@ -65,6 +69,10 @@ public:
             if (type == Type::Identity) {
                 buffer.setIdentity();
             }
+        }
+
+        if (type == Type::Constant) {
+            buffer = partialExpression.evaluate();
         }
 
         if (type != Type::Generic) {
@@ -85,7 +93,7 @@ public:
 
 template<typename EvaluableT>
 size_t levi::expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>>& node,
-                        bool resize,
+                        bool expandForSqueeze,
                         std::vector<levi::TreeComponent<EvaluableT>>& expandedExpression,
                         std::vector<size_t>& generics) {
 
@@ -96,9 +104,9 @@ size_t levi::expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::M
 
     levi::EvaluableType type;
 
-    type = node.info().type;
+    expandedExpression.emplace_back(node, expandForSqueeze);
 
-    expandedExpression.emplace_back(node, resize);
+    type = expandedExpression.back().type;
 
     size_t currentIndex = currentIndex = expandedExpression.size() - 1;
 
@@ -114,21 +122,22 @@ size_t levi::expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::M
         return currentIndex;
     }
 
-    if (type == Type::Null || type == Type::Identity) {
+    if (type == Type::Null || type == Type::Identity || type == Type::Constant) {
         return currentIndex;
     }
 
-    if (type == Type::Sum || type == Type::Subtraction || type == Type::Product || type == Type::Division) {
-        size_t lhsIndex = expandTree(node.info().lhs, resize, expandedExpression, generics);
+    if (type == Type::Sum || type == Type::Subtraction || type == Type::Product ||
+        type == Type::Division || type == Type::Vertcat || type == Type::Horzcat) {
+        size_t lhsIndex = expandTree(node.info().lhs, expandForSqueeze, expandedExpression, generics);
         expandedExpression[currentIndex].lhsIndex = lhsIndex;
-        size_t rhsIndex = expandTree(node.info().rhs, resize, expandedExpression, generics);
+        size_t rhsIndex = expandTree(node.info().rhs, expandForSqueeze, expandedExpression, generics);
         expandedExpression[currentIndex].rhsIndex = rhsIndex;
         return currentIndex;
     }
 
     if (type == Type::InvertedSign || type == Type::Pow || type == Type::Transpose || type == Type::Row ||
         type == Type::Column || type == Type::Element || type == Type::Block) {
-        size_t lhsIndex = expandTree(node.info().lhs, resize, expandedExpression, generics);
+        size_t lhsIndex = expandTree(node.info().lhs, expandForSqueeze, expandedExpression, generics);
         expandedExpression[currentIndex].lhsIndex = lhsIndex;
         return currentIndex;
     }

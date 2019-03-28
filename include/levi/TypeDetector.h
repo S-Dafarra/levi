@@ -14,6 +14,7 @@ namespace levi {
         Generic,
         Null,
         Identity,
+        Constant,
         Sum,
         Subtraction,
         InvertedSign,
@@ -24,7 +25,9 @@ namespace levi {
         Row,
         Column,
         Element,
-        Block
+        Block,
+        Vertcat,
+        Horzcat
     };
 
     template <typename EvaluableT>
