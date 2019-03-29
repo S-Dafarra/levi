@@ -590,18 +590,12 @@ bool levi::ExpressionComponent<EvaluableT>::operator==(const levi::ExpressionCom
 
         if (type == Type::Sum) {
             return ((info().lhs == other.info().lhs) && (info().rhs == other.info().rhs)) || ((info().lhs == other.info().rhs) && (info().rhs == other.info().lhs));
-        } else if (type == Type::Subtraction) {
+        } else if (type == Type::Subtraction || type == Type::Product || type == Type::Division || type == Type::Horzcat || type == Type::Vertcat) {
             return (info().lhs == other.info().lhs) && (info().rhs == other.info().rhs);
-        } else if (type == Type::Product) {
-            return (info().lhs == other.info().lhs) && (info().rhs == other.info().rhs);
-        } else if (type == Type::Division) {
-            return (info().lhs == other.info().lhs) && (info().rhs == other.info().rhs);
-        } else if (type == Type::InvertedSign) {
+        } else if (type == Type::InvertedSign || type == Type::Transpose) {
             return info().lhs == other.info().lhs;
         } else if (type == Type::Pow) {
             return (info().lhs == other.info().lhs) && (info().exponent == other.info().exponent);
-        } else if (type == Type::Transpose) {
-            return info().lhs == other.info().lhs;
         } else if (type == Type::Row) {
             return (info().lhs == other.info().lhs) && (info().block.startRow == other.info().block.startRow);
         } else if (type == Type::Column) {
@@ -610,6 +604,8 @@ bool levi::ExpressionComponent<EvaluableT>::operator==(const levi::ExpressionCom
             return (info().lhs == other.info().lhs) && (info().block.startRow == other.info().block.startRow) && (info().block.startCol == other.info().block.startCol);
         } else if (type == Type::Block) {
             return (info().lhs == other.info().lhs) && (info().block == other.info().block);
+        } else if (type == Type::Identity || type == Type::Null) {
+            return (rows() == other.rows()) && (cols() == other.cols());
         }
     }
 
@@ -623,7 +619,7 @@ bool levi::ExpressionComponent<EvaluableT>::operator!=(const levi::ExpressionCom
     assert(m_evaluable && "This expression is empty.");
     assert(other.isValidExpression() && "The other expression is empty.");
 
-    return info().hash != other.info().hash;
+    return !operator==(other);
 }
 
 template<class EvaluableT>

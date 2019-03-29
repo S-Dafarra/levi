@@ -48,12 +48,12 @@ public:
 
         levi::EvaluableType type;
 
-        for(typename std::vector<levi::TreeComponent<EvaluableT>>::reverse_iterator i = m_expandedExpression.rbegin();
-             i != m_expandedExpression.rend(); ++i) {
+        for(typename std::vector<levi::TreeComponent<EvaluableT>>::iterator i = m_expandedExpression.begin();
+             i != m_expandedExpression.end(); ++i) {
             type = i->type;
 
             if (type == Type::Sum) {
-                i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer + m_expandedExpression[i->rhsIndex].buffer); //this is why I need to evaluate the expanded expression in reverse order
+                i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer + m_expandedExpression[i->rhsIndex].buffer);
             } else if (type == Type::Subtraction) {
                 i->buffer.lazyAssign(m_expandedExpression[i->lhsIndex].buffer - m_expandedExpression[i->rhsIndex].buffer);
             } else if (type == Type::Product) {
@@ -93,7 +93,7 @@ public:
             }
         }
 
-        this->m_evaluationBuffer = m_expandedExpression[0].buffer;
+        this->m_evaluationBuffer = m_expandedExpression.back().buffer;
 
         return this->m_evaluationBuffer;
     }

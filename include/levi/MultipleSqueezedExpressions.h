@@ -54,8 +54,8 @@ public:
 
         levi::EvaluableType type;
 
-        for(typename std::vector<levi::TreeComponent<EvaluableT>>::reverse_iterator i = m_expandedExpression.rbegin();
-             i != m_expandedExpression.rend(); ++i) {
+        for(typename std::vector<levi::TreeComponent<EvaluableT>>::iterator i = m_expandedExpression.begin();
+             i != m_expandedExpression.end(); ++i) {
             type = i->type;
 
             if (type == Type::Sum) {

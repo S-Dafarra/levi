@@ -268,7 +268,7 @@ private:
 
     void getScalarVariables() {
 
-        for(int index = m_expandedExpression.size() - 1; index >= 0; --index) {
+        for(int index = 0; index < m_expandedExpression.size(); ++index) {
 
             if (!m_literalSubExpressions[index].isScalar || m_literalSubExpressions[index].isAlreadyCompressed ||
                 m_literalSubExpressions[index].isSimple) {
@@ -297,7 +297,7 @@ private:
 
     void getCommonSubExpression() {
 
-        for(int index = m_expandedExpression.size() - 1; index >= 0; --index) {
+        for(int index = 0; index < m_expandedExpression.size(); ++index) {
 
             if (m_literalSubExpressions[index].isAlreadyCompressed || m_literalSubExpressions[index].isSimple) {
                 continue;
@@ -463,7 +463,7 @@ private:
 
         std::cout << "First tree expansion.." << std::endl;
 
-        for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
+        for(int i = 0; i < m_expandedExpression.size(); ++i) {
 
             expandElement(i);
 
@@ -478,7 +478,7 @@ private:
 
         std::cout << "Second tree expansion.." << std::endl;
 
-        for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
+        for(int i = 0; i < m_expandedExpression.size(); ++i) {
             expandElement(i); //some inner elements may have been modified when extracting the helpers. Here we reconstruct the total expression
         }
 
@@ -488,7 +488,7 @@ private:
 
         std::cout << "Third tree expansion.." << std::endl;
 
-        for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
+        for(int i = 0; i < m_expandedExpression.size(); ++i) {
             levi::TreeComponent<EvaluableT>& subExpr = m_expandedExpression[static_cast<size_t>(i)];
             LiteralComponent& literalSubExpr = m_literalSubExpressions[static_cast<size_t>(i)];
 
@@ -503,7 +503,7 @@ private:
 
         std::cout << "Fourth tree expansion.." << std::endl;
 
-        for(int i = m_expandedExpression.size() - 1; i >= 0; --i) {
+        for(int i = 0; i < m_expandedExpression.size(); ++i) {
             expandElement(i); //some inner elements may have been modified when extracting the common subexpressions. Here we reconstruct the total expression
         }
 

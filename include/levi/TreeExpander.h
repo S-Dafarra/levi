@@ -11,8 +11,11 @@
 #include <levi/ForwardDeclarations.h>
 #include <levi/Expression.h>
 #include <levi/TypeDetector.h>
+#include <map>
 
 namespace levi {
+
+    typedef std::map<levi::EvaluableType, std::vector<size_t>> AddedExpressions;
 
     template<typename EvaluableT>
     size_t expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>>& node,
@@ -20,6 +23,11 @@ namespace levi {
                       std::vector<levi::TreeComponent<EvaluableT>>& expandedExpression,
                       std::vector<size_t>& generics);
 
+    template<typename EvaluableT>
+    size_t expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>>& node,
+                      bool expandForSqueeze,
+                      std::vector<levi::TreeComponent<EvaluableT>>& expandedExpression,
+                      std::vector<size_t>& generics, AddedExpressions& alreadyAdded);
 }
 
 template<typename EvaluableT>
@@ -96,6 +104,15 @@ size_t levi::expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::M
                         bool expandForSqueeze,
                         std::vector<levi::TreeComponent<EvaluableT>>& expandedExpression,
                         std::vector<size_t>& generics) {
+    levi::AddedExpressions alreadyAdded;
+    return levi::expandTree(node, expandForSqueeze, expandedExpression, generics, alreadyAdded);
+}
+
+template<typename EvaluableT>
+size_t levi::expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, Eigen::Dynamic, Eigen::Dynamic>>>& node,
+                        bool expandForSqueeze,
+                        std::vector<levi::TreeComponent<EvaluableT>>& expandedExpression,
+                        std::vector<size_t>& generics, levi::AddedExpressions& alreadyAdded) {
 
     using Type = levi::EvaluableType;
 
@@ -104,41 +121,86 @@ size_t levi::expandTree(const levi::ExpressionComponent<levi::Evaluable<Eigen::M
 
     levi::EvaluableType type;
 
-    expandedExpression.emplace_back(node, expandForSqueeze);
+    levi::TreeComponent<EvaluableT> newComponent(node, expandForSqueeze);
 
-    type = expandedExpression.back().type;
+    type = newComponent.type;
 
-    size_t currentIndex = currentIndex = expandedExpression.size() - 1;
+    size_t currentIndex = expandedExpression.size();
 
     if (type == Type::Generic) {
         for (size_t generic : generics) {
-            if (expandedExpression[generic].partialExpression == expandedExpression[currentIndex].partialExpression) {
+            if (expandedExpression[generic].partialExpression == newComponent.partialExpression) {
                 // This is the case where the same Generic has been added before.
-                expandedExpression.pop_back();
                 return generic;
             }
         }
+        expandedExpression.push_back(newComponent);
+        currentIndex = expandedExpression.size() - 1;
         generics.push_back(currentIndex);
         return currentIndex;
     }
 
     if (type == Type::Null || type == Type::Identity || type == Type::Constant) {
+        expandedExpression.push_back(newComponent);
+        currentIndex = expandedExpression.size() - 1;
         return currentIndex;
     }
 
     if (type == Type::Sum || type == Type::Subtraction || type == Type::Product ||
         type == Type::Division || type == Type::Vertcat || type == Type::Horzcat) {
-        size_t lhsIndex = expandTree(node.info().lhs, expandForSqueeze, expandedExpression, generics);
-        expandedExpression[currentIndex].lhsIndex = lhsIndex;
-        size_t rhsIndex = expandTree(node.info().rhs, expandForSqueeze, expandedExpression, generics);
-        expandedExpression[currentIndex].rhsIndex = rhsIndex;
+        size_t lhsIndex = expandTree(node.info().lhs, expandForSqueeze, expandedExpression, generics, alreadyAdded);
+        newComponent.lhsIndex = lhsIndex;
+        size_t rhsIndex = expandTree(node.info().rhs, expandForSqueeze, expandedExpression, generics, alreadyAdded);
+        newComponent.rhsIndex = rhsIndex;
+
+        if (lhsIndex < currentIndex && rhsIndex < currentIndex) { //This means that both the lhs and the rhs were added before
+            bool isNew = true;
+            size_t i = 0;
+
+            std::vector<size_t>& others = alreadyAdded[type];
+
+            while (isNew && i < others.size()) {
+                isNew = isNew && (expandedExpression[others[i]].partialExpression != newComponent.partialExpression);
+                ++i;
+            }
+
+            if (!isNew) {
+                return others[i-1];
+            }
+
+        }
+
+        expandedExpression.push_back(newComponent);
+        currentIndex = expandedExpression.size() - 1;
+        alreadyAdded[type].push_back(currentIndex);
         return currentIndex;
     }
 
     if (type == Type::InvertedSign || type == Type::Pow || type == Type::Transpose || type == Type::Row ||
         type == Type::Column || type == Type::Element || type == Type::Block) {
-        size_t lhsIndex = expandTree(node.info().lhs, expandForSqueeze, expandedExpression, generics);
-        expandedExpression[currentIndex].lhsIndex = lhsIndex;
+        size_t lhsIndex = expandTree(node.info().lhs, expandForSqueeze, expandedExpression, generics, alreadyAdded);
+        newComponent.lhsIndex = lhsIndex;
+
+        if (lhsIndex < currentIndex) { //This means that the lhs was already before
+            bool isNew = true;
+            size_t i = 0;
+
+            std::vector<size_t>& others = alreadyAdded[type];
+
+            while (isNew && i < others.size()) {
+                isNew = isNew && (expandedExpression[others[i]].partialExpression != newComponent.partialExpression);
+                ++i;
+            }
+
+            if (!isNew) {
+                return others[i-1];
+            }
+
+        }
+
+        expandedExpression.push_back(newComponent);
+        currentIndex = expandedExpression.size() - 1;
+        alreadyAdded[type].push_back(currentIndex);
         return currentIndex;
     }
 
