@@ -42,7 +42,7 @@ public:
         if (m_expression.isNew()) {
             this->resetEvaluationRegister();
         }
-        return !this->m_evaluationRegister[callerID];
+        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
@@ -88,7 +88,7 @@ public:
         if (lhsIsNew || rhsIsNew) {
             this->resetEvaluationRegister();
         }
-        return !this->m_evaluationRegister[callerID];
+        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{

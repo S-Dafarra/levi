@@ -102,7 +102,9 @@ protected:
     /**
      * @brief Register to keep track of which parent read the new values.
      */
-    std::vector<bool> m_evaluationRegister;
+    std::vector<int> m_evaluationRegister;
+
+    int m_isNewCounter;
 
     /**
      * @brief Register to keep track of which index can be reused
@@ -113,7 +115,7 @@ protected:
      * @brief Reset the evaluation register to notify of new values
      */
     void resetEvaluationRegister() {
-        std::fill(m_evaluationRegister.begin(), m_evaluationRegister.end(), false);
+        m_isNewCounter++;
         m_alreadyComputed = false;
     }
 
@@ -148,6 +150,7 @@ public:
      */
     Evaluable(const std::string& name)
         : m_name(name)
+        , m_isNewCounter(0)
         , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
@@ -163,6 +166,7 @@ public:
      */
     Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : m_name(name)
+        , m_isNewCounter(0)
         , m_evaluationBuffer(rows, cols)
         , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
@@ -179,6 +183,7 @@ public:
      */
     Evaluable(const Matrix& initialValue, const std::string& name)
         : m_name(name)
+        , m_isNewCounter(0)
         , m_evaluationBuffer(initialValue)
         , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
@@ -245,13 +250,13 @@ public:
      */
     const Matrix& evaluateID(size_t callerID, bool checkDependencies) {
         if (callerID < m_evaluationRegister.size()) {
-            if ((checkDependencies && this->isNew(callerID)) || (!checkDependencies && !m_evaluationRegister[callerID])) {
+            if ((checkDependencies && this->isNew(callerID)) || (!checkDependencies && m_evaluationRegister[callerID] != m_isNewCounter)) {
                 if (m_alreadyComputed) {
-                    m_evaluationRegister[callerID] = true;
+                    m_evaluationRegister[callerID] = m_isNewCounter;
                     return m_evaluationBuffer;
                 } else {
                     const Matrix& output = evaluate();
-                    m_evaluationRegister[callerID] = true;
+                    m_evaluationRegister[callerID] = m_isNewCounter;
                     m_alreadyComputed = true;
                     return output;
                 }
@@ -269,11 +274,11 @@ public:
     size_t getNewCallerID() {
         if (m_IDRecycleBin.size()) {
             size_t newIndex = m_IDRecycleBin.back();
-            m_evaluationRegister[newIndex] = false;
+            m_evaluationRegister[newIndex] = m_isNewCounter - 1;
             m_IDRecycleBin.pop_back();
             return newIndex;
         }
-        m_evaluationRegister.push_back(false);
+        m_evaluationRegister.push_back(m_isNewCounter - 1);
         return m_evaluationRegister.size() -1;
     }
 
@@ -285,7 +290,7 @@ public:
      * m_evaluationRegister to grow indefinitely
      */
     void deleteID(size_t index) {
-        m_evaluationRegister[index] = false;
+        m_evaluationRegister[index] = m_isNewCounter - 1;
         m_IDRecycleBin.push_back(index);
     }
 
@@ -295,7 +300,7 @@ public:
      * @return True if new
      */
     virtual bool isNew(size_t callerID) {
-        return !m_evaluationRegister[callerID];
+        return m_evaluationRegister[callerID] != m_isNewCounter;
     }
 
     /**
@@ -475,7 +480,9 @@ protected:
     /**
      * @brief Register to keep track of which parent read the new values.
      */
-    std::vector<bool> m_evaluationRegister;
+    std::vector<int> m_evaluationRegister;
+
+    int m_isNewCounter;
 
     /**
      * @brief Register to keep track of which index can be reused
@@ -486,7 +493,7 @@ protected:
      * @brief Reset the evaluation register to notify of new values
      */
     void resetEvaluationRegister() {
-        std::fill(m_evaluationRegister.begin(), m_evaluationRegister.end(), false);
+        m_isNewCounter++;
         m_alreadyComputed = false;
     }
 
@@ -518,6 +525,7 @@ public:
      */
     Evaluable(const std::string& name)
         : m_name(name)
+        , m_isNewCounter(0)
         , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
@@ -533,6 +541,7 @@ public:
      */
     Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : m_name(name)
+        , m_isNewCounter(0)
         , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
@@ -551,6 +560,7 @@ public:
     Evaluable(const Scalar& initialValue, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(initialValue)
+        , m_isNewCounter(0)
         , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
@@ -565,6 +575,7 @@ public:
     Evaluable(const Scalar& initialValue)
         : m_name(std::to_string(initialValue))
         , m_evaluationBuffer(initialValue)
+        , m_isNewCounter(0)
         , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
@@ -630,13 +641,13 @@ public:
      */
     const Scalar& evaluateID(size_t callerID, bool checkDependencies) {
         if (callerID < m_evaluationRegister.size()) {
-            if ((checkDependencies && this->isNew(callerID)) || (!checkDependencies && !m_evaluationRegister[callerID])) {
+            if ((checkDependencies && this->isNew(callerID)) || (!checkDependencies && m_evaluationRegister[callerID] != m_isNewCounter)) {
                 if (m_alreadyComputed) {
-                    m_evaluationRegister[callerID] = true;
+                    m_evaluationRegister[callerID] = m_isNewCounter;
                     return m_evaluationBuffer;
                 } else {
                     const Scalar& output = evaluate();
-                    m_evaluationRegister[callerID] = true;
+                    m_evaluationRegister[callerID] = m_isNewCounter;
                     m_alreadyComputed = true;
                     return output;
                 }
@@ -655,11 +666,11 @@ public:
     size_t getNewCallerID() {
         if (m_IDRecycleBin.size()) {
             size_t newIndex = m_IDRecycleBin.back();
-            m_evaluationRegister[newIndex] = false;
+            m_evaluationRegister[newIndex] = m_isNewCounter - 1;
             m_IDRecycleBin.pop_back();
             return newIndex;
         }
-        m_evaluationRegister.push_back(false);
+        m_evaluationRegister.push_back(m_isNewCounter - 1);
         return m_evaluationRegister.size() -1;
     }
 
@@ -671,7 +682,7 @@ public:
      * m_evaluationRegister to grow indefinitely
      */
     void deleteID(size_t index) {
-        m_evaluationRegister[index] = false;
+        m_evaluationRegister[index] = m_isNewCounter - 1;
         m_IDRecycleBin.push_back(index);
     }
 
@@ -681,7 +692,7 @@ public:
      * @return True if new
      */
     virtual bool isNew(size_t callerID) {
-        return !m_evaluationRegister[callerID];
+        return m_evaluationRegister[callerID] != m_isNewCounter;
     }
 
     /**

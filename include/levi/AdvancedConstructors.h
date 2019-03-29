@@ -82,7 +82,7 @@ public:
             this->resetEvaluationRegister();
         }
 
-        return !this->m_evaluationRegister[callerID];
+        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
     }
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename composite_evaluable::row_type>> row(Eigen::Index row) final {
@@ -199,7 +199,7 @@ public:
             this->resetEvaluationRegister();
         }
 
-        return !this->m_evaluationRegister[callerID];
+        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
     }
 
     virtual const typename composite_evaluable::matrix_type& evaluate() final {
@@ -253,7 +253,7 @@ public:
         if (m_expression.isNew()) {
             this->resetEvaluationRegister();
         }
-        return !this->m_evaluationRegister[callerID];
+        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
     }
 
     virtual const typename EvaluableT::col_type& evaluate() final {

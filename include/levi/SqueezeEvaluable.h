@@ -112,7 +112,7 @@ public:
             this->resetEvaluationRegister();
         }
 
-        return !this->m_evaluationRegister[callerID];
+        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
     }
 
 };
