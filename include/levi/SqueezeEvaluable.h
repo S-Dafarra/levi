@@ -36,6 +36,10 @@ public:
           , m_fullExpression(fullExpression)
     {
         levi::expandTree(fullExpression, true, m_expandedExpression, m_generics);
+
+        for (size_t i = 0; i < m_generics.size(); ++i) {
+            this->addDependencies(m_expandedExpression[m_generics[i]].partialExpression);
+        }
     }
 
     ~SqueezeEvaluable();
@@ -43,7 +47,7 @@ public:
     virtual const SqueezedMatrix& evaluate() final {
 
         for (size_t generic : m_generics) {
-            m_expandedExpression[generic].buffer = m_expandedExpression[generic].partialExpression.evaluate(false); //first evaluate generics
+            m_expandedExpression[generic].buffer = m_expandedExpression[generic].partialExpression.evaluate(); //first evaluate generics
         }
 
         levi::EvaluableType type;
@@ -96,23 +100,6 @@ public:
         this->m_evaluationBuffer = m_expandedExpression.back().buffer;
 
         return this->m_evaluationBuffer;
-    }
-
-    virtual bool isNew(size_t callerID) final {
-
-        bool newVal = false;
-        bool isNew;
-
-        for (size_t i = 0; i < m_generics.size(); ++i) {
-            isNew = m_expandedExpression[m_generics[i]].partialExpression.isNew();
-            newVal = isNew || newVal;
-        }
-
-        if (newVal) {
-            this->resetEvaluationRegister();
-        }
-
-        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
     }
 
 };

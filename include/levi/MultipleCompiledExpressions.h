@@ -89,7 +89,8 @@ public:
 
     const OutputType& evaluate() {
 
-        m_compiledEvaluable->evaluate(m_helper.evaluateGenerics(true), m_resultsRef);
+        const std::vector<SqueezedMatrixRef>& generics = m_helper.evaluateGenerics();
+        m_compiledEvaluable->evaluate(generics, m_resultsRef);
 
         return m_results;
 

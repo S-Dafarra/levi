@@ -15,7 +15,7 @@ int main() {
     Constant a(Eigen::MatrixXd::Identity(3,3), "a");
     Eigen::Matrix<double,3,3> B;
     B.setIdentity();
-    Constant b(3,3,"b");
+    Mutable b(3,3,"b");
 
     auto sum  = A + a;
 

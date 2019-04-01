@@ -96,7 +96,7 @@ public:
     }
 
     virtual const typename EvaluableT::row_type& evaluate() final {
-        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate(false).row(m_row));
+        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate().row(m_row));
 
         return this->m_evaluationBuffer;
     }
@@ -138,7 +138,7 @@ public:
     virtual ~RowEvaluable() final;
 
     virtual const typename EvaluableT::row_type& evaluate() final {
-        this->m_evaluationBuffer = this->m_expression.evaluate(false);
+        this->m_evaluationBuffer = this->m_expression.evaluate();
 
         return this->m_evaluationBuffer;
     }
@@ -187,7 +187,7 @@ public:
     }
 
     virtual const typename EvaluableT::col_type& evaluate() final {
-        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate(false).col(m_col));
+        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate().col(m_col));
 
         return this->m_evaluationBuffer;
     }
@@ -230,7 +230,7 @@ public:
     virtual ~ColEvaluable() final;
 
     virtual const typename EvaluableT::col_type& evaluate() final {
-        this->m_evaluationBuffer = this->m_expression.evaluate(false);
+        this->m_evaluationBuffer = this->m_expression.evaluate();
 
         return this->m_evaluationBuffer;
     }
@@ -273,7 +273,7 @@ public:
     virtual ~ElementEvaluable() final;
 
     virtual const typename EvaluableT::value_type& evaluate() final {
-        this->m_evaluationBuffer = this->m_expression.evaluate(false)(m_row, m_col);
+        this->m_evaluationBuffer = this->m_expression.evaluate()(m_row, m_col);
 
         return this->m_evaluationBuffer;
     }
@@ -316,7 +316,7 @@ public:
     virtual ~ElementEvaluable() final;
 
     virtual const typename EvaluableT::value_type& evaluate() final {
-        this->m_evaluationBuffer = this->m_expression.evaluate(false);
+        this->m_evaluationBuffer = this->m_expression.evaluate();
         return this->m_evaluationBuffer;
     }
 
@@ -345,11 +345,11 @@ class levi::BlockEvaluable<InputEvaluable, OutputEvaluable, typename std::enable
     void eval(levi::bool_value<value>);
 
     void eval(levi::bool_value<true>) {
-        this->m_evaluationBuffer.lazyAssign((this->m_expression.evaluate(false)).template block<OutputEvaluable::rows_at_compile_time, OutputEvaluable::cols_at_compile_time>(m_startRow, m_startCol));
+        this->m_evaluationBuffer.lazyAssign((this->m_expression.evaluate()).template block<OutputEvaluable::rows_at_compile_time, OutputEvaluable::cols_at_compile_time>(m_startRow, m_startCol));
     }
 
     void eval(levi::bool_value<false>) {
-        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate(false).block(m_startRow, m_startCol, this->rows(), this->cols()));
+        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate().block(m_startRow, m_startCol, this->rows(), this->cols()));
     }
 
 public:
@@ -431,7 +431,7 @@ public:
     virtual ~BlockEvaluable() final;
 
     virtual const block_type& evaluate() final {
-        this->m_evaluationBuffer = this->m_expression.evaluate(false);
+        this->m_evaluationBuffer = this->m_expression.evaluate();
         return this->m_evaluationBuffer;
     }
 
@@ -460,15 +460,15 @@ class levi::CastEvaluable : public levi::UnaryOperator<typename LeftEvaluable::m
     void eval(levi::bool_value<leftIsScalar>, levi::bool_value<rightIsScalar>());
 
     void eval(levi::bool_value<true>, levi::bool_value<true>) {
-        this->m_evaluationBuffer = this->m_expression.evaluate(false);
+        this->m_evaluationBuffer = this->m_expression.evaluate();
     }
 
     void eval(levi::bool_value<true>, levi::bool_value<false>) {
-        this->m_evaluationBuffer = this->m_expression.evaluate(false)(0,0);
+        this->m_evaluationBuffer = this->m_expression.evaluate()(0,0);
     }
 
     void eval(levi::bool_value<false>, levi::bool_value<true>) {
-        this->m_evaluationBuffer(0,0) = this->m_expression.evaluate(false);
+        this->m_evaluationBuffer(0,0) = this->m_expression.evaluate();
     }
 
     template <bool ImpossibleAssignement>
@@ -479,7 +479,7 @@ class levi::CastEvaluable : public levi::UnaryOperator<typename LeftEvaluable::m
     }
 
     void evalMatrix(levi::bool_value<false>) {
-        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate(false));
+        this->m_evaluationBuffer.lazyAssign(this->m_expression.evaluate());
     }
 
     void eval(levi::bool_value<false>, levi::bool_value<false>) {

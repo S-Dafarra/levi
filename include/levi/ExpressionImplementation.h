@@ -254,9 +254,9 @@ const typename EvaluableT::EvaluableInfo& levi::ExpressionComponent<EvaluableT>:
 
 
 template <class EvaluableT>
-const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::evaluate(bool checkDependencies) {
+const typename EvaluableT::matrix_type &levi::ExpressionComponent<EvaluableT>::evaluate() {
     assert(m_evaluable && "This expression is empty.");
-    return m_evaluable->evaluateID(m_callerID, checkDependencies);
+    return m_evaluable->evaluateID(m_callerID);
 }
 
 template <class EvaluableT>
@@ -885,6 +885,13 @@ bool levi::ExpressionComponent<EvaluableT>::isDependentFrom(std::shared_ptr<levi
     assert(variable && "Empty variable pointer.");
 
     return m_evaluable->isDependentFrom(variable);
+}
+
+template<typename EvaluableT>
+std::vector<std::shared_ptr<levi::Registrar> > levi::ExpressionComponent<EvaluableT>::getDependencies() const
+{
+    assert(m_evaluable && "Cannot get the dependencies of this expression.");
+    return m_evaluable->getDependencies();
 }
 
 template<class EvaluableT>

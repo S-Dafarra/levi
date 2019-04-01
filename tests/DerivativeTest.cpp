@@ -33,7 +33,7 @@ int main() {
     Constant a(MatrixXd::Identity(3,3), "a");
     Matrix<double,3,3> B;
     B.setIdentity();
-    Constant b(3,3,"b");
+    Mutable b(3,3,"b");
 
     b = B;
 

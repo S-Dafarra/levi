@@ -19,7 +19,10 @@
  * thus allowing for seamless application of arithmetic operators.
  */
 template <typename Vector>
-class levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type> : public levi::VariableBase, public levi::Evaluable<Vector> {
+class levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type> : public levi::VariableBase,
+                                                                                                           public levi::Evaluable<Vector>,
+                                                                                                           public std::enable_shared_from_this<levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type>>
+{
 protected:
     levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Vector>::derivative_evaluable::matrix_type>> m_identityDerivative;
 
@@ -30,7 +33,7 @@ protected:
     void copy_constant(bool_value<true>, const OtherVector& rhs) {
         static_assert (this->rows_at_compile_time == Eigen::Dynamic || this->rows_at_compile_time == 1, "Cannot copy a scalar to this variable.");
 
-        this->resize(1,1);
+        this->m_evaluationBuffer.resize(1,1);
 
         this->m_evaluationBuffer(0,0) = rhs;
     }
@@ -74,17 +77,6 @@ public:
         this->resetEvaluationRegister();
     }
 
-    /**
-     * @brief Assignement operator to set the values of the variable equal to another variable.
-     */
-    template<typename OtherVector>
-    void operator=(const EvaluableVariable<OtherVector>& rhs) {
-        static_assert (OtherVector::ColsAtCompileTime == 1, "The chosen VectorType for the rhs should have exactly one column at compile time.");
-        assert(rhs.dimension() == this->dimension());
-        this->m_evaluationBuffer = rhs.evaluate(false);
-        this->resetEvaluationRegister();
-    }
-
     virtual const Vector& evaluate() override {
         return this->m_evaluationBuffer;
     }
@@ -105,6 +97,10 @@ public:
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension()));
     }
 
+    virtual std::vector<std::shared_ptr<levi::Registrar>> getDependencies() override {
+        return {this->shared_from_this()};
+    }
+
 };
 template <typename Vector>
 levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type>::~EvaluableVariable() { }
@@ -116,7 +112,10 @@ levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vect
  * thus allowing for seamless application of arithmetic operators.
  */
 template <typename Scalar>
-class levi::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public levi::VariableBase, public levi::Evaluable<Scalar> {
+class levi::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public levi::VariableBase,
+                                                                                                          public levi::Evaluable<Scalar>,
+                                                                                                          public std::enable_shared_from_this<levi::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>>
+{
 protected:
     levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>> m_identityDerivative;
 
@@ -154,14 +153,6 @@ public:
         this->resetEvaluationRegister();
     }
 
-    /**
-     * @brief Assignement operator to set the values of the variable equal to another variable.
-     */
-    void operator=(const EvaluableVariable<Scalar>& rhs) {
-        this->m_evaluationBuffer = rhs.evaluate(false);
-        this->resetEvaluationRegister();
-    }
-
     virtual const Scalar& evaluate() override {
         return this->m_evaluationBuffer;
     }
@@ -179,6 +170,10 @@ public:
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) override {
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension()));
+    }
+
+    virtual std::vector<std::shared_ptr<levi::Registrar>> getDependencies() override {
+        return {this->shared_from_this()};
     }
 
 };

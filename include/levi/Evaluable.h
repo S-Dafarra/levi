@@ -11,6 +11,7 @@
 #include <levi/ForwardDeclarations.h>
 #include <levi/TypeDetector.h>
 #include <levi/VariableBase.h>
+#include <levi/Registrar.h>
 
 /**
  * @brief Evaluable class (for matrix type)
@@ -23,7 +24,7 @@
  * Take a look at the ExpressionComponent documentation to place an evaluable into an expression.
  */
 template<typename Matrix>
-class levi::Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> {
+class levi::Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> : public levi::Registrar {
 
     /**
      * @brief Name of the evaluable
@@ -99,31 +100,6 @@ protected:
      */
     Matrix m_evaluationBuffer;
 
-    /**
-     * @brief Register to keep track of which parent read the new values.
-     */
-    std::vector<int> m_evaluationRegister;
-
-    int m_isNewCounter;
-
-    /**
-     * @brief Register to keep track of which index can be reused
-     */
-    std::vector<size_t> m_IDRecycleBin;
-
-    /**
-     * @brief Reset the evaluation register to notify of new values
-     */
-    void resetEvaluationRegister() {
-        m_isNewCounter++;
-        m_alreadyComputed = false;
-    }
-
-    /**
-     * @brief Check if the buffer has been filled at least once since the evaluation register has been resetted
-     */
-    bool m_alreadyComputed;
-
     using DerivativeMap = std::unordered_map<std::string, std::vector<levi::ExpressionComponent<derivative_evaluable>>>;
 
     using DerivativeMapKey = std::pair<std::string, std::vector<levi::ExpressionComponent<derivative_evaluable>>>;
@@ -150,8 +126,6 @@ public:
      */
     Evaluable(const std::string& name)
         : m_name(name)
-        , m_isNewCounter(0)
-        , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
         m_info->type = levi::EvaluableType::Generic;
@@ -166,9 +140,7 @@ public:
      */
     Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : m_name(name)
-        , m_isNewCounter(0)
         , m_evaluationBuffer(rows, cols)
-        , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
         m_evaluationBuffer.setZero();
@@ -183,9 +155,7 @@ public:
      */
     Evaluable(const Matrix& initialValue, const std::string& name)
         : m_name(name)
-        , m_isNewCounter(0)
         , m_evaluationBuffer(initialValue)
-        , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
         m_info->type = levi::EvaluableType::Generic;
@@ -248,16 +218,18 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    const Matrix& evaluateID(size_t callerID, bool checkDependencies) {
+    const Matrix& evaluateID(size_t callerID) {
         if (callerID < m_evaluationRegister.size()) {
-            if ((checkDependencies && this->isNew(callerID)) || (!checkDependencies && m_evaluationRegister[callerID] != m_isNewCounter)) {
-                if (m_alreadyComputed) {
-                    m_evaluationRegister[callerID] = m_isNewCounter;
+            if (this->isNew(callerID)) {
+                if (this->m_alreadyComputed) {
+                    this->m_evaluationRegister[callerID] = this->m_isNewCounter;
+                    this->dependenciesChecked();
                     return m_evaluationBuffer;
                 } else {
                     const Matrix& output = evaluate();
-                    m_evaluationRegister[callerID] = m_isNewCounter;
-                    m_alreadyComputed = true;
+                    this->m_evaluationRegister[callerID] = this->m_isNewCounter;
+                    this->m_alreadyComputed = true;
+                    this->dependenciesChecked();
                     return output;
                 }
             } else {
@@ -267,54 +239,6 @@ public:
         return evaluate();
     }
 
-    /**
-     * @brief Get a new ID to check whether the evaluable has a new value
-     * @return An ID to use to check whether the evaluable has already been called since new data has come in.
-     */
-    size_t getNewCallerID() {
-        if (m_IDRecycleBin.size()) {
-            size_t newIndex = m_IDRecycleBin.back();
-            m_evaluationRegister[newIndex] = m_isNewCounter - 1;
-            m_IDRecycleBin.pop_back();
-            return newIndex;
-        }
-        m_evaluationRegister.push_back(m_isNewCounter - 1);
-        return m_evaluationRegister.size() -1;
-    }
-
-
-    /**
-     * @brief Delete a previousy created ID
-     * @param index The index to remove
-     * The index will be contained in the buffer m_IDRecycleBin to reuse previously deleted IDs. This avoids the
-     * m_evaluationRegister to grow indefinitely
-     */
-    void deleteID(size_t index) {
-        m_evaluationRegister[index] = m_isNewCounter - 1;
-        m_IDRecycleBin.push_back(index);
-    }
-
-    /**
-     * @brief Check if the evaluable has a new value which has not been read by the caller
-     * @param callerID The ID of caller
-     * @return True if new
-     */
-    virtual bool isNew(size_t callerID) {
-        return m_evaluationRegister[callerID] != m_isNewCounter;
-    }
-
-    /**
-     * @brief Resize the evaluation buffer.
-     * @param newRows New number of rows
-     * @param newCols New number of columns
-     *
-     * @warning This performs dynamic memory allocation.
-     *
-     * @Note This method should be called only if the matrix storage type is dynamic.
-     */
-    virtual void resize(Eigen::Index newRows, Eigen::Index newCols) {
-        m_evaluationBuffer.resize(newRows, newCols);
-    }
     /**
      * @brief Evaluate the evaluable
      *
@@ -333,18 +257,6 @@ public:
     virtual levi::ExpressionComponent<derivative_evaluable> getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
         levi::unused(column, variable);
         return levi::ExpressionComponent<derivative_evaluable>();
-    }
-
-    /**
-     * @brief Check whether the evaluable depends on a specified variable
-     * @param variable The variable of interest
-     * @return True if dependent
-     *
-     * User should override this method to reduce callings to getColumnDerivative.
-     */
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
-        levi::unused(variable);
-        return true;
     }
 
     /**
@@ -413,7 +325,7 @@ levi::Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::val
  * Take a look at the ExpressionComponent documentation to place an evaluable into an expression.
  */
 template <typename Scalar>
-class levi::Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> {
+class levi::Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public levi::Registrar {
 
     /**
      * @brief Name of the evaluable
@@ -477,31 +389,6 @@ protected:
      */
     Scalar m_evaluationBuffer;
 
-    /**
-     * @brief Register to keep track of which parent read the new values.
-     */
-    std::vector<int> m_evaluationRegister;
-
-    int m_isNewCounter;
-
-    /**
-     * @brief Register to keep track of which index can be reused
-     */
-    std::vector<size_t> m_IDRecycleBin;
-
-    /**
-     * @brief Reset the evaluation register to notify of new values
-     */
-    void resetEvaluationRegister() {
-        m_isNewCounter++;
-        m_alreadyComputed = false;
-    }
-
-    /**
-     * @brief Check if the buffer has been filled at least once since the evaluation register has been resetted
-     */
-    bool m_alreadyComputed;
-
     using DerivativeMap = std::unordered_map<std::string, std::vector<levi::ExpressionComponent<derivative_evaluable>>>;
 
     using DerivativeMapKey = std::pair<std::string, std::vector<levi::ExpressionComponent<derivative_evaluable>>>;
@@ -525,8 +412,6 @@ public:
      */
     Evaluable(const std::string& name)
         : m_name(name)
-        , m_isNewCounter(0)
-        , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
         m_info->type = levi::EvaluableType::Generic;
@@ -541,8 +426,6 @@ public:
      */
     Evaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : m_name(name)
-        , m_isNewCounter(0)
-        , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
         levi::unused(rows, cols);
@@ -560,8 +443,6 @@ public:
     Evaluable(const Scalar& initialValue, const std::string& name)
         : m_name(name)
         , m_evaluationBuffer(initialValue)
-        , m_isNewCounter(0)
-        , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
         m_info->type = levi::EvaluableType::Generic;
@@ -575,8 +456,6 @@ public:
     Evaluable(const Scalar& initialValue)
         : m_name(std::to_string(initialValue))
         , m_evaluationBuffer(initialValue)
-        , m_isNewCounter(0)
-        , m_alreadyComputed(false)
         , m_info(new EvaluableInfo)
     {
         m_info->type = levi::EvaluableType::Generic;
@@ -639,16 +518,18 @@ public:
      *
      * @return const reference to the evaluation buffer.
      */
-    const Scalar& evaluateID(size_t callerID, bool checkDependencies) {
+    const Scalar& evaluateID(size_t callerID) {
         if (callerID < m_evaluationRegister.size()) {
-            if ((checkDependencies && this->isNew(callerID)) || (!checkDependencies && m_evaluationRegister[callerID] != m_isNewCounter)) {
-                if (m_alreadyComputed) {
-                    m_evaluationRegister[callerID] = m_isNewCounter;
+            if (this->isNew(callerID)) {
+                if (this->m_alreadyComputed) {
+                    this->m_evaluationRegister[callerID] = this->m_isNewCounter;
+                    this->dependenciesChecked();
                     return m_evaluationBuffer;
                 } else {
                     const Scalar& output = evaluate();
-                    m_evaluationRegister[callerID] = m_isNewCounter;
-                    m_alreadyComputed = true;
+                    this->m_evaluationRegister[callerID] = this->m_isNewCounter;
+                    this->m_alreadyComputed = true;
+                    this->dependenciesChecked();
                     return output;
                 }
             } else {
@@ -657,42 +538,6 @@ public:
         }
 
         return evaluate();
-    }
-
-    /**
-     * @brief Get a new ID to check whether the evaluable has a new value
-     * @return An ID to use to check whether the evaluable has already been called since new data has come in.
-     */
-    size_t getNewCallerID() {
-        if (m_IDRecycleBin.size()) {
-            size_t newIndex = m_IDRecycleBin.back();
-            m_evaluationRegister[newIndex] = m_isNewCounter - 1;
-            m_IDRecycleBin.pop_back();
-            return newIndex;
-        }
-        m_evaluationRegister.push_back(m_isNewCounter - 1);
-        return m_evaluationRegister.size() -1;
-    }
-
-
-    /**
-     * @brief Delete a previousy created ID
-     * @param index The index to remove
-     * The index will be contained in the buffer m_IDRecycleBin to reuse previously deleted IDs. This avoids the
-     * m_evaluationRegister to grow indefinitely
-     */
-    void deleteID(size_t index) {
-        m_evaluationRegister[index] = m_isNewCounter - 1;
-        m_IDRecycleBin.push_back(index);
-    }
-
-    /**
-     * @brief Check if the evaluable has a new value which has not been read by the caller
-     * @param callerID The ID of caller
-     * @return True if new
-     */
-    virtual bool isNew(size_t callerID) {
-        return m_evaluationRegister[callerID] != m_isNewCounter;
     }
 
     /**
@@ -713,18 +558,6 @@ public:
     virtual levi::ExpressionComponent<derivative_evaluable> getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) {
         levi::unused(column, variable);
         return levi::ExpressionComponent<derivative_evaluable>();
-    }
-
-    /**
-     * @brief Check whether the evaluable depends on a specified variable
-     * @param variable The variable of interest
-     * @return True if dependent
-     *
-     * User should override this method to reduce callings to getColumnDerivative.
-     */
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
-        levi::unused(variable);
-        return true;
     }
 
     /**

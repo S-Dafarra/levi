@@ -706,24 +706,21 @@ public:
         std::cout << "Automatic generation completed!" << std::endl;
     }
 
-    const std::vector<SqueezedMatrixRef>& evaluateGenerics(bool checkDependencies) {
+    const std::vector<SqueezedMatrixRef>& evaluateGenerics() {
         for (size_t generic : m_generics) {
-            m_expandedExpression[generic].buffer = m_expandedExpression[generic].partialExpression.evaluate(checkDependencies);
+            m_expandedExpression[generic].buffer = m_expandedExpression[generic].partialExpression.evaluate();
         }
 
         return m_genericsRefs;
     }
 
-    bool checkGenerics() {
-        bool newVal = false;
-        bool isNew;
-
+    std::vector<std::shared_ptr<levi::Registrar>> getDependencies() {
+        std::vector<std::shared_ptr<levi::Registrar>> deps;
         for (size_t i = 0; i < m_generics.size(); ++i) {
-            isNew = m_expandedExpression[m_generics[i]].partialExpression.isNew();
-            newVal = isNew || newVal;
+            std::vector<std::shared_ptr<levi::Registrar>> genericDeps = m_expandedExpression[m_generics[i]].partialExpression.getDependencies();
+            deps.insert(deps.end(), genericDeps.begin(), genericDeps.end());
         }
-
-        return newVal;
+        return deps;
     }
 
     const std::ostringstream& getHelpersDeclaration() const {

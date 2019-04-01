@@ -24,30 +24,25 @@ public:
     UnaryOperator(const levi::ExpressionComponent<EvaluableT>& expression, const std::string& name)
         : levi::Evaluable<MatrixType>(name)
         , m_expression(expression)
-    { }
+    {
+        this->addDependencies(expression);
+    }
 
     UnaryOperator(const levi::ExpressionComponent<EvaluableT>& expression, Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : levi::Evaluable<MatrixType>(rows, cols, name)
         , m_expression(expression)
-    { }
+    {
+        this->addDependencies(expression);
+    }
 
     UnaryOperator(const levi::ExpressionComponent<EvaluableT>& expression, const MatrixType& initialValue, const std::string& name)
         : levi::Evaluable<MatrixType>(initialValue, name)
         , m_expression(expression)
-    { }
+    {
+        this->addDependencies(expression);
+    }
 
     virtual ~UnaryOperator() override;
-
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
-    }
-
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_expression.isDependentFrom(variable);
-    }
 
 };
 template <typename MatrixType, typename EvaluableT>
@@ -66,35 +61,27 @@ public:
         : levi::Evaluable<MatrixType>(name)
         , m_lhs(lhs)
         , m_rhs(rhs)
-    { }
+    {
+        this->addDependencies(m_lhs, m_rhs);
+    }
 
     BinaryOperator(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs, Eigen::Index rows, Eigen::Index cols, const std::string& name)
         : levi::Evaluable<MatrixType>(rows, cols, name)
         , m_lhs(lhs)
         , m_rhs(rhs)
-    { }
+    {
+        this->addDependencies(m_lhs, m_rhs);
+    }
 
     BinaryOperator(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs, const MatrixType& initialValue, const std::string& name)
         : levi::Evaluable<MatrixType>(initialValue, name)
         , m_lhs(lhs)
         , m_rhs(rhs)
-    { }
+    {
+        this->addDependencies(m_lhs, m_rhs);
+    }
 
     ~BinaryOperator() override;
-
-    virtual bool isNew(size_t callerID) final{
-        bool lhsIsNew = m_lhs.isNew();
-        bool rhsIsNew = m_rhs.isNew();
-        if (lhsIsNew || rhsIsNew) {
-            this->resetEvaluationRegister();
-        }
-        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
-    }
-
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return m_lhs.isDependentFrom(variable) || m_rhs.isDependentFrom(variable);
-    }
-
 };
 template <typename MatrixType, class LeftEvaluable, class RightEvaluable>
 levi::BinaryOperator<MatrixType, LeftEvaluable, RightEvaluable>::~BinaryOperator() { }

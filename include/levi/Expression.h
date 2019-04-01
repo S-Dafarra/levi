@@ -305,7 +305,7 @@ public:
      *
      * @return A const reference to the evaluation buffer of the pointed evaluable.
      */
-    const typename EvaluableT::matrix_type& evaluate(bool checkDependencies = true);
+    const typename EvaluableT::matrix_type& evaluate();
 
     /**
      * @brief Operator +
@@ -581,6 +581,8 @@ public:
      * @return True if dependent
      */
     bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) const;
+
+    std::vector<std::shared_ptr<levi::Registrar>> getDependencies() const;
 
     /**
      * @brief Check if the expression is valid

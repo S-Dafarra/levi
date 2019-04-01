@@ -30,6 +30,8 @@ namespace levi {
     template<int rows, int cols>
     class INVALID_FIXED_TYPE;
 
+    class Registrar;
+
     template<typename Matrix, class Enabler = void>
     class Evaluable;
 
@@ -61,6 +63,15 @@ namespace levi {
 
     template <typename Scalar>
     class ConstantEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
+
+    template <typename Matrix, class Enabler = void>
+    class MutableEvaluable;
+
+    template <typename Matrix>
+    class MutableEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
+
+    template <typename Scalar>
+    class MutableEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
 
     template <typename Matrix, class Enabler = void>
     class NullEvaluable;
@@ -253,6 +264,8 @@ namespace levi {
 
     typedef ExpressionComponent<ConstantEvaluable<LEVI_DEFAULT_MATRIX_TYPE>> Constant;
 
+    typedef ExpressionComponent<MutableEvaluable<LEVI_DEFAULT_MATRIX_TYPE>> Mutable;
+
     template<int rows, int cols>
     using FixedSizeConstant = ExpressionComponent<ConstantEvaluable<LEVI_DEFAULT_MATRIX_FIX_TYPE(rows, cols)>>;
 
@@ -267,6 +280,9 @@ namespace levi {
     using FixedSizeNull = ExpressionComponent<NullEvaluable<LEVI_DEFAULT_MATRIX_FIX_TYPE(rows, cols)>>;
 
     typedef ExpressionComponent<ConstantEvaluable<double>> Scalar;
+
+    typedef ExpressionComponent<MutableEvaluable<double>> ScalarMutable;
+
 }
 
 #endif // LEVI_FORWARDDECLARATIONS_H

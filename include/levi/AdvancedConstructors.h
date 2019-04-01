@@ -37,13 +37,12 @@ private:
     void eval_row(levi::bool_value<value>, Eigen::Index row);
 
     void eval_row(levi::bool_value<true>, Eigen::Index row) {
-        this->m_evaluationBuffer(row, 0) = m_rows[row].evaluate(false);
+        this->m_evaluationBuffer(row, 0) = m_rows[row].evaluate();
     }
 
     void eval_row(levi::bool_value<false>, Eigen::Index row) {
-        this->m_evaluationBuffer.row(row) = m_rows[row].evaluate(false);
+        this->m_evaluationBuffer.row(row) = m_rows[row].evaluate();
     }
-
 
 public:
 
@@ -60,30 +59,15 @@ public:
         for (size_t i = 1; i < rows.size(); ++i) {
             m_rows.push_back(rows[i]);
             assert(m_rows[i].cols() == nCols);
+            this->addDependencies(rows[i]);
         }
 
-        this->resize(m_rows.size(), nCols);
+        this->m_evaluationBuffer.resize(m_rows.size(), nCols);
 
         m_derivatives.resize(m_rows.size());
     }
 
     virtual ~ConstructorByRows() final;
-
-    virtual bool isNew(size_t callerID) final{
-        bool newVal = false;
-        bool isNew;
-
-        for (size_t i = 0; i < m_rows.size(); ++i) {
-            isNew = m_rows[i].isNew();
-            newVal = isNew || newVal;
-        }
-
-        if (newVal) {
-            this->resetEvaluationRegister();
-        }
-
-        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
-    }
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename composite_evaluable::row_type>> row(Eigen::Index row) final {
         return m_rows[row];
@@ -113,16 +97,6 @@ public:
         return derivative;
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
-        bool isDependent = false;
-
-        for (size_t i = 0; i < m_rows.size(); ++i) {
-            isDependent = isDependent || m_rows[i].isDependentFrom(variable);
-        }
-
-        return isDependent;
-    }
-
 };
 template <typename EvaluableT, int rowsNumber>
 levi::ConstructorByRows<EvaluableT, rowsNumber>::~ConstructorByRows() { }
@@ -149,11 +123,11 @@ private:
     void eval_col(levi::bool_value<value>, Eigen::Index col);
 
     void eval_col(levi::bool_value<true>, Eigen::Index col) {
-        this->m_evaluationBuffer(0, col) = m_cols[col].evaluate(false);
+        this->m_evaluationBuffer(0, col) = m_cols[col].evaluate();
     }
 
     void eval_col(levi::bool_value<false>, Eigen::Index col) {
-        this->m_evaluationBuffer.col(col) = m_cols[col].evaluate(false);
+        this->m_evaluationBuffer.col(col) = m_cols[col].evaluate();
     }
 
 public:
@@ -171,9 +145,10 @@ public:
         for (size_t i = 1; i < cols.size(); ++i) {
             m_cols.push_back(cols[i]);
             assert(m_cols[i].rows() == nRows);
+            this->addDependencies(cols[i]);
         }
 
-        this->resize(nRows, m_cols.size());
+        this->m_evaluationBuffer.resize(nRows, m_cols.size());
     }
 
     virtual ~ConstructorByCols() final;
@@ -184,22 +159,6 @@ public:
 
     virtual levi::ExpressionComponent<levi::Evaluable<typename composite_evaluable::value_type>> element(Eigen::Index row, Eigen::Index col) final {
         return m_cols[col](row, 0);
-    }
-
-    virtual bool isNew(size_t callerID) final{
-        bool newVal = false;
-        bool isNew;
-
-        for (size_t i = 0; i < m_cols.size(); ++i) {
-            isNew = m_cols[i].isNew();
-            newVal = isNew || newVal;
-        }
-
-        if (newVal) {
-            this->resetEvaluationRegister();
-        }
-
-        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
     }
 
     virtual const typename composite_evaluable::matrix_type& evaluate() final {
@@ -218,16 +177,6 @@ public:
         return derivative;
     }
 
-    virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) {
-        bool isDependent = false;
-
-        for (size_t i = 0; i < m_cols.size(); ++i) {
-            isDependent = isDependent || m_cols[i].isDependentFrom(variable);
-        }
-
-        return isDependent;
-    }
-
 };
 template <typename EvaluableT, int colsNumber>
 levi::ConstructorByCols<EvaluableT, colsNumber>::~ConstructorByCols(){}
@@ -244,25 +193,27 @@ public:
     {
         static_assert (EvaluableT::cols_at_compile_time == 1 || EvaluableT::cols_at_compile_time == Eigen::Dynamic, "Can't obtain a variable from a matrix evaluable" );
         assert(expression.cols() == 1 && "Can't obtain a variable from a matrix evaluable");
-
+        this->addDependencies(expression);
     }
 
     virtual ~VariableFromExpressionEvaluable() final;
 
-    virtual bool isNew(size_t callerID) final{
-        if (m_expression.isNew()) {
-            this->resetEvaluationRegister();
-        }
-        return this->m_evaluationRegister[callerID] != this->m_isNewCounter;
-    }
-
     virtual const typename EvaluableT::col_type& evaluate() final {
-        this->m_evaluationBuffer = m_expression.evaluate(false);
+        this->m_evaluationBuffer = m_expression.evaluate();
         return this->m_evaluationBuffer;
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) || m_expression.isDependentFrom(variable);
+    }
+
+    virtual std::vector<std::shared_ptr<levi::Registrar>> getDependencies() final {
+        std::vector<std::shared_ptr<Registrar>> deps;
+        for (auto& dep : this->m_dependencies) {
+            deps.push_back(dep.first);
+        }
+        deps.push_back(this->shared_from_this());
+        return deps;
     }
 
     virtual levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable> getNewColumnDerivative(Eigen::Index column,
@@ -324,8 +275,8 @@ public:
     }
 
     virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
-        this->m_evaluationBuffer.leftCols(this->m_lhs.cols()) = this->m_lhs.evaluate(false);
-        this->m_evaluationBuffer.rightCols(this->m_rhs.cols()) = this->m_rhs.evaluate(false);
+        this->m_evaluationBuffer.leftCols(this->m_lhs.cols()) = this->m_lhs.evaluate();
+        this->m_evaluationBuffer.rightCols(this->m_rhs.cols()) = this->m_rhs.evaluate();
         return this->m_evaluationBuffer;
     }
 
@@ -383,8 +334,8 @@ public:
     }
 
     virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
-        this->m_evaluationBuffer.topRows(this->m_lhs.rows()) = this->m_lhs.evaluate(false);
-        this->m_evaluationBuffer.bottomRows(this->m_rhs.rows()) = this->m_rhs.evaluate(false);
+        this->m_evaluationBuffer.topRows(this->m_lhs.rows()) = this->m_lhs.evaluate();
+        this->m_evaluationBuffer.bottomRows(this->m_rhs.rows()) = this->m_rhs.evaluate();
         return this->m_evaluationBuffer;
     }
 
