@@ -198,12 +198,14 @@ levi::ConstructorByCols<EvaluableT, colsNumber>::~ConstructorByCols(){}
 template <typename EvaluableT>
 class levi::VariableFromExpressionEvaluable : public levi::EvaluableVariable<typename EvaluableT::col_type> {
     levi::ExpressionComponent<EvaluableT> m_expression;
+    bool m_isDependent;
 
 public:
 
-    VariableFromExpressionEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
+    VariableFromExpressionEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, bool treatAsDependentExpression)
         : levi::EvaluableVariable<typename EvaluableT::col_type>(expression.rows(), expression.name())
           , m_expression(expression)
+          , m_isDependent(treatAsDependentExpression)
     {
         static_assert (EvaluableT::cols_at_compile_time == 1 || EvaluableT::cols_at_compile_time == Eigen::Dynamic, "Can't obtain a variable from a matrix evaluable" );
         assert(expression.cols() == 1 && "Can't obtain a variable from a matrix evaluable");
@@ -218,13 +220,15 @@ public:
     }
 
     virtual bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) final{
-        return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) || m_expression.isDependentFrom(variable);
+        return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) || (m_isDependent && m_expression.isDependentFrom(variable));
     }
 
     virtual std::vector<std::shared_ptr<levi::Registrar>> getDependencies() final {
         std::vector<std::shared_ptr<Registrar>> deps;
-        for (auto& dep : this->m_dependencies) {
-            deps.push_back(dep.first);
+        if (m_isDependent) {
+            for (auto& dep : this->m_dependencies) {
+                deps.push_back(dep.first);
+            }
         }
         deps.push_back(this->shared_from_this());
         return deps;
@@ -236,7 +240,7 @@ public:
         assert(column == 0);
         if ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) {
             return this->m_identityDerivative;
-        } else if (m_expression.isDependentFrom(variable)) {
+        } else if (m_isDependent && m_expression.isDependentFrom(variable)) {
             return m_expression.getColumnDerivative(column, variable);
         } else {
             return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<typename EvaluableT::col_type>::derivative_evaluable::matrix_type>>(this->dimension(), variable->dimension(),

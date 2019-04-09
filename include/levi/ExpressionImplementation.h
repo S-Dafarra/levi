@@ -819,7 +819,15 @@ levi::ExpressionComponent<levi::EvaluableVariable<typename EvaluableT::col_type>
 {
     assert(m_evaluable && "The expression is empty.");
 
-    return levi::ExpressionComponent<levi::VariableFromExpressionEvaluable<EvaluableT>>(*this, 0);
+    return levi::ExpressionComponent<levi::VariableFromExpressionEvaluable<EvaluableT>>(*this, true);
+}
+
+template<class EvaluableT>
+levi::ExpressionComponent<levi::EvaluableVariable<typename EvaluableT::col_type> > levi::ExpressionComponent<EvaluableT>::asIndependentVariable() const
+{
+    assert(m_evaluable && "The expression is empty.");
+
+    return levi::ExpressionComponent<levi::VariableFromExpressionEvaluable<EvaluableT>>(*this, false);
 }
 
 template<class EvaluableT>

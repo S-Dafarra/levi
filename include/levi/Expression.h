@@ -532,6 +532,16 @@ public:
     ExpressionComponent<levi::EvaluableVariable<typename EvaluableT::col_type>> asVariable() const;
 
     /**
+     * @brief get a variable from the current expression
+     * @return A variable obtained by interpreting the current expression as a variable. This is like a completely
+     * new variable, thus the derivative wrt another variable will be zero. Nevertheless, the evaluation will still
+     * evaluate the underneath expression.
+     *
+     * @note The expression must have a single column.
+     */
+    ExpressionComponent<levi::EvaluableVariable<typename EvaluableT::col_type>> asIndependentVariable() const;
+
+    /**
      * @brief Generates a new expression condensing all the nodes in one. This expression canno be derived.
      * @return A new expression containing the condensed version of the current expression
      */
