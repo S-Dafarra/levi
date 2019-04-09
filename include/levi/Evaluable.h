@@ -300,7 +300,7 @@ public:
     /**
      * @brief Clears the cache of derivatives
      */
-    void clearDerivativesCache() {
+    virtual void clearDerivativesCache() {
         m_derivativeBuffer.clear();
     }
 
@@ -601,7 +601,7 @@ public:
     /**
      * @brief Clears the cache of derivatives
      */
-    void clearDerivativesCache() {
+    virtual void clearDerivativesCache() {
         m_derivativeBuffer.clear();
     }
 

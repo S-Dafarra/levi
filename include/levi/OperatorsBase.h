@@ -44,6 +44,11 @@ public:
 
     virtual ~UnaryOperator() override;
 
+    virtual void clearDerivativesCache() final {
+        this->m_derivativeBuffer.clear();
+        m_expression.clearDerivativesCache();
+    }
+
 };
 template <typename MatrixType, typename EvaluableT>
 levi::UnaryOperator<MatrixType, EvaluableT>::~UnaryOperator() { }
@@ -82,6 +87,12 @@ public:
     }
 
     ~BinaryOperator() override;
+
+    virtual void clearDerivativesCache() final {
+        this->m_derivativeBuffer.clear();
+        m_lhs.clearDerivativesCache();
+        m_rhs.clearDerivativesCache();
+    }
 };
 template <typename MatrixType, class LeftEvaluable, class RightEvaluable>
 levi::BinaryOperator<MatrixType, LeftEvaluable, RightEvaluable>::~BinaryOperator() { }

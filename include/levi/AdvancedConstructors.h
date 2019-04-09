@@ -97,6 +97,13 @@ public:
         return derivative;
     }
 
+    virtual void clearDerivativesCache() final {
+        this->m_derivativeBuffer.clear();
+        for (auto& expression : m_rows) {
+            expression.clearDerivativesCache();
+        }
+    }
+
 };
 template <typename EvaluableT, int rowsNumber>
 levi::ConstructorByRows<EvaluableT, rowsNumber>::~ConstructorByRows() { }
@@ -177,6 +184,13 @@ public:
         return derivative;
     }
 
+    virtual void clearDerivativesCache() final {
+        this->m_derivativeBuffer.clear();
+        for (auto& expression : m_cols) {
+            expression.clearDerivativesCache();
+        }
+    }
+
 };
 template <typename EvaluableT, int colsNumber>
 levi::ConstructorByCols<EvaluableT, colsNumber>::~ConstructorByCols(){}
@@ -230,6 +244,11 @@ public:
         }
     }
 
+    virtual void clearDerivativesCache() final {
+        this->m_derivativeBuffer.clear();
+        m_expression.clearDerivativesCache();
+    }
+
 };
 template <typename EvaluableT>
 levi::VariableFromExpressionEvaluable<EvaluableT>::~VariableFromExpressionEvaluable() { }
@@ -275,8 +294,8 @@ public:
     }
 
     virtual const typename CompositeEvaluable::matrix_type& evaluate() final {
-        this->m_evaluationBuffer.leftCols(this->m_lhs.cols()) = this->m_lhs.evaluate();
-        this->m_evaluationBuffer.rightCols(this->m_rhs.cols()) = this->m_rhs.evaluate();
+        this->m_evaluationBuffer.leftCols(this->m_lhs.cols()).lazyAssign(this->m_lhs.evaluate());
+        this->m_evaluationBuffer.rightCols(this->m_rhs.cols()).lazyAssign(this->m_rhs.evaluate());
         return this->m_evaluationBuffer;
     }
 
