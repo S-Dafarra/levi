@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cmath>
 #include <unordered_map>
+#include <mutex>
 
 #ifndef LEVI_DEFAULT_MATRIX_TYPE
 #define LEVI_DEFAULT_MATRIX_TYPE Eigen::MatrixXd

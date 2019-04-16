@@ -153,8 +153,12 @@ public:
 
     void dependenciesChecked() {
         for (auto& dep : m_dependencies) {
-            dep.first->m_evaluationRegister[dep.second] = dep.first->m_isNewCounter;
+            dep.first->checkID(dep.second);
         }
+    }
+
+    void checkID(size_t callerID) {
+        m_evaluationRegister[callerID] = m_isNewCounter;
     }
 
     /**

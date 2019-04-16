@@ -31,6 +31,11 @@ class levi::Evaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix
      */
     std::string m_name;
 
+    /**
+     * @brief Mutex for evaluation
+     */
+    std::mutex m_evaluationMutex;
+
 public:
 
     /**
@@ -219,6 +224,8 @@ public:
      * @return const reference to the evaluation buffer.
      */
     const Matrix& evaluateID(size_t callerID) {
+        std::lock_guard<std::mutex> lock(m_evaluationMutex);
+
         if (callerID < m_evaluationRegister.size()) {
             if (this->isNew(callerID)) {
                 if (this->m_alreadyComputed) {
@@ -331,6 +338,11 @@ class levi::Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>
      * @brief Name of the evaluable
      */
     std::string m_name;
+
+    /**
+     * @brief Mutex for evaluation
+     */
+    std::mutex m_evaluationMutex;
 
 public:
 
@@ -519,6 +531,8 @@ public:
      * @return const reference to the evaluation buffer.
      */
     const Scalar& evaluateID(size_t callerID) {
+        std::lock_guard<std::mutex> lock(m_evaluationMutex);
+
         if (callerID < m_evaluationRegister.size()) {
             if (this->isNew(callerID)) {
                 if (this->m_alreadyComputed) {
