@@ -72,6 +72,12 @@ public:
         this->m_info->type = levi::EvaluableType::Constant;
     }
 
+    ConstantEvaluable(const Scalar& constant, const std::string& name)
+        : levi::Evaluable<Scalar>(constant, name)
+    {
+        this->m_info->type = levi::EvaluableType::Constant;
+    }
+
     virtual ~ConstantEvaluable() final;
 
     virtual const Scalar& evaluate() final {
@@ -149,6 +155,10 @@ public:
 
     MutableEvaluable(const Scalar& constant)
         : levi::Evaluable<Scalar>(constant)
+    { }
+
+    MutableEvaluable(const Scalar& constant, const std::string& name)
+        : levi::Evaluable<Scalar>(constant, name)
     { }
 
     virtual ~MutableEvaluable() final;
