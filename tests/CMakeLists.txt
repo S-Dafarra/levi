@@ -59,6 +59,10 @@ add_levi_test(AdvancedConstructors)
 add_levi_test(Cache)
 add_levi_test(Dependencies)
 add_levi_test(Rotation)
-add_levi_test(CompiledRotation)
 
+option(ENABLE_COMPILED_ROTATION_TEST "Enable the test on the automatic code generation and compilation" OFF)
+
+if (ENABLE_COMPILED_ROTATION_TEST)
+    add_levi_test(CompiledRotation)
+endif()
 
