@@ -34,7 +34,7 @@ static levi::ExpressionComponent<levi::ConstantEvaluable<T>> levi::build_constan
 }
 
 template<int rowsNumber, class EvaluableT>
-levi::ExpressionComponent<typename levi::ConstructorByRows<EvaluableT>::composite_evaluable>
+levi::ExpressionComponent<typename levi::ConstructorByRows<EvaluableT, rowsNumber>::composite_evaluable>
 levi::ComposeByRows(const std::vector<ExpressionComponent<EvaluableT>>& rows, const std::string& name)
 {
     static_assert (EvaluableT::rows_at_compile_time == 1, "ComposeByRows can compose only from expressions which have 1 row at compile time.");
@@ -42,7 +42,7 @@ levi::ComposeByRows(const std::vector<ExpressionComponent<EvaluableT>>& rows, co
 }
 
 template<int colsNumber, typename EvaluableT>
-levi::ExpressionComponent<typename levi::ConstructorByCols<EvaluableT>::composite_evaluable>
+levi::ExpressionComponent<typename levi::ConstructorByCols<EvaluableT, colsNumber>::composite_evaluable>
 levi::ComposeByCols(const std::vector<levi::ExpressionComponent<EvaluableT>>& cols, const std::string& name)
 {
     static_assert (EvaluableT::cols_at_compile_time == 1, "ComposeByCols can compose only from expressions which have 1 col at compile time.");
@@ -57,6 +57,14 @@ levi::MultipleCompiledOutputPointer<Matrix> levi::CompileMultipleExpressions(con
 template <typename Matrix>
 levi::MultipleSqueezedOutputPointer<Matrix> levi::SqueezeMultipleExpressions(const levi::MultipleExpressionsMap<Matrix> &elements) {
     return std::make_unique<levi::MultipleSqueezedExpressions<levi::Evaluable<Matrix>>>(elements);
+}
+
+template<typename LeftEvaluable, typename RightEvaluable>
+levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename levi::scalar_product_return<typename LeftEvaluable::value_type,
+                                                                                             typename RightEvaluable::value_type>::type,
+                                                        LeftEvaluable::rows_at_compile_time, Eigen::Dynamic>>>
+levi::MatrixProductDerivativeExpression(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs, std::shared_ptr<levi::VariableBase> variable) {
+    return levi::ExpressionComponent<levi::MatrixProductDerivative<LeftEvaluable, RightEvaluable>>(lhs, rhs, variable);
 }
 
 template <class EvaluableT>

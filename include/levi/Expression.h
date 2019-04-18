@@ -36,7 +36,7 @@ namespace levi {
     * @return An expression made of the specified rows
     */
     template<int rowsNumber = -1, typename EvaluableT>
-    ExpressionComponent<typename levi::ConstructorByRows<EvaluableT>::composite_evaluable>
+    ExpressionComponent<typename levi::ConstructorByRows<EvaluableT, rowsNumber>::composite_evaluable>
     ComposeByRows(const std::vector<ExpressionComponent<EvaluableT>>& rows, const std::string& name);
 
     /**
@@ -46,7 +46,7 @@ namespace levi {
      * @return An expression made of the specified columns
      */
     template<int colsNumber = -1, typename EvaluableT>
-    ExpressionComponent<typename levi::ConstructorByCols<EvaluableT>::composite_evaluable>
+    ExpressionComponent<typename levi::ConstructorByCols<EvaluableT, colsNumber>::composite_evaluable>
     ComposeByCols(const std::vector<levi::ExpressionComponent<EvaluableT>>& cols, const std::string& name);
 
     template <typename LhsT, typename RhsT>
@@ -91,6 +91,12 @@ namespace levi {
 
     template <typename Matrix>
     MultipleSqueezedOutputPointer<Matrix> SqueezeMultipleExpressions(const MultipleExpressionsMap<Matrix>& elements);
+
+    template<typename LeftEvaluable, typename RightEvaluable>
+    ExpressionComponent<Evaluable<Eigen::Matrix<typename levi::scalar_product_return<typename LeftEvaluable::value_type,
+                                                                                     typename RightEvaluable::value_type>::type,
+                                                LeftEvaluable::rows_at_compile_time, Eigen::Dynamic>>>
+    MatrixProductDerivativeExpression(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs, std::shared_ptr<levi::VariableBase> variable);
 }
 
 /**

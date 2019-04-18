@@ -356,6 +356,116 @@ public:
 template <class EvaluableT>
 levi::SignInvertedEvaluable<EvaluableT>::~SignInvertedEvaluable() { }
 
+template <class LeftEvaluable, class RightEvaluable>
+class levi::MatrixProductDerivative : public levi::Evaluable<
+                                          Eigen::Matrix<typename levi::scalar_product_return<typename LeftEvaluable::value_type,
+                                                                                             typename RightEvaluable::value_type>::type,
+                                                        LeftEvaluable::rows_at_compile_time, Eigen::Dynamic>> {
+
+    levi::ExpressionComponent<LeftEvaluable> m_lhs;
+    levi::ExpressionComponent<RightEvaluable> m_rhs;
+
+    using return_type = Eigen::Matrix<typename levi::scalar_product_return<typename LeftEvaluable::value_type,
+                                                                           typename RightEvaluable::value_type>::type,
+                                      LeftEvaluable::rows_at_compile_time, Eigen::Dynamic>;
+
+    using this_derivative_evaluable = typename levi::Evaluable<return_type>::derivative_evaluable;
+
+    using lhs_derivative_evaluable = typename LeftEvaluable::derivative_evaluable;
+
+    using lhs_derivative_evaluable_cols = typename lhs_derivative_evaluable::col_type;
+
+    using composite_matrix = Eigen::Matrix<typename LeftEvaluable::value_type, LeftEvaluable::rows_at_compile_time, Eigen::Dynamic>;
+
+    using single_variable_derivative_expression =
+        levi::ExpressionComponent<levi::Evaluable<composite_matrix>>;
+
+    std::vector<levi::ExpressionComponent<lhs_derivative_evaluable>> m_lhsDerivatives;
+
+    std::vector<single_variable_derivative_expression> m_lhsSingleVariableDerivatives;
+
+public:
+
+
+    MatrixProductDerivative(const levi::ExpressionComponent<LeftEvaluable>& lhs, const levi::ExpressionComponent<RightEvaluable>& rhs, std::shared_ptr<levi::VariableBase> variable)
+        : levi::Evaluable<return_type>(lhs.rows(), variable->dimension(),
+                                       "d(" + lhs.name() + ")/d" + variable->variableName() + " * " + rhs.name())
+          , m_lhs(lhs)
+          , m_rhs(rhs)
+    {
+        static_assert (!std::is_arithmetic<typename LeftEvaluable::matrix_type>::value, "The left hand side is supposed to be a matrix");
+        static_assert (RightEvaluable::cols_at_compile_time == 1 || RightEvaluable::cols_at_compile_time == Eigen::Dynamic,
+                      "The right hand side is supposed to be a vector");
+
+        assert(lhs.isValidExpression() && "The left hand side does not appear to be a valid expression.");
+        assert(rhs.isValidExpression() && "The right hand side does not appear to be a valid expression.");
+        assert(lhs.cols() == rhs.rows() && "The left hand side columns do not match the right hand side rows.");
+
+        this->m_info->lhs = lhs;
+        this->m_info->rhs = rhs;
+
+        this->addDependencies(m_rhs);
+
+        for (Eigen::Index col = 0; col < lhs.cols(); ++col) {
+            m_lhsDerivatives.push_back(m_lhs.getColumnDerivative(col, variable));
+            this->addDependencies(m_lhsDerivatives.back());
+        }
+
+        for (Eigen::Index variableDim = 0; variableDim < variable->dimension(); ++variableDim) {
+            std::vector<levi::ExpressionComponent<levi::Evaluable<lhs_derivative_evaluable_cols>>> derivative_cols;
+            for (Eigen::Index col = 0; col < lhs.cols(); ++col) {
+                derivative_cols.push_back(m_lhsDerivatives[col].col(variableDim));
+            }
+            m_lhsSingleVariableDerivatives.push_back(levi::ComposeByCols(derivative_cols, "d(" + lhs.name() + ")/d" +
+                                                                             variable->variableName() + "_" +
+                                                                             std::to_string(variableDim)));
+        }
+
+    }
+
+    virtual ~MatrixProductDerivative() final;
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename levi::Evaluable<return_type>::col_type>> col(Eigen::Index col) final {
+        return m_lhsSingleVariableDerivatives[col] * m_rhs;
+    }
+
+    virtual const return_type& evaluate() final {
+
+        const typename RightEvaluable::matrix_type& rhs = m_rhs.evaluate();
+
+        this->m_evaluationBuffer =rhs(0,0) * m_lhsDerivatives[0].evaluate();
+
+        for (Eigen::Index col = 1; col < m_lhsDerivatives.size(); ++col) {
+            this->m_evaluationBuffer += rhs(col,0) * m_lhsDerivatives[col].evaluate();
+        }
+
+        return this->m_evaluationBuffer;
+    }
+
+    virtual levi::ExpressionComponent<this_derivative_evaluable>
+    getNewColumnDerivative(Eigen::Index column,
+                           std::shared_ptr<levi::VariableBase> variable) final {
+
+                return col(column).getColumnDerivative(0, variable);
+    }
+
+    virtual void clearDerivativesCache() final {
+        this->m_derivativeBuffer.clear();
+        m_lhs.clearDerivativesCache();
+        m_rhs.clearDerivativesCache();
+
+        for (auto& expression : m_lhsDerivatives) {
+            expression.clearDerivativesCache();
+        }
+
+        for (auto& expression : m_lhsSingleVariableDerivatives) {
+            expression.clearDerivativesCache();
+        }
+    }
+};
+template <class LeftEvaluable, class RightEvaluable>
+levi::MatrixProductDerivative<LeftEvaluable, RightEvaluable>::~MatrixProductDerivative() { }
+
 /**
  * @brief The ProductEvaluable. Implements the product of two evaluables.
  */
@@ -496,13 +606,11 @@ private:
 
         if (isLeftDependent && isRightDependent) {
 
-            derivative = this->m_lhs * this->m_rhs.getColumnDerivative(column, variable);
-
-            for (Eigen::Index i = 0; i < this->m_rhs.rows(); ++i) {
-                derivative = derivative + this->m_lhs.getColumnDerivative(i, variable) * this->m_rhs(i, column);
-            }
+            derivative = this->m_lhs * this->m_rhs.getColumnDerivative(column, variable) +
+                levi::MatrixProductDerivativeExpression(this->m_lhs, this->m_rhs.col(column), variable);
 
             return derivative;
+
         }
 
         if (!isLeftDependent && !isRightDependent) {
@@ -513,12 +621,7 @@ private:
 
         if (isLeftDependent) {
 
-            derivative = this->m_lhs.getColumnDerivative(0, variable) * this->m_rhs(0, column);
-
-            for (Eigen::Index i = 1; i < this->m_rhs.rows(); ++i) {
-                derivative = derivative + this->m_lhs.getColumnDerivative(i, variable) * this->m_rhs(i, column);
-            }
-
+            derivative = levi::MatrixProductDerivativeExpression(this->m_lhs, this->m_rhs.col(column), variable);
             return derivative;
 
         } else {
@@ -640,6 +743,7 @@ public:
 };
 template <class LeftEvaluable, class RightEvaluable>
 levi::ProductEvaluable<LeftEvaluable, RightEvaluable>::~ProductEvaluable() { }
+
 
 template <class EvaluableT>
 class levi::PowEvaluable : public levi::UnaryOperator<typename EvaluableT::value_type, EvaluableT> {

@@ -115,6 +115,9 @@ namespace levi {
     template <class LeftEvaluable, class RightEvaluable>
     class ProductEvaluable;
 
+    template <class LeftEvaluable, class RightEvaluable>
+    class MatrixProductDerivative;
+
     template <class EvaluableT>
     class PowEvaluable;
 
