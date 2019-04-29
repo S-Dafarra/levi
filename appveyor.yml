@@ -43,14 +43,14 @@ build_script:
   - cd build
   - cmake ..
   - cmake --build . --config Release --target INSTALL
-  - echo "-------------------- BEGIN BLOCK FACTORY INSTALLATION --------------------"
-  - cd c:\dev
-  - git clone https://github.com/robotology/blockfactory.git
-  - cd blockfactory
-  - md build
-  - cd build
-  - cmake -G"$env:CMAKE_GENERATOR" -DCMAKE_INSTALL_PREFIX="C:\dev/blockfactory/build/install" ..
-  - cmake --build . --config Release --target INSTALL
+  - ps: echo "-------------------- BEGIN BLOCK FACTORY INSTALLATION --------------------"
+  - ps: cd c:\dev
+  - ps: git clone https://github.com/robotology/blockfactory.git
+  - ps: cd blockfactory
+  - ps: md build
+  - ps: cd build
+  - ps: cmake -G"$env:CMAKE_GENERATOR" -DCMAKE_INSTALL_PREFIX="C:\dev/blockfactory/build/install" ..
+  - ps: cmake --build . --config Release --target INSTALL
   - ps: echo "-------------------- BEGIN LEVI INSTALLATION --------------------"
   - ps: cd c:\dev\levi
   - ps: md build
