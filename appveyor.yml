@@ -49,7 +49,7 @@ build_script:
   - cd blockfactory
   - md build
   - cd build
-  - cmake -DCMAKE_INSTALL_PREFIX="C:\dev/blockfactory/build/install" ..
+  - cmake -G"$env:CMAKE_GENERATOR" -DCMAKE_INSTALL_PREFIX="C:\dev/blockfactory/build/install" ..
   - cmake --build . --config Release --target INSTALL
   - ps: echo "-------------------- BEGIN LEVI INSTALLATION --------------------"
   - ps: cd c:\dev\levi
