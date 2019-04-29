@@ -57,7 +57,12 @@ class levi::AddendsExpander {
 
         if (type == Type::Product) {
             newAddend.lhs = addend.info().lhs;
-            newAddend.rhs = addend.info().rhs;
+            AddendExpression rhs = addend.info().rhs;
+            while (rhs.info().type == Type::Product) {
+                newAddend.lhs = newAddend.lhs * rhs.info().lhs;
+                rhs = rhs.info().rhs;
+            }
+            newAddend.rhs = rhs; //extract the rightmost factor
             newAddend.initial = addend;
             newAddend.sign = sign;
 

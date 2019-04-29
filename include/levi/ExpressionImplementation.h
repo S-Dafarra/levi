@@ -460,6 +460,17 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
         isRhsLhsScalar = false;
     }
 
+    auto costOfProduct = [](Eigen::Index lhsRows, Eigen::Index lhsCols, Eigen::Index rhsCols){return lhsRows * rhsCols * (3 * lhsCols - 1);}; //assuming the cost of product being twice the one of sums.
+    auto threeMatricesCompositionCost = [costOfProduct](Eigen::Index leftmostRows, Eigen::Index leftmostCols, Eigen::Index rightmostRows, Eigen::Index rightmostCols) -> std::pair<double, double>{
+        double composeLeft = costOfProduct(leftmostRows, leftmostCols, rightmostRows); //1*2
+        composeLeft += costOfProduct(leftmostRows, rightmostRows, rightmostCols); // (1*2)*3
+
+        double composeRight = costOfProduct(leftmostCols, rightmostRows, rightmostCols); // 2*3
+        composeRight += costOfProduct(leftmostRows, leftmostCols, rightmostCols); //1*(2*3)
+
+        return std::make_pair(composeLeft, composeRight);
+    }; //Cost of composing three matrices, either on the left or on the right (the middle one dimensions are obtained from lhs and rhs)
+
 
     if (isLhsScalar) {
         if (isRhsScalar) {
@@ -512,7 +523,29 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
                             return levi::ExpressionComponent<levi::ProductEvaluable<levi::Evaluable<typename rhsOperand::value_type>, newRhsType>>(rhs_lhs(0, 0), lhs * rhs_rhs);
                         } else {
                             //(lhs1 * rhs1) * (lhs2 * rhs2)
-                            return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(lhs, rhs);
+
+                            auto leftCompositionCosts = threeMatricesCompositionCost(lhs_lhs.rows(), lhs_lhs.cols(), rhs_lhs.rows(), rhs_lhs.cols());
+
+                            double costLeft = std::min(leftCompositionCosts.first, leftCompositionCosts.second);
+                            costLeft += costOfProduct(lhs_lhs.rows(), rhs_rhs.rows(), rhs_rhs.cols());
+
+                            double costMiddle = costOfProduct(lhs_lhs.rows(), lhs_lhs.cols(), lhs_rhs.cols()) + costOfProduct(rhs_lhs.rows(), rhs_lhs.cols(), rhs_rhs.cols());
+
+                            auto rightCompositionCosts = threeMatricesCompositionCost(lhs_rhs.rows(), lhs_rhs.cols(), rhs_rhs.rows(), rhs_rhs.cols());
+                            double costRight = std::min(rightCompositionCosts.first, rightCompositionCosts.second);
+                            costRight += costOfProduct(lhs_lhs.rows(), lhs_lhs.cols(), lhs_rhs.rows());
+
+                            if (costLeft < std::min(costMiddle, costRight)) {
+                                using newLhsType = levi::ProductOutputEvaluable<EvaluableT, rhsOperand>;
+
+                                return levi::ExpressionComponent<levi::ProductEvaluable<newLhsType, rhsOperand>>(lhs * rhs_lhs, rhs_rhs); //(lhs1 * rhs1 * lhs2) * rhs2
+                            } else if (costRight < std::min(costMiddle, costLeft)) {
+                                using newRhsType = levi::ProductOutputEvaluable<lhsOperand, EvaluableRhs>;
+
+                                return levi::ExpressionComponent<levi::ProductEvaluable<lhsOperand, newRhsType>>(lhs_lhs, lhs_rhs * rhs); //lhs1 * (rhs1 * lhs2 * rhs2)
+                            } else {
+                                return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(lhs, rhs); //(lhs1 * rhs1) * (lhs2 * rhs2)
+                            }
                         }
                     }
                 } else {
@@ -521,8 +554,15 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
                         using newRhsType = levi::ProductOutputEvaluable<lhsOperand, EvaluableRhs>;
                         return levi::ExpressionComponent<levi::ProductEvaluable<levi::Evaluable<typename lhsOperand::value_type>, newRhsType>>(lhs_lhs(0,0), lhs_rhs * rhs);
                     } else {
-                        //(lsh * rhs) * matrix
-                        return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(lhs, rhs);
+                        //(lhs * rhs) * matrix
+                        auto compositionCost = threeMatricesCompositionCost(lhs_lhs.rows(), lhs_lhs.cols(), rhs.rows(), rhs.cols());
+                        if (compositionCost.second < compositionCost.first) {
+                            using newRhsType = levi::ProductOutputEvaluable<lhsOperand, EvaluableRhs>;
+                            return levi::ExpressionComponent<levi::ProductEvaluable<lhsOperand, newRhsType>>(lhs_lhs, lhs_rhs * rhs);  //lhs * (rhs * matrix)
+                        } else {
+                            return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(lhs, rhs); //(lhs * rhs) * matrix
+
+                        }
                     }
                 }
             }
@@ -538,7 +578,16 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
                         return levi::ExpressionComponent<levi::ProductEvaluable<levi::Evaluable<typename rhsOperand::value_type>, newRhsType>>(rhs_lhs(0,0), lhs * rhs_rhs);
                     } else {
                         //matrix * (lhs * rhs)
-                        return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(lhs, rhs);
+                        auto compositionCost = threeMatricesCompositionCost(lhs.rows(), lhs.cols(), rhs_rhs.rows(), rhs_rhs.cols());
+
+                        if (compositionCost.first < compositionCost.second) {
+                            using newLhsType = levi::ProductOutputEvaluable<EvaluableT, rhsOperand>;
+
+                            return levi::ExpressionComponent<levi::ProductEvaluable<newLhsType, rhsOperand>>(lhs * rhs_lhs, rhs_rhs); //(matrix * lhs) * rhs
+
+                        } else {
+                            return levi::ExpressionComponent<levi::ProductEvaluable<EvaluableT, EvaluableRhs>>(lhs, rhs); //matrix * (lhs * rhs)
+                        }
                     }
                 } else {
                     //matrix * matrix
