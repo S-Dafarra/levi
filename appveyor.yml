@@ -43,9 +43,10 @@ build_script:
   - cd build
   - cmake ..
   - cmake --build . --config Release --target INSTALL
-  - ps: echo "-------------------- BEGIN BLOCK FACTORY INSTALLATION --------------------"
+  - echo "-------------------- BEGIN BLOCK FACTORY INSTALLATION --------------------"
+  - cd c:\dev
+  - git clone https://github.com/robotology/blockfactory.git
   - ps: cd c:\dev
-  - ps: git clone https://github.com/robotology/blockfactory.git
   - ps: cd blockfactory
   - ps: md build
   - ps: cd build
