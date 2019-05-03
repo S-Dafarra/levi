@@ -193,7 +193,7 @@ public:
         size_t i = 0;
 
         while (!isNew && i < m_dependencies.size()) {
-            isNew = isNew || m_dependencies[i].isNew();
+            isNew = isNew || (m_dependencies[i] != this && m_dependencies[i].isNew());
             ++i;
         }
 
@@ -214,7 +214,7 @@ public:
         bool isDependent = false;
         size_t i = 0;
         while (!isDependent && i < m_dependencies.size()) {
-            isDependent = isDependent || m_dependencies[i].get()->isDependentFrom(variable);
+            isDependent = isDependent || (m_dependencies[i] != this && m_dependencies[i].get()->isDependentFrom(variable));
             ++i;
         }
 
