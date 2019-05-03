@@ -714,10 +714,10 @@ public:
         return m_genericsRefs;
     }
 
-    std::vector<std::shared_ptr<levi::Registrar>> getDependencies() {
-        std::vector<std::shared_ptr<levi::Registrar>> deps;
+    std::vector<levi::Registrar*> getDependencies() {
+        std::vector<levi::Registrar*> deps;
         for (size_t i = 0; i < m_generics.size(); ++i) {
-            std::vector<std::shared_ptr<levi::Registrar>> genericDeps = m_expandedExpression[m_generics[i]].partialExpression.getDependencies();
+            std::vector<levi::Registrar*> genericDeps = m_expandedExpression[m_generics[i]].partialExpression.getDependencies();
             deps.insert(deps.end(), genericDeps.begin(), genericDeps.end());
         }
         return deps;

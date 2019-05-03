@@ -39,27 +39,111 @@ protected:
      */
     bool m_alreadyComputed;
 
-    std::vector<std::pair<std::shared_ptr<Registrar>, size_t>> m_dependencies;
+    struct ValidityChecker { };
 
-    void addDependencies(const std::vector<std::shared_ptr<Registrar>>& dependencies) {
+    std::shared_ptr<ValidityChecker> m_thisIsValid;
+
+    class Dependency {
+        Registrar* m_ptr;
+        size_t m_id;
+        std::weak_ptr<ValidityChecker> m_isValid;
+
+    public:
+
+        Dependency() = delete;
+
+        Dependency(const Dependency& other) {
+            if (isAlive()) {
+                m_ptr->deleteID(m_id);
+            }
+
+            m_ptr = other.m_ptr;
+            assert(m_ptr);
+            m_isValid = m_ptr->getValidityChecker();
+            assert(isAlive());
+            m_id = m_ptr->getNewCallerID();
+        }
+
+        Dependency(Dependency&& other) {
+            if (isAlive()) {
+                m_ptr->deleteID(m_id);
+            }
+
+            m_ptr = other.m_ptr;
+            assert(m_ptr);
+            m_isValid = m_ptr->getValidityChecker();
+            assert(isAlive());
+            m_id = m_ptr->getNewCallerID();
+        }
+
+        Dependency(Registrar* other)
+        {
+            m_ptr = other;
+            assert(other);
+            m_isValid = other->getValidityChecker();
+            assert(isAlive());
+            m_id = other->getNewCallerID();
+        }
+
+        ~Dependency() {
+            if (isAlive()) {
+                m_ptr->deleteID(m_id);
+            }
+        }
+
+        bool operator!=(Registrar* other) const {
+            assert(isAlive() && "The dependency was deleted while it was still needed.");
+            return (m_ptr != other);
+        }
+
+        Registrar* get() {
+            assert(isAlive() && "The dependency was deleted while it was still needed.");
+            return m_ptr;
+        }
+
+        bool isNew() const {
+            assert(isAlive() && "The dependency was deleted while it was still needed.");
+            return m_ptr->isNew(m_id);
+        }
+
+        bool isAlive() const {
+            return !m_isValid.expired();
+        }
+
+        void check() {
+            assert(isAlive() && "The dependency was deleted while it was still needed.");
+            m_ptr->checkID(m_id);
+        }
+    };
+
+    /**
+     * @brief Vector storing pointers to the dependencies registrar, plus the EvaluationID
+     *
+     * @warning Here we assume that the ptr will be always be alive when evaluating. Infact,
+     * if it is a dependecy, I can expect the evaluable to save a pointer to the expression. Indeed, dependencies
+     * cannot be evaluated via the pointer to the registrar, thus another pointer is needed to exploit their values.
+     */
+    std::vector<Dependency> m_dependencies;
+
+    void addDependencies(const std::vector<Registrar*>& dependencies) {
         for (auto& dep : dependencies) {
             assert(dep);
             bool isNewDep = true;
             size_t i = 0;
 
             while (isNewDep && i < m_dependencies.size()) {
-                isNewDep = isNewDep && m_dependencies[i].first != dep;
+                isNewDep = isNewDep && m_dependencies[i] != dep;
                 ++i;
             }
 
             if (isNewDep) {
-                m_dependencies.emplace_back(dep, dep->getNewCallerID());
+                m_dependencies.emplace_back(dep);
             }
         }
     }
 
     template<typename... OtherVectors>
-    void addDependencies(const std::vector<std::shared_ptr<Registrar>>& firstDependencies, const OtherVectors& ...otherDependencies) {
+    void addDependencies(const std::vector<Registrar*>& firstDependencies, const OtherVectors& ...otherDependencies) {
         addDependencies(firstDependencies);
         addDependencies(otherDependencies...);
     }
@@ -72,12 +156,12 @@ protected:
             size_t i = 0;
 
             while (isNewDep && i < m_dependencies.size()) {
-                isNewDep = isNewDep && m_dependencies[i].first != dep;
+                isNewDep = isNewDep && m_dependencies[i] != dep;
                 ++i;
             }
 
             if (isNewDep) {
-                m_dependencies.emplace_back(dep, dep->getNewCallerID());
+                m_dependencies.emplace_back(dep);
             }
         }
     }
@@ -93,16 +177,10 @@ public:
     Registrar()
         : m_isNewCounter(0)
           , m_alreadyComputed(false)
+          , m_thisIsValid(std::make_shared<ValidityChecker>())
     { }
 
-    virtual ~Registrar() {
-        for (auto& dep : m_dependencies) {
-            if (dep.first) {
-                dep.first->deleteID(dep.second);
-                dep.first = nullptr;
-            }
-        }
-    }
+    virtual ~Registrar() { }
 
     /**
      * @brief Check if the evaluable has a new value which has not been read by the caller
@@ -115,7 +193,7 @@ public:
         size_t i = 0;
 
         while (!isNew && i < m_dependencies.size()) {
-            isNew = isNew || m_dependencies[i].first->isNew(m_dependencies[i].second);
+            isNew = isNew || m_dependencies[i].isNew();
             ++i;
         }
 
@@ -136,24 +214,24 @@ public:
         bool isDependent = false;
         size_t i = 0;
         while (!isDependent && i < m_dependencies.size()) {
-            isDependent = isDependent || m_dependencies[i].first->isDependentFrom(variable);
+            isDependent = isDependent || m_dependencies[i].get()->isDependentFrom(variable);
             ++i;
         }
 
         return isDependent;
     }
 
-    virtual std::vector<std::shared_ptr<levi::Registrar>> getDependencies() {
-        std::vector<std::shared_ptr<Registrar>> deps;
+    virtual std::vector<levi::Registrar*> getDependencies() {
+        std::vector<Registrar*> deps;
         for (auto& dep : m_dependencies) {
-            deps.push_back(dep.first);
+            deps.push_back(dep.get());
         }
         return deps;
     }
 
     void dependenciesChecked() {
         for (auto& dep : m_dependencies) {
-            dep.first->checkID(dep.second);
+            dep.check();
         }
     }
 
@@ -174,6 +252,10 @@ public:
         }
         m_evaluationRegister.push_back(m_isNewCounter - 1);
         return m_evaluationRegister.size() -1;
+    }
+
+    std::weak_ptr<ValidityChecker> getValidityChecker() const {
+        return m_thisIsValid;
     }
 
 

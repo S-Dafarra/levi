@@ -138,19 +138,6 @@ class levi::ExpressionComponent {
     void default_constructor(levi::bool_value<false>);
 
     /**
-     * Template declaration of a struct used to detect whether the equal operator is available.
-     */
-    template<class Matrix, typename = int>
-    struct has_equal_to_constant_operator : std::false_type { };
-
-    /**
-     * Template specialization of a struct used to detect whether the equal operator is available.
-     * See https://stackoverflow.com/questions/1005476/how-to-detect-whether-there-is-a-specific-member-variable-in-class
-     */
-    template<class Matrix>
-    struct has_equal_to_constant_operator<Matrix, decltype(std::declval<EvaluableT>().operator=(std::declval<Matrix>()), 0)> : std::true_type { };
-
-    /**
      * Template declaration of a function used to perform casting when during assignements.
      */
     template<bool value, typename OtherEvaluable>
@@ -598,7 +585,7 @@ public:
      */
     bool isDependentFrom(std::shared_ptr<levi::VariableBase> variable) const;
 
-    std::vector<std::shared_ptr<levi::Registrar>> getDependencies() const;
+    std::vector<Registrar*> getDependencies() const;
 
     /**
      * @brief Check if the expression is valid

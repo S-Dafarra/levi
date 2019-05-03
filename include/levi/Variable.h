@@ -20,8 +20,7 @@
  */
 template <typename Vector>
 class levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type> : public levi::VariableBase,
-                                                                                                           public levi::Evaluable<Vector>,
-                                                                                                           public std::enable_shared_from_this<levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vector>::value>::type>>
+                                                                                                           public levi::Evaluable<Vector>
 {
 protected:
     levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Vector>::derivative_evaluable::matrix_type>> m_identityDerivative;
@@ -97,8 +96,8 @@ public:
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension()));
     }
 
-    virtual std::vector<std::shared_ptr<levi::Registrar>> getDependencies() override {
-        return {this->shared_from_this()};
+    virtual std::vector<levi::Registrar*> getDependencies() override {
+        return {this};
     }
 
 };
@@ -113,8 +112,7 @@ levi::EvaluableVariable<Vector, typename std::enable_if<!std::is_arithmetic<Vect
  */
 template <typename Scalar>
 class levi::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public levi::VariableBase,
-                                                                                                          public levi::Evaluable<Scalar>,
-                                                                                                          public std::enable_shared_from_this<levi::EvaluableVariable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>>
+                                                                                                          public levi::Evaluable<Scalar>
 {
 protected:
     levi::ExpressionComponent<levi::IdentityEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>> m_identityDerivative;
@@ -172,8 +170,8 @@ public:
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension()));
     }
 
-    virtual std::vector<std::shared_ptr<levi::Registrar>> getDependencies() override {
-        return {this->shared_from_this()};
+    virtual std::vector<levi::Registrar*> getDependencies() override {
+        return {this};
     }
 
 };

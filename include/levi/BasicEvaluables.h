@@ -11,6 +11,7 @@
 #include <levi/ForwardDeclarations.h>
 #include <levi/Evaluable.h>
 #include <levi/VariableBase.h>
+#include <levi/Assignable.h>
 
 template<typename Scalar>
 struct levi::TripletStruct{
@@ -101,21 +102,20 @@ levi::ConstantEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scala
  *
  */
 template <typename Matrix>
-class levi::MutableEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> : public levi::Evaluable<Matrix>,
-                                                                                                          public std::enable_shared_from_this<levi::MutableEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>>
+class levi::MutableEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type> : public levi::Assignable<Matrix>
 {
 public:
 
     MutableEvaluable(std::string name)
-        : levi::Evaluable<Matrix>(name)
+        : levi::Assignable<Matrix>(name)
     { }
 
     MutableEvaluable(const Matrix& constant, std::string name)
-        : levi::Evaluable<Matrix>(constant, name)
+        : levi::Assignable<Matrix>(constant, name)
     { }
 
     MutableEvaluable(Eigen::Index rows, Eigen::Index cols, const std::string& name)
-        : levi::Evaluable<Matrix>(rows, cols, name)
+        : levi::Assignable<Matrix>(rows, cols, name)
     { }
 
     virtual ~MutableEvaluable() final;
@@ -128,15 +128,6 @@ public:
         levi::unused(column);
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Matrix>::derivative_evaluable::matrix_type>>(this->rows(), variable->dimension());
     }
-
-    void operator=(const Matrix& rhs) {
-        this->m_evaluationBuffer = rhs;
-        this->resetEvaluationRegister();
-    }
-
-    virtual std::vector<std::shared_ptr<levi::Registrar>> getDependencies() final {
-        return {this->shared_from_this()};
-    }
 };
 template <typename Matrix>
 levi::MutableEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>::~MutableEvaluable() { }
@@ -148,17 +139,16 @@ levi::MutableEvaluable<Matrix, typename std::enable_if<!std::is_arithmetic<Matri
  *
  */
 template <typename Scalar>
-class levi::MutableEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public levi::Evaluable<Scalar>,
-                                                                                                         public std::enable_shared_from_this<levi::MutableEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>>
+class levi::MutableEvaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type> : public levi::Assignable<Scalar>
 {
 public:
 
     MutableEvaluable(const Scalar& constant)
-        : levi::Evaluable<Scalar>(constant)
+        : levi::Assignable<Scalar>(constant)
     { }
 
     MutableEvaluable(const Scalar& constant, const std::string& name)
-        : levi::Evaluable<Scalar>(constant, name)
+        : levi::Assignable<Scalar>(constant, name)
     { }
 
     virtual ~MutableEvaluable() final;
@@ -171,15 +161,6 @@ public:
                                                                                                                   std::shared_ptr<levi::VariableBase> variable) final {
         levi::unused(column);
         return levi::ExpressionComponent<levi::NullEvaluable<typename levi::Evaluable<Scalar>::derivative_evaluable::matrix_type>>(1, variable->dimension());
-    }
-
-    void operator=(const Scalar& rhs) {
-        this->m_evaluationBuffer = rhs;
-        this->resetEvaluationRegister();
-    }
-
-    virtual std::vector<std::shared_ptr<levi::Registrar>> getDependencies() final {
-        return {this->shared_from_this()};
     }
 };
 template <typename Scalar>

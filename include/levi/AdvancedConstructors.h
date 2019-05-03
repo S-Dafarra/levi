@@ -223,14 +223,14 @@ public:
         return ((this->variableName() == variable->variableName()) && (this->dimension() == variable->dimension())) || (m_isDependent && m_expression.isDependentFrom(variable));
     }
 
-    virtual std::vector<std::shared_ptr<levi::Registrar>> getDependencies() final {
-        std::vector<std::shared_ptr<Registrar>> deps;
+    virtual std::vector<levi::Registrar*> getDependencies() final {
+        std::vector<Registrar*> deps;
         if (m_isDependent) {
             for (auto& dep : this->m_dependencies) {
-                deps.push_back(dep.first);
+                deps.push_back(dep.get());
             }
         }
-        deps.push_back(this->shared_from_this());
+        deps.push_back(this);
         return deps;
     }
 

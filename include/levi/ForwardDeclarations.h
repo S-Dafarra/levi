@@ -41,6 +41,15 @@ namespace levi {
     template <typename Scalar>
     class Evaluable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
 
+    template <typename Matrix, class Enabler = void>
+    class Assignable;
+
+    template <typename Matrix>
+    class Assignable<Matrix, typename std::enable_if<!std::is_arithmetic<Matrix>::value>::type>;
+
+    template <typename Scalar>
+    class Assignable<Scalar, typename std::enable_if<std::is_arithmetic<Scalar>::value>::type>;
+
     class VariableBase;
 
     template <typename Vector, class Enabler = void>
