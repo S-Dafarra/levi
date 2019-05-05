@@ -462,11 +462,11 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
     }
 
     auto costOfProduct = [](Eigen::Index lhsRows, Eigen::Index lhsCols, Eigen::Index rhsCols){return lhsRows * rhsCols * (3 * lhsCols - 1);}; //assuming the cost of product being twice the one of sums.
-    auto threeMatricesCompositionCost = [costOfProduct](Eigen::Index leftmostRows, Eigen::Index leftmostCols, Eigen::Index rightmostRows, Eigen::Index rightmostCols) -> std::pair<double, double>{
-        double composeLeft = costOfProduct(leftmostRows, leftmostCols, rightmostRows); //1*2
+    auto threeMatricesCompositionCost = [costOfProduct](Eigen::Index leftmostRows, Eigen::Index leftmostCols, Eigen::Index rightmostRows, Eigen::Index rightmostCols) -> std::pair<Eigen::Index, Eigen::Index>{
+        Eigen::Index composeLeft = costOfProduct(leftmostRows, leftmostCols, rightmostRows); //1*2
         composeLeft += costOfProduct(leftmostRows, rightmostRows, rightmostCols); // (1*2)*3
 
-        double composeRight = costOfProduct(leftmostCols, rightmostRows, rightmostCols); // 2*3
+        Eigen::Index composeRight = costOfProduct(leftmostCols, rightmostRows, rightmostCols); // 2*3
         composeRight += costOfProduct(leftmostRows, leftmostCols, rightmostCols); //1*(2*3)
 
         return std::make_pair(composeLeft, composeRight);
@@ -527,13 +527,13 @@ levi::ExpressionComponent<levi::Evaluable<typename levi::matrix_product_return<t
 
                             auto leftCompositionCosts = threeMatricesCompositionCost(lhs_lhs.rows(), lhs_lhs.cols(), rhs_lhs.rows(), rhs_lhs.cols());
 
-                            double costLeft = std::min(leftCompositionCosts.first, leftCompositionCosts.second);
+                            Eigen::Index costLeft = std::min(leftCompositionCosts.first, leftCompositionCosts.second);
                             costLeft += costOfProduct(lhs_lhs.rows(), rhs_rhs.rows(), rhs_rhs.cols());
 
-                            double costMiddle = costOfProduct(lhs_lhs.rows(), lhs_lhs.cols(), lhs_rhs.cols()) + costOfProduct(rhs_lhs.rows(), rhs_lhs.cols(), rhs_rhs.cols());
+                            Eigen::Index costMiddle = costOfProduct(lhs_lhs.rows(), lhs_lhs.cols(), lhs_rhs.cols()) + costOfProduct(rhs_lhs.rows(), rhs_lhs.cols(), rhs_rhs.cols());
 
                             auto rightCompositionCosts = threeMatricesCompositionCost(lhs_rhs.rows(), lhs_rhs.cols(), rhs_rhs.rows(), rhs_rhs.cols());
-                            double costRight = std::min(rightCompositionCosts.first, rightCompositionCosts.second);
+                            Eigen::Index costRight = std::min(rightCompositionCosts.first, rightCompositionCosts.second);
                             costRight += costOfProduct(lhs_lhs.rows(), lhs_lhs.cols(), lhs_rhs.rows());
 
                             if (costLeft < std::min(costMiddle, costRight)) {
