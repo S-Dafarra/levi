@@ -55,6 +55,7 @@ public:
 
         m_rows.push_back(rows.front());
         nCols = m_rows.front().cols();
+        this->addDependencies(rows.front());
 
         for (size_t i = 1; i < rows.size(); ++i) {
             m_rows.push_back(rows[i]);
@@ -148,6 +149,7 @@ public:
 
         m_cols.push_back(cols.front());
         nRows = m_cols.front().rows();
+        this->addDependencies(cols.front());
 
         for (size_t i = 1; i < cols.size(); ++i) {
             m_cols.push_back(cols[i]);
