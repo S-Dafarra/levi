@@ -178,6 +178,9 @@ namespace levi {
     template <typename EvaluableT>
     class TransposeEvaluable;
 
+    template <typename EvaluableT>
+    class VeeEvaluable;
+
     template <typename EvaluableT, int rowsNumber = -1>
     class ConstructorByRows;
 

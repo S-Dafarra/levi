@@ -863,6 +863,17 @@ levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::val
 }
 
 template<class EvaluableT>
+levi::ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 1>>> levi::ExpressionComponent<EvaluableT>::vee() const
+{
+    static_assert (((EvaluableT::rows_at_compile_time == Eigen::Dynamic) ||(EvaluableT::rows_at_compile_time == 3)) &&
+                      ((EvaluableT::cols_at_compile_time == Eigen::Dynamic) ||(EvaluableT::cols_at_compile_time == 3)) , "Vee can be applied only to three dimensional squared matrices.");
+    assert(m_evaluable && "Cannot apply the vee operator to this expression.");
+    assert(rows() == 3 && cols() == 3 && "Vee can be applied only to three dimensional squared matrices.");
+
+    return levi::ExpressionComponent<levi::VeeEvaluable<EvaluableT>>(*this, 0);
+}
+
+template<class EvaluableT>
 levi::ExpressionComponent<levi::Evaluable<typename levi::transpose_type<EvaluableT>::type> > levi::ExpressionComponent<EvaluableT>::transpose() const
 {
     assert(m_evaluable && "Cannot compute the transpose from this expression.");

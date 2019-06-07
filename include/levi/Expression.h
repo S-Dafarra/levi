@@ -507,6 +507,13 @@ public:
      */
     ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 3>>> skew() const;
 
+    /**
+     * @brief Extract the vector defining a skew symmetric matrix
+     * @return An expression pointing to an evaluable which performs the vee operator
+     * @note This works only with three dimensional squared matrices.
+     */
+    ExpressionComponent<levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 1>>> vee() const;
+
 
     /**
      * @brief Computes the transpose of the current expression

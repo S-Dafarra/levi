@@ -996,4 +996,58 @@ public:
 template <typename EvaluableT>
 levi::TransposeEvaluable<EvaluableT>::~TransposeEvaluable() { }
 
+template <typename EvaluableT>
+class levi::VeeEvaluable : public levi::UnaryOperator<Eigen::Matrix<typename EvaluableT::value_type, 3, 1>, EvaluableT> {
+
+    std::unordered_map<Eigen::Index, std::pair<Eigen::Index, Eigen::Index>> m_indexMap;
+    std::vector<levi::ExpressionComponent<typename levi::Evaluable<typename EvaluableT::value_type>::derivative_evaluable>> m_derivatives;
+
+
+public:
+
+    VeeEvaluable(const levi::ExpressionComponent<EvaluableT>& expression, int)
+        : levi::UnaryOperator<Eigen::Matrix<typename EvaluableT::value_type, 3, 1>, EvaluableT>(expression, 3, 1, expression.name() + "^vee")
+    {
+        this->m_info->lhs = expression;
+        m_indexMap[0] = std::make_pair(2,1);
+        m_indexMap[1] = std::make_pair(0,2);
+        m_indexMap[2] = std::make_pair(1,0);
+        m_derivatives.resize(3);
+    }
+
+    virtual ~VeeEvaluable() final;
+
+    typedef levi::Evaluable<typename levi::transpose_type<EvaluableT>::type> ThisEvaluable;
+
+    virtual levi::ExpressionComponent<levi::Evaluable<typename ThisEvaluable::value_type>> element(Eigen::Index row, Eigen::Index col) final {
+        assert(col == 0);
+        levi::unused(col);
+
+        std::pair<Eigen::Index, Eigen::Index> indices = m_indexMap[row];
+        return this->m_expression(indices.first, indices.second);
+    }
+
+    virtual const Eigen::Matrix<typename EvaluableT::value_type, 3, 1> & evaluate() final {
+        const typename EvaluableT::matrix_type original = this->m_expression.evaluate();
+        this->m_evaluationBuffer(0) = original(2,1);
+        this->m_evaluationBuffer(1) = original(0,2);
+        this->m_evaluationBuffer(2) = original(1,0);
+        return this->m_evaluationBuffer;
+    }
+
+    virtual levi::ExpressionComponent<typename levi::Evaluable<Eigen::Matrix<typename EvaluableT::value_type, 3, 1>>::derivative_evaluable>
+    getNewColumnDerivative(Eigen::Index column, std::shared_ptr<levi::VariableBase> variable) final {
+
+        levi::unused(column);
+
+        m_derivatives[0] = this->m_expression(2,1).getColumnDerivative(0, variable);
+        m_derivatives[1] = this->m_expression(0,2).getColumnDerivative(0, variable);
+        m_derivatives[2] = this->m_expression(1,0).getColumnDerivative(0, variable);
+
+        return levi::ComposeByRows(m_derivatives, "d(" + this->name() + ")/d" + variable->variableName());
+    }
+};
+template <typename EvaluableT>
+levi::VeeEvaluable<EvaluableT>::~VeeEvaluable() { }
+
 #endif // LEVI_OPERATORS_H

@@ -98,6 +98,9 @@ int main() {
     assert(testBlock.evaluate() == c.evaluate().block(1,1,2,2));
 
     auto testSkew = x.skew();
+    auto testVee = testSkew.vee();
+
+    assert(x.evaluate() == testVee.evaluate());
 
     Variable z(1,"z");
 
